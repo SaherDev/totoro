@@ -7,10 +7,10 @@ Totoro is an AI-native place decision engine. Users share places over time (free
 ## Key Directories
 
 ```
-apps/web/          → Next.js frontend (Tailwind CSS, Clerk auth)
+apps/web/          → Next.js frontend (Tailwind v3, shadcn/ui, Clerk auth)
 apps/api/          → NestJS backend (Prisma, PostgreSQL + pgvector)
 libs/shared/       → Shared TypeScript types, DTOs, constants
-libs/ui/           → Design system (UI components, Tailwind preset)
+libs/ui/           → Design system (shadcn/ui components, cva variants, cn() utility)
 messages/          → i18n translation files (en.json, he.json)
 config/            → YAML configuration files (dev.yml, prod.yml, test.yml)
 scripts/           → Shell scripts (env-setup.sh)
@@ -62,6 +62,7 @@ yarn nx affected -t test       # Test only affected projects
 
 **Path aliases:**
 - `@totoro/shared` → `libs/shared/src`
+- `@totoro/ui` → `libs/ui/src`
 - App-internal imports use relative paths
 
 **Naming patterns:**
@@ -76,9 +77,12 @@ yarn nx affected -t test       # Test only affected projects
 - API responses use shared DTOs; frontend consumes the same types
 - Database models are Prisma-generated; do not manually define entity types
 
-**Frontend** (see @.claude/rules/frontend.md):
+**Frontend** (see @.claude/rules/frontend.md and @.claude/rules/tailwind-patterns.md):
+- Tailwind v3 + shadcn/ui — components are copied into `libs/ui`, not installed as a dependency (ADR-007)
+- shadcn components use `cva` for variants and `cn()` (`clsx` + `tailwind-merge`) for class merging
+- CSS variables use raw HSL values (`262 80% 50%`) — Tailwind wraps with `hsl()` to support opacity modifiers
+- Dark mode via `darkMode: 'class'` in `tailwind.config.js` + `next-themes` — semantic classes only, no raw Tailwind colors
 - RTL support for Hebrew — logical properties only, no `ml`/`mr`/`left`/`right`
-- Dark mode via CSS variables + `next-themes` — semantic classes only, no raw Tailwind colors
 - i18n via `next-intl` — URL routing `/en/` and `/he/`, all strings through translation functions
 
 **Architectural boundaries** (see @.claude/rules/architecture.md):
