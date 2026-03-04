@@ -143,3 +143,13 @@ scripts/env-setup.sh
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Nx
+.nx
+tmp
+
+
+
+.nx/cache
+.nx/workspace-data
+test-output

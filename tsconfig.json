@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/web"
+    },
+{
+      "path": "./libs/shared"
+    },
+    {
+      "path": "./services/api-e2e"
+    },
+    {
+      "path": "./services/api"
+    }
+  ]
+}
