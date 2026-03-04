@@ -4,12 +4,12 @@
 
 | Source | Can import from | Cannot import from |
 |--------|----------------|--------------------|
-| `apps/web` | `libs/shared`, `libs/ui` | `apps/api` |
-| `apps/api` | `libs/shared` | `apps/web`, `libs/ui` |
-| `libs/ui` | `libs/shared` | `apps/web`, `apps/api` |
-| `libs/shared` | (nothing) | `apps/web`, `apps/api`, `libs/ui` |
+| `apps/web` | `libs/shared`, `libs/ui` | `services/api` |
+| `services/api` | `libs/shared` | `apps/web`, `libs/ui` |
+| `libs/ui` | `libs/shared` | `apps/web`, `services/api` |
+| `libs/shared` | (nothing) | `apps/web`, `services/api`, `libs/ui` |
 
-These boundaries are enforced by Nx module boundary rules. If you get a lint error about a cross-boundary import, do not suppress it — move the shared code into the appropriate lib. Note: `libs/ui` is frontend-only — `apps/api` must never import from it.
+These boundaries are enforced by Nx module boundary rules. If you get a lint error about a cross-boundary import, do not suppress it — move the shared code into the appropriate lib. Note: `libs/ui` is frontend-only — `services/api` must never import from it.
 
 ## Two-Repo Separation
 
@@ -24,7 +24,7 @@ These boundaries are enforced by Nx module boundary rules. If you get a lint err
 
 ## AI Service Communication
 
-- All calls to `totoro-ai` originate from `apps/api` (NestJS services).
+- All calls to `totoro-ai` originate from `services/api` (NestJS services).
 - `apps/web` never calls `totoro-ai` directly. The frontend talks to the NestJS API, which proxies to the AI service.
 - The AI service base URL is loaded from YAML config (`config/*.yml` → `ai_service.base_url`), not from environment variables.
 - See @docs/api-contract.md for endpoint definitions.
@@ -49,7 +49,7 @@ All NestJS routes use the `/api/v1/` global prefix. Set via `app.setGlobalPrefix
 | Service | Platform | Tier |
 |---------|----------|------|
 | `apps/web` (Next.js) | Vercel | Free Hobby |
-| `apps/api` (NestJS) | Railway | Hobby $5/mo |
+| `services/api` (NestJS) | Railway | Hobby $5/mo |
 | `totoro-ai` (FastAPI) | Railway | Hobby $5/mo |
 | PostgreSQL + pgvector | Railway | Hobby $5/mo |
 | Redis | Railway | Serverless |

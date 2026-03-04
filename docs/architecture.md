@@ -14,12 +14,12 @@ Totoro is split across two repositories with a clear separation of concerns:
 │              apps/web (Next.js + Clerk)              │
 │  - UI rendering, client-side state                  │
 │  - Clerk auth (frontend SDK)                        │
-│  - Calls apps/api via internal HTTP                 │
+│  - Calls services/api via internal HTTP                 │
 └──────────────────────┬──────────────────────────────┘
                        │ HTTP (REST)
                        ▼
 ┌─────────────────────────────────────────────────────┐
-│             apps/api (NestJS + Prisma)              │
+│             services/api (NestJS + Prisma)              │
 │  - Auth verification (Clerk backend SDK)            │
 │  - Business logic, CRUD operations                  │
 │  - Orchestrates calls to totoro-ai                  │
@@ -39,23 +39,23 @@ Totoro is split across two repositories with a clear separation of concerns:
 ## Data Flow: "Recommend me a place"
 
 1. **User types a query** in the chat UI (e.g., "good ramen near me for a date night").
-2. **`apps/web`** sends the raw query string to `apps/api` via REST.
-3. **`apps/api`** forwards the query to `totoro-ai` via `POST /parse-intent`.
+2. **`apps/web`** sends the raw query string to `services/api` via REST.
+3. **`services/api`** forwards the query to `totoro-ai` via `POST /parse-intent`.
 4. **`totoro-ai`** returns a structured intent (cuisine type, occasion, location, etc.).
-5. **`apps/api`** sends the structured intent to `totoro-ai` via `POST /retrieve`.
+5. **`services/api`** sends the structured intent to `totoro-ai` via `POST /retrieve`.
 6. **`totoro-ai`** returns candidate places from the user's saved places and/or external discovery.
-7. **`apps/api`** sends candidates + user context to `totoro-ai` via `POST /rank`.
+7. **`services/api`** sends candidates + user context to `totoro-ai` via `POST /rank`.
 8. **`totoro-ai`** returns 1 primary recommendation + 2 alternatives, each with reasoning.
-9. **`apps/api`** persists the recommendation and streams the response to `apps/web`.
+9. **`services/api`** persists the recommendation and streams the response to `apps/web`.
 10. **`apps/web`** renders the recommendation with reasoning text.
 
 ## Data Flow: "Share a place"
 
 1. **User submits free-text input** (a URL, place name, or description).
-2. **`apps/web`** sends the raw string to `apps/api`.
-3. **`apps/api`** forwards the string to `totoro-ai` for extraction and validation.
+2. **`apps/web`** sends the raw string to `services/api`.
+3. **`services/api`** forwards the string to `totoro-ai` for extraction and validation.
 4. **`totoro-ai`** parses the input (URL fetch, Google Places lookup, etc.) and returns structured place data.
-5. **`apps/api`** stores the place in PostgreSQL, associated with the user's profile.
+5. **`services/api`** stores the place in PostgreSQL, associated with the user's profile.
 6. Over time, accumulated places form the user's taste model (built by `totoro-ai`).
 
 ## Technology Stack

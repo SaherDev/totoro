@@ -2,13 +2,13 @@
 
 ## Project Context
 
-Totoro is an AI-native place decision engine. Users share places over time (free-text, URLs, descriptions), the system builds a taste model, and returns one confident recommendation from natural language intent. This is the **product repo**: an Nx monorepo with a Next.js frontend (`apps/web`), NestJS backend (`apps/api`), and shared TypeScript types (`libs/shared`). This repo contains zero AI/ML code. All AI logic lives in a separate Python repo (`totoro-ai`) that this repo talks to over HTTP only. See @docs/architecture.md for the two-repo design and @docs/api-contract.md for the HTTP contract.
+Totoro is an AI-native place decision engine. Users share places over time (free-text, URLs, descriptions), the system builds a taste model, and returns one confident recommendation from natural language intent. This is the **product repo**: an Nx monorepo with a Next.js frontend (`apps/web`), NestJS backend (`services/api`), and shared TypeScript types (`libs/shared`). This repo contains zero AI/ML code. All AI logic lives in a separate Python repo (`totoro-ai`) that this repo talks to over HTTP only. See @docs/architecture.md for the two-repo design and @docs/api-contract.md for the HTTP contract.
 
 ## Key Directories
 
 ```
 apps/web/          → Next.js frontend (Tailwind v3, shadcn/ui, Clerk auth)
-apps/api/          → NestJS backend (Prisma, PostgreSQL + pgvector)
+services/api/      → NestJS backend (Prisma, PostgreSQL + pgvector)
 libs/shared/       → Shared TypeScript types, DTOs, constants
 libs/ui/           → Design system (shadcn/ui components, cva variants, cn() utility)
 messages/          → i18n translation files (en.json, he.json)
@@ -23,9 +23,8 @@ docs/              → Operational docs (architecture, API contract, decisions)
 
 ```bash
 # Dev servers
-yarn nx serve web              # Next.js dev server
-yarn nx serve api              # NestJS dev server
-yarn nx run-many -t serve      # Both simultaneously
+yarn nx dev web                # Next.js on http://localhost:4200
+yarn nx serve api              # NestJS on http://localhost:3333/api/v1
 
 # Testing
 yarn nx test web               # Frontend tests (Jest + RTL)
@@ -52,20 +51,24 @@ yarn nx affected -t test       # Test only affected projects
 ## Standards
 
 **Zero hardcoding:**
+
 - Nothing is hardcoded. Every value that could change — URLs, ports, labels, limits, thresholds, feature flags, UI text — must come from config (YAML for non-secrets, env vars for secrets) or a constants file in `libs/shared`.
 - Frontend UI strings, colors, and layout parameters are configurable — not buried in components.
 - If you're about to type a literal value that isn't a boolean, 0, or 1, extract it to config or a named constant.
 
 **Linting:**
+
 - ESLint: use Nx-generated configs only. Do not add plugins or override generated rules.
 - Never disable an ESLint rule inline without a comment explaining why.
 
 **Path aliases:**
+
 - `@totoro/shared` → `libs/shared/src`
 - `@totoro/ui` → `libs/ui/src`
 - App-internal imports use relative paths
 
 **Naming patterns:**
+
 - Files: `kebab-case.ts` (e.g., `place-recommendation.service.ts`)
 - Classes: `PascalCase` (e.g., `PlaceRecommendationService`)
 - Interfaces/Types: `PascalCase`, no `I` prefix (e.g., `PlaceResult`, not `IPlaceResult`)
@@ -73,11 +76,13 @@ yarn nx affected -t test       # Test only affected projects
 - NestJS modules: one module per domain (e.g., `places/`, `recommendations/`)
 
 **Type conventions:**
+
 - All shared types live in `libs/shared` — never duplicate types between apps
 - API responses use shared DTOs; frontend consumes the same types
 - Database models are Prisma-generated; do not manually define entity types
 
 **Frontend** (see @.claude/rules/frontend.md and @.claude/rules/tailwind-patterns.md):
+
 - Tailwind v3 + shadcn/ui — components are copied into `libs/ui`, not installed as a dependency (ADR-007)
 - shadcn components use `cva` for variants and `cn()` (`clsx` + `tailwind-merge`) for class merging
 - CSS variables use raw HSL values (`262 80% 50%`) — Tailwind wraps with `hsl()` to support opacity modifiers
@@ -86,8 +91,9 @@ yarn nx affected -t test       # Test only affected projects
 - i18n via `next-intl` — URL routing `/en/` and `/he/`, all strings through translation functions
 
 **Architectural boundaries** (see @.claude/rules/architecture.md):
-- `apps/web` never imports from `apps/api` (communicate via HTTP only)
-- `apps/api` never imports from `apps/web`
+
+- `apps/web` never imports from `services/api` (communicate via HTTP only)
+- `services/api` never imports from `apps/web`
 - Both apps may import from `libs/shared`
 - AI calls go through NestJS services only — frontend never calls totoro-ai directly
 - Non-secret config loaded from YAML (`config/*.yml`), not environment variables
@@ -95,22 +101,39 @@ yarn nx affected -t test       # Test only affected projects
 - All NestJS routes use `/api/v1/` prefix
 
 **Commit conventions** (see @.claude/rules/git.md):
+
 - Format: `type(scope): description #TASK_ID`
 - Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`
 - Scopes: `api`, `web`, `shared`
 
 ## Workflow
 
-Before touching code, answer three questions:
-1. **What file(s) will change?** — Read them first.
-2. **What could break?** — Identify side effects across the monorepo.
-3. **Is this the simplest change?** — Do not over-engineer.
+Before implementing, ask clarifying questions if the task has ambiguity. Do not assume. Keep questions to 3 or fewer. If the task is fully scoped with no ambiguity, skip questions and start executing.
+
+Before touching code, answer six questions:
+
+**Context checks:**
+
+1. **Which phase?** — Only build what the current phase requires. Do not build ahead.
+2. **Crosses repo boundary?** — If it touches AI/ML logic, it belongs in `totoro-ai`. If it touches UI/auth/CRUD, it belongs here.
+3. **Existing pattern?** — Find a similar file or module and follow its conventions.
+
+**File-level checks:** 4. **What file(s) will change?** — Read them first. 5. **What could break?** — Identify side effects across the monorepo. 6. **Is this the simplest change?** — Do not over-engineer.
 
 Then follow this cycle:
-1. **Plan** — State what you will do and which files are affected.
+
+1. **Plan** — If the task touches 3+ files or involves generators/scaffolding, write a plan in chat under 20 lines. For tasks touching 1–2 files, skip the plan and go straight to implementation.
 2. **Implement** — Make the smallest change that works. One concern per commit.
 3. **Verify** — Run `yarn nx affected -t test` and `yarn nx affected -t lint`. Fix failures before moving on.
-4. **Completion report** — Summarize: what changed, what was tested, any deviations from the plan (flag these explicitly).
+4. **Completion report** — 5 lines or less. What changed, what was tested, any deviations from the plan.
+
+**Token efficiency rules:**
+
+- Plans go in chat, not in separate files.
+- Do not repeat file contents back after creating or editing them.
+- Do not explain code you just wrote unless asked.
+- Do not list what you are about to do and then do it. Pick one: explain or execute.
+- Keep commit messages to one line. Add a body only if the change is non-obvious.
 
 ## Notes
 
