@@ -60,24 +60,25 @@ Totoro is split across two repositories with a clear separation of concerns:
 
 ## Technology Stack
 
-| Layer | Technology | Notes |
-|-------|-----------|-------|
-| Frontend | Next.js + Tailwind CSS | Server and client components |
-| Auth | Clerk | Free tier, 50K MAU |
-| Backend | NestJS | Modular architecture |
-| ORM | Prisma | With raw SQL for pgvector ops |
-| Database | PostgreSQL + pgvector | Vector similarity search |
-| AI Service | Python (totoro-ai repo) | GPT-4o-mini, Claude Sonnet, Voyage embeddings |
-| Package Manager | Yarn (node-modules linker) | |
-| Monorepo | Nx | Workspace with module boundaries |
-| Runtime | Node 20 LTS | |
-| Frontend Deploy | Vercel | Free Hobby tier |
-| Backend Deploy | Railway | Hobby $5/mo, Serverless Redis |
-| Local Dev | Docker Compose | Not used in production |
+| Layer           | Technology                 | Notes                                         |
+| --------------- | -------------------------- | --------------------------------------------- |
+| Frontend        | Next.js + Tailwind CSS     | Server and client components                  |
+| Auth            | Clerk                      | Free tier, 50K MAU                            |
+| Backend         | NestJS                     | Modular architecture                          |
+| ORM             | Prisma                     | With raw SQL for pgvector ops                 |
+| Database        | PostgreSQL + pgvector      | Vector similarity search                      |
+| AI Service      | Python (totoro-ai repo)    | GPT-4o-mini, Claude Sonnet, Voyage embeddings |
+| Package Manager | Yarn (node-modules linker) |                                               |
+| Monorepo        | Nx                         | Workspace with module boundaries              |
+| Runtime         | Node 20 LTS                |                                               |
+| Frontend Deploy | Vercel                     | Free Hobby tier                               |
+| Backend Deploy  | Railway                    | Hobby $5/mo, Serverless Redis                 |
+| Local Dev       | Docker Compose             | Not used in production                        |
 
 ## Repo Boundaries
 
 This repo (`totoro`) owns:
+
 - All user-facing UI
 - Authentication and authorization
 - Database schema and migrations
@@ -85,6 +86,7 @@ This repo (`totoro`) owns:
 - HTTP orchestration of AI calls
 
 The AI repo (`totoro-ai`) owns:
+
 - Natural language understanding
 - Place extraction from URLs and free text
 - Embedding generation and vector search

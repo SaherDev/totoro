@@ -52,6 +52,6 @@ Run this once per machine. Without it, commit messages containing `#` will be tr
 
 1. Create a feature or fix branch from `dev`.
 2. Work on the branch, commit with conventional format.
-3. Merge into `dev` via squash-and-merge to keep history clean.
+3. When complete, merge branch into `dev` (squash or merge commit, your call per branch).
 4. Delete the source branch after merge.
 5. When a milestone is ready, merge `dev` into `main` (regular merge, not squash).
