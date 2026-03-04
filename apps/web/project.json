@@ -3,7 +3,7 @@
   "targets": {
     "dev": {
       "options": {
-        "command": "next dev -p 4200"
+        "command": "sh -c 'next dev -p ${WEB_PORT:-4200}'"
       }
     }
   }

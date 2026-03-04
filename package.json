@@ -2,6 +2,11 @@
   "name": "@totoro/source",
   "version": "0.0.0",
   "private": true,
+  "scripts": {
+    "dev": "sh -c 'set -a && . ../totoro-config/.env.shared && . ../totoro-config/.env.totoro && . ../totoro-config/.env.totoro-ai && set +a && nx run-many -t dev serve -p web api'",
+    "dev:web": "sh -c 'set -a && . ../totoro-config/.env.shared && . ../totoro-config/.env.totoro && set +a && nx dev web'",
+    "dev:api": "sh -c 'set -a && . ../totoro-config/.env.shared && . ../totoro-config/.env.totoro && set +a && nx serve api'"
+  },
   "workspaces": [
     "apps/*",
     "services/*",
