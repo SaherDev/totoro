@@ -10,7 +10,7 @@
 ## Theming and Dark Mode
 
 - CSS variables for all colors. Define tokens in `globals.css` using `:root` (light) and `.dark` (dark).
-- Map tokens to Tailwind via `@theme` directive. Semantic names: `primary`, `foreground`, `background`, `muted`, `border`, `accent`.
+- Map tokens to Tailwind via `tailwind.config.js` theme extension. Semantic names: `primary`, `foreground`, `background`, `muted`, `border`, `accent`.
 - `next-themes` for system preference detection and theme toggle. No custom dark mode JS.
 - Components use semantic classes only (`bg-primary`, `text-foreground`). Never use raw Tailwind colors like `bg-blue-500` directly.
 - To swap palette, change CSS variable values only. Components stay untouched.

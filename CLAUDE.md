@@ -2,7 +2,9 @@
 
 ## Project Context
 
-Totoro is an AI-native place decision engine. Users share places over time (free-text, URLs, descriptions), the system builds a taste model, and returns one confident recommendation from natural language intent. This is the **product repo**: an Nx monorepo with a Next.js frontend (`apps/web`), NestJS backend (`services/api`), and shared TypeScript types (`libs/shared`). This repo contains zero AI/ML code. All AI logic lives in a separate Python repo (`totoro-ai`) that this repo talks to over HTTP only. See @docs/architecture.md for the two-repo design and @docs/api-contract.md for the HTTP contract.
+Totoro is an AI-native place decision engine. The AI IS the product — NestJS is supporting infrastructure. Users share places over time (free-text, URLs, descriptions), the system builds a taste model, and returns one confident recommendation from natural language intent.
+
+This is the **product repo**: an Nx monorepo with a Next.js frontend (`apps/web`), NestJS backend (`services/api`), and shared TypeScript types (`libs/shared`). NestJS is a **thin gateway + data owner** — it authenticates, forwards AI requests, writes data, and serves CRUD. All AI logic lives in a separate Python repo (`totoro-ai`, FastAPI) that acts as the **autonomous AI brain** with read-only database access and full control over the AI pipeline (LLMs, embeddings, vector search, Google Places, LangGraph agent, Redis caching). See @docs/architecture.md for the full design and @docs/api-contract.md for the HTTP contract.
 
 ## Key Directories
 
@@ -96,6 +98,10 @@ yarn nx affected -t test       # Test only affected projects
 - `services/api` never imports from `apps/web`
 - Both apps may import from `libs/shared`
 - AI calls go through NestJS services only — frontend never calls totoro-ai directly
+- NestJS does four things: authenticate (Clerk), forward AI requests, write data (Prisma), serve CRUD
+- NestJS never calls LLMs, generates embeddings, runs vector search, or calls Google Places — that is totoro-ai's job
+- NestJS does not touch Redis — Redis is FastAPI-only (LLM cache, session state, agent state)
+- Database writes are NestJS-only; totoro-ai gets read-only access for vector search and retrieval
 - Non-secret config loaded from YAML (`config/*.yml`), not environment variables
 - Secrets (DB credentials, Clerk keys, API keys) use shell-exported environment variables — no `.env` files
 - All NestJS routes use `/api/v1/` prefix
@@ -144,5 +150,5 @@ Then follow this cycle:
 - **totoro-ai returns 1+2**: One primary recommendation plus two alternatives. Each has: place name, address, reasoning text, source (saved vs discovered). Do not expect or depend on additional fields until they are added.
 - **No .env files**: Secrets are shell-exported (`source scripts/env-setup.sh`). The `env-setup.sh` file is gitignored. Never create `.env` files.
 - **API versioning**: All NestJS routes are prefixed with `/api/v1/`. Set this as a global prefix in `main.ts`.
-- **Deployment**: Vercel (frontend), Railway (backend + AI service + PostgreSQL + Redis). Docker Compose for local dev only.
+- **Deployment**: Vercel (frontend), Railway (backend + AI service + PostgreSQL + Redis). Redis is FastAPI-only. Docker Compose for local dev only.
 - **git comment character**: This repo uses `;` as git's comment character (not `#`) to support ClickUp task IDs in commit messages. Run `git config --global core.commentChar ";"` once per machine.

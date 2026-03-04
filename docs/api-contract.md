@@ -1,102 +1,61 @@
 # API Contract — totoro ↔ totoro-ai
 
-This document defines the HTTP contract between the product repo (`apps/api`) and the AI service (`totoro-ai`). The product repo is the **client**; the AI repo is the **server**.
+This document defines the HTTP contract between the product repo (`services/api`) and the AI service (`totoro-ai`). The product repo is the **client**; the AI repo is the **server**.
 
 ## Connection
 
 - Base URL loaded from YAML config: `config/dev.yml` → `ai_service.base_url`
+- All endpoints are prefixed with `/v1/`
 - All requests are JSON over HTTP (`Content-Type: application/json`)
 - Auth between services is TBD (likely a shared secret header in later phases)
 
 ---
 
-## POST /parse-intent
+## POST /v1/extract-place
 
-Parse a natural language query into structured intent.
+Extract and validate a place from raw user input (URL, name, or screenshot).
 
 **Request:**
 ```json
 {
   "user_id": "string",
-  "query": "good ramen near Sukhumvit for a date night"
+  "raw_input": "https://maps.google.com/..."
 }
 ```
 
 **Response:**
 ```json
 {
-  "intent": {
-    "cuisine": "ramen",
-    "occasion": "date night",
-    "location": "Sukhumvit",
-    "constraints": []
-  }
-}
-```
-
-**Notes:**
-- The `query` field is the raw user input, unmodified.
-- The response schema will evolve as the AI repo adds more intent fields. Treat unknown fields as forward-compatible — do not fail on extra keys.
-
----
-
-## POST /retrieve
-
-Retrieve candidate places matching a structured intent.
-
-**Request:**
-```json
-{
-  "user_id": "string",
-  "intent": {
-    "cuisine": "ramen",
-    "occasion": "date night",
-    "location": "Sukhumvit",
-    "constraints": []
-  }
-}
-```
-
-**Response:**
-```json
-{
-  "candidates": [
-    {
-      "place_name": "Fuji Ramen",
-      "address": "123 Sukhumvit Soi 33, Bangkok",
-      "source": "saved"
-    }
-  ]
-}
-```
-
-**Notes:**
-- `source` is either `"saved"` (from user's collection) or `"discovered"` (external lookup).
-- The candidate list length is controlled by the AI service. Expect 5–20 candidates.
-
----
-
-## POST /rank
-
-Score and rank candidates with user context, return top recommendations.
-
-**Request:**
-```json
-{
-  "user_id": "string",
-  "intent": {
-    "cuisine": "ramen",
-    "occasion": "date night",
-    "location": "Sukhumvit",
-    "constraints": []
+  "place": {
+    "place_name": "Fuji Ramen",
+    "address": "123 Sukhumvit Soi 33, Bangkok",
+    "source": "saved"
   },
-  "candidates": [
-    {
-      "place_name": "Fuji Ramen",
-      "address": "123 Sukhumvit Soi 33, Bangkok",
-      "source": "saved"
-    }
-  ]
+  "embedding": [0.012, -0.034, ...]
+}
+```
+
+**Notes:**
+- `raw_input` is the unmodified user input — a URL, place name, or free-text description.
+- totoro-ai handles all parsing, Google Places validation, and embedding generation internally.
+- NestJS writes both the place record and the embedding vector to PostgreSQL.
+- The response schema will evolve. Treat unknown fields as forward-compatible — do not fail on extra keys.
+
+---
+
+## POST /v1/consult
+
+Get a recommendation from natural language intent. The AI service handles the entire pipeline: intent parsing, vector retrieval, external discovery, ranking, and response generation.
+
+**Request:**
+```json
+{
+  "user_id": "string",
+  "query": "good ramen near Sukhumvit for a date night",
+  "location": {
+    "lat": 13.7563,
+    "lng": 100.5018
+  }
 }
 ```
 
@@ -121,9 +80,13 @@ Score and rank candidates with user context, return top recommendations.
 ```
 
 **Notes:**
+- `query` is the raw user input, unmodified.
+- `location` is the user's current location (optional, used for distance-aware ranking).
 - Always returns exactly 1 `primary` and up to 2 `alternatives`.
-- Each result contains three core fields: `place_name`, `address`, `reasoning`, `source`.
+- Each result contains four core fields: `place_name`, `address`, `reasoning`, `source`.
+- `source` is either `"saved"` (from user's collection) or `"discovered"` (external lookup).
 - Additional fields (distance, price, open status, confidence score, photos) will be added in later phases. Design the frontend and DTOs to tolerate extra fields gracefully.
+- One HTTP call. The AI agent runs autonomously — no mid-pipeline callbacks to NestJS.
 
 ---
 
@@ -139,4 +102,4 @@ The AI service returns standard HTTP status codes:
 | 500 | AI service internal error | Log error, return 503 to frontend with retry suggestion |
 | Timeout | Service unreachable | Return 503 with "service temporarily unavailable" |
 
-**Timeout policy:** Set HTTP client timeout to 30 seconds for all AI service calls. Intent parsing and retrieval should respond within 5s; ranking may take up to 20s for complex queries.
+**Timeout policy:** Set HTTP client timeout to 30 seconds for all AI service calls. Extract-place should respond within 10s; consult may take up to 20s for complex queries.

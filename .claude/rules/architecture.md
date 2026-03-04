@@ -1,5 +1,22 @@
 # Architecture Rules — Totoro Product Repo
 
+## First Principle
+
+The AI IS the product. NestJS is supporting infrastructure. totoro-ai (FastAPI) is the autonomous brain. This repo is the thin gateway and data owner.
+
+## NestJS: Four Responsibilities Only
+
+1. **Authenticate** every request (Clerk)
+2. **Forward** AI requests to FastAPI with user context (user_id, location)
+3. **Write** all data to PostgreSQL (place records, embeddings, taste model updates)
+4. **CRUD** for non-AI operations (list places, delete a place, update settings)
+
+If you are writing code in this repo that calls an LLM, generates embeddings, parses free-text input, runs vector search, or calls Google Places API — stop. That belongs in `totoro-ai`.
+
+## totoro-ai: Autonomous AI Brain
+
+FastAPI owns the entire AI pipeline. It has read-only access to PostgreSQL and read-write access to Redis. It calls external APIs (Google Places, LLM providers) directly. It runs the full agent graph via LangGraph. NestJS never intervenes mid-pipeline.
+
 ## Nx Boundaries
 
 | Source | Can import from | Cannot import from |
@@ -17,17 +34,30 @@ These boundaries are enforced by Nx module boundary rules. If you get a lint err
 |---------|---------------------|-----------------------|
 | Language | TypeScript | Python |
 | Runtime | Node 20 | Python 3.11+ |
-| Responsibilities | UI, auth, CRUD, orchestration | Intent parsing, embeddings, ranking |
+| Role | Thin gateway + data owner | Autonomous AI brain |
+| Responsibilities | Auth, CRUD, DB writes, HTTP forwarding | Intent parsing, embeddings, vector search, ranking, LLM calls, Google Places |
+| Database access | Read-write (Prisma) | Read-only (direct connection) |
+| Redis access | None | Read-write (LLM cache, session state, agent state) |
 | Communication | Sends HTTP requests | Receives HTTP requests |
 
-**Hard rule:** This repo never runs ML models, parses free-text place input, or calls embedding APIs directly. If you find yourself importing an NLP library or writing text extraction logic, stop — that belongs in `totoro-ai`.
+**Hard rule:** This repo never runs ML models, parses free-text place input, calls embedding APIs, runs vector queries, or calls Google Places API. If you find yourself importing an NLP library or writing text extraction logic, stop — that belongs in `totoro-ai`.
+
+## Database Ownership
+
+Write ownership prevents race conditions and distributed conflicts. One service writes, one migration owner.
+
+- **NestJS writes and reads:** users, places, embeddings, recommendations, taste_model_updates
+- **totoro-ai reads only:** places, embeddings, taste_model_updates (for retrieval and ranking)
+- **totoro-ai writes to Redis only:** LLM cache, session context, intermediate agent state
+
+One shared PostgreSQL instance. One migration owner (Prisma in this repo). Two connection strings: NestJS read-write, totoro-ai read-only.
 
 ## AI Service Communication
 
 - All calls to `totoro-ai` originate from `services/api` (NestJS services).
-- `apps/web` never calls `totoro-ai` directly. The frontend talks to the NestJS API, which proxies to the AI service.
+- `apps/web` never calls `totoro-ai` directly. The frontend talks to the NestJS API, which forwards to the AI service.
 - The AI service base URL is loaded from YAML config (`config/*.yml` → `ai_service.base_url`), not from environment variables.
-- See @docs/api-contract.md for endpoint definitions.
+- Two endpoints only: `POST /v1/extract-place` and `POST /v1/consult`. See @docs/api-contract.md for schemas.
 
 ## Configuration Strategy
 
@@ -52,7 +82,7 @@ All NestJS routes use the `/api/v1/` global prefix. Set via `app.setGlobalPrefix
 | `services/api` (NestJS) | Railway | Hobby $5/mo |
 | `totoro-ai` (FastAPI) | Railway | Hobby $5/mo |
 | PostgreSQL + pgvector | Railway | Hobby $5/mo |
-| Redis | Railway | Serverless |
+| Redis | Railway | Serverless (FastAPI-only) |
 
 Docker Compose is for local development only. Never deploy Docker containers to production.
 
@@ -63,3 +93,4 @@ Docker Compose is for local development only. Never deploy Docker containers to 
 - **One NestJS module per domain.** Each business domain (places, recommendations, users) gets its own module with its own service and controller.
 - **Shared types are the contract.** If both apps need a type, it goes in `libs/shared`. If only one app uses it, keep it local to that app.
 - **No barrel exports from apps.** Only `libs/shared` exposes a public API via `index.ts`.
+- **NestJS does not touch Redis.** All caching and session state is FastAPI's concern.
