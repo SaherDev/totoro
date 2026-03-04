@@ -1,0 +1,121 @@
+# CLAUDE.md — Totoro Product Repo
+
+## Project Context
+
+Totoro is an AI-native place decision engine. Users share places over time (free-text, URLs, descriptions), the system builds a taste model, and returns one confident recommendation from natural language intent. This is the **product repo**: an Nx monorepo with a Next.js frontend (`apps/web`), NestJS backend (`apps/api`), and shared TypeScript types (`libs/shared`). This repo contains zero AI/ML code. All AI logic lives in a separate Python repo (`totoro-ai`) that this repo talks to over HTTP only. See @docs/architecture.md for the two-repo design and @docs/api-contract.md for the HTTP contract.
+
+## Key Directories
+
+```
+apps/web/          → Next.js frontend (Tailwind CSS, Clerk auth)
+apps/api/          → NestJS backend (Prisma, PostgreSQL + pgvector)
+libs/shared/       → Shared TypeScript types, DTOs, constants
+libs/ui/           → Design system (UI components, Tailwind preset)
+messages/          → i18n translation files (en.json, he.json)
+config/            → YAML configuration files (dev.yml, prod.yml, test.yml)
+scripts/           → Shell scripts (env-setup.sh)
+prisma/            → Prisma schema and migrations
+docs/              → Operational docs (architecture, API contract, decisions)
+.claude/rules/     → Claude Code rules (git, architecture, frontend)
+```
+
+## Common Commands
+
+```bash
+# Dev servers
+yarn nx serve web              # Next.js dev server
+yarn nx serve api              # NestJS dev server
+yarn nx run-many -t serve      # Both simultaneously
+
+# Testing
+yarn nx test web               # Frontend tests (Jest + RTL)
+yarn nx test api               # Backend tests (Jest)
+yarn nx run-many -t test       # All tests
+
+# Lint & Build
+yarn nx lint web
+yarn nx lint api
+yarn nx run-many -t lint
+yarn nx build web
+yarn nx build api
+
+# Database
+yarn prisma migrate dev        # Run migrations
+yarn prisma generate           # Regenerate client
+yarn prisma studio             # Visual DB browser
+
+# Nx utilities
+yarn nx graph                  # Dependency graph
+yarn nx affected -t test       # Test only affected projects
+```
+
+## Standards
+
+**Zero hardcoding:**
+- Nothing is hardcoded. Every value that could change — URLs, ports, labels, limits, thresholds, feature flags, UI text — must come from config (YAML for non-secrets, env vars for secrets) or a constants file in `libs/shared`.
+- Frontend UI strings, colors, and layout parameters are configurable — not buried in components.
+- If you're about to type a literal value that isn't a boolean, 0, or 1, extract it to config or a named constant.
+
+**Linting:**
+- ESLint: use Nx-generated configs only. Do not add plugins or override generated rules.
+- Never disable an ESLint rule inline without a comment explaining why.
+
+**Path aliases:**
+- `@totoro/shared` → `libs/shared/src`
+- App-internal imports use relative paths
+
+**Naming patterns:**
+- Files: `kebab-case.ts` (e.g., `place-recommendation.service.ts`)
+- Classes: `PascalCase` (e.g., `PlaceRecommendationService`)
+- Interfaces/Types: `PascalCase`, no `I` prefix (e.g., `PlaceResult`, not `IPlaceResult`)
+- DTOs: `PascalCase` + `Dto` suffix (e.g., `CreatePlaceDto`)
+- NestJS modules: one module per domain (e.g., `places/`, `recommendations/`)
+
+**Type conventions:**
+- All shared types live in `libs/shared` — never duplicate types between apps
+- API responses use shared DTOs; frontend consumes the same types
+- Database models are Prisma-generated; do not manually define entity types
+
+**Frontend** (see @.claude/rules/frontend.md):
+- RTL support for Hebrew — logical properties only, no `ml`/`mr`/`left`/`right`
+- Dark mode via CSS variables + `next-themes` — semantic classes only, no raw Tailwind colors
+- i18n via `next-intl` — URL routing `/en/` and `/he/`, all strings through translation functions
+
+**Architectural boundaries** (see @.claude/rules/architecture.md):
+- `apps/web` never imports from `apps/api` (communicate via HTTP only)
+- `apps/api` never imports from `apps/web`
+- Both apps may import from `libs/shared`
+- AI calls go through NestJS services only — frontend never calls totoro-ai directly
+- Non-secret config loaded from YAML (`config/*.yml`), not environment variables
+- Secrets (DB credentials, Clerk keys, API keys) use shell-exported environment variables — no `.env` files
+- All NestJS routes use `/api/v1/` prefix
+
+**Commit conventions** (see @.claude/rules/git.md):
+- Format: `type(scope): description #TASK_ID`
+- Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`
+- Scopes: `api`, `web`, `shared`
+
+## Workflow
+
+Before touching code, answer three questions:
+1. **What file(s) will change?** — Read them first.
+2. **What could break?** — Identify side effects across the monorepo.
+3. **Is this the simplest change?** — Do not over-engineer.
+
+Then follow this cycle:
+1. **Plan** — State what you will do and which files are affected.
+2. **Implement** — Make the smallest change that works. One concern per commit.
+3. **Verify** — Run `yarn nx affected -t test` and `yarn nx affected -t lint`. Fix failures before moving on.
+4. **Completion report** — Summarize: what changed, what was tested, any deviations from the plan (flag these explicitly).
+
+## Notes
+
+- **pgvector**: PostgreSQL must have the `vector` extension enabled. Prisma schema uses `Unsupported("vector")` until Prisma adds native support — handle vector operations via raw SQL.
+- **Clerk middleware**: Runs in both Next.js middleware and NestJS guards. Auth state is verified independently in each app — do not pass raw tokens between apps; use Clerk's backend SDK to verify.
+- **YAML config**: The `config/` directory is NOT for secrets. Pattern: `config/dev.yml` contains `ai_service.base_url` and similar non-secret settings. Load via NestJS `ConfigModule` with a custom YAML loader.
+- **Free-text place input**: The frontend sends a raw string to the API. The API forwards it to totoro-ai for parsing. This repo never parses place names, URLs, or extracts metadata — that is the AI repo's job.
+- **totoro-ai returns 1+2**: One primary recommendation plus two alternatives. Each has: place name, address, reasoning text, source (saved vs discovered). Do not expect or depend on additional fields until they are added.
+- **No .env files**: Secrets are shell-exported (`source scripts/env-setup.sh`). The `env-setup.sh` file is gitignored. Never create `.env` files.
+- **API versioning**: All NestJS routes are prefixed with `/api/v1/`. Set this as a global prefix in `main.ts`.
+- **Deployment**: Vercel (frontend), Railway (backend + AI service + PostgreSQL + Redis). Docker Compose for local dev only.
+- **git comment character**: This repo uses `;` as git's comment character (not `#`) to support ClickUp task IDs in commit messages. Run `git config --global core.commentChar ";"` once per machine.
