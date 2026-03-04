@@ -1,0 +1,10 @@
+{
+  "name": "@totoro/web",
+  "targets": {
+    "dev": {
+      "options": {
+        "command": "next dev -p 4200"
+      }
+    }
+  }
+}
