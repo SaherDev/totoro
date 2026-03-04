@@ -106,6 +106,10 @@ Then: Plan (if 3+ files) → Implement → Verify (`yarn nx affected -t test,lin
 - Do not list what you are about to do and then do it. Pick one: explain or execute.
 - Keep commit messages to one line. Add a body only if the change is non-obvious.
 
+## API Testing
+
+Bruno collection at `totoro-config/bruno/`. New API endpoints should have a corresponding `.bru` request file added there.
+
 ## Deployment
 
 Vercel (frontend), Railway (backend + AI service + PostgreSQL + Redis). Redis is FastAPI-only. Docker Compose for local dev only.
