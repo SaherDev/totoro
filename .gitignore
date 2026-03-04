@@ -140,3 +140,6 @@ vite.config.ts.timestamp-*
 
 # Environment setup script (contains secrets)
 scripts/env-setup.sh
+
+# Claude Code local settings
+.claude/settings.local.json
