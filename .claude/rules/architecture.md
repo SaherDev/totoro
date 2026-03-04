@@ -2,20 +2,22 @@
 
 ## First Principle
 
-The AI IS the product. NestJS is supporting infrastructure. totoro-ai (FastAPI) is the autonomous brain. This repo is the thin gateway and data owner.
+The AI IS the product. NestJS is supporting infrastructure. totoro-ai (FastAPI) is the autonomous brain. This repo is the thin gateway and schema owner.
 
 ## NestJS: Four Responsibilities Only
 
 1. **Authenticate** every request (Clerk)
 2. **Forward** AI requests to FastAPI with user context (user_id, location)
-3. **Write** all data to PostgreSQL (place records, embeddings, taste model updates)
-4. **CRUD** for non-AI operations (list places, delete a place, update settings)
+3. **Write product data** to PostgreSQL (users, user_settings, recommendation history)
+4. **CRUD** for user-facing operations (user settings, recommendation history)
+
+NestJS does NOT write place records, embeddings, or taste model data. FastAPI writes those directly to PostgreSQL.
 
 If you are writing code in this repo that calls an LLM, generates embeddings, parses free-text input, runs vector search, or calls Google Places API — stop. That belongs in `totoro-ai`.
 
 ## totoro-ai: Autonomous AI Brain
 
-FastAPI owns the entire AI pipeline. It has read-only access to PostgreSQL and read-write access to Redis. It calls external APIs (Google Places, LLM providers) directly. It runs the full agent graph via LangGraph. NestJS never intervenes mid-pipeline.
+FastAPI owns the entire AI pipeline. It writes AI-generated data (places, embeddings, taste model) directly to PostgreSQL. It has read-write access to Redis. It calls external APIs (Google Places, LLM providers) directly. It runs the full agent graph via LangGraph. NestJS never intervenes mid-pipeline.
 
 ## Nx Boundaries
 
@@ -34,9 +36,9 @@ These boundaries are enforced by Nx module boundary rules. If you get a lint err
 |---------|---------------------|-----------------------|
 | Language | TypeScript | Python |
 | Runtime | Node 20 | Python 3.11+ |
-| Role | Thin gateway + data owner | Autonomous AI brain |
-| Responsibilities | Auth, CRUD, DB writes, HTTP forwarding | Intent parsing, embeddings, vector search, ranking, LLM calls, Google Places |
-| Database access | Read-write (Prisma) | Read-only (direct connection) |
+| Role | Thin gateway + schema owner | Autonomous AI brain |
+| Responsibilities | Auth, user CRUD, recommendation history, HTTP forwarding | Intent parsing, embeddings, vector search, ranking, LLM calls, Google Places, writing places/embeddings/taste_model |
+| Database access | Read-write for product tables (Prisma) | Read-write for AI tables (direct connection) |
 | Redis access | None | Read-write (LLM cache, session state, agent state) |
 | Communication | Sends HTTP requests | Receives HTTP requests |
 
@@ -44,13 +46,17 @@ These boundaries are enforced by Nx module boundary rules. If you get a lint err
 
 ## Database Ownership
 
-Write ownership prevents race conditions and distributed conflicts. One service writes, one migration owner.
+Write ownership is split by domain. Each service writes to its own tables. Neither service writes to the other's tables. This prevents race conditions and conflicting updates.
 
-- **NestJS writes and reads:** users, places, embeddings, recommendations, taste_model_updates
-- **totoro-ai reads only:** places, embeddings, taste_model_updates (for retrieval and ranking)
-- **totoro-ai writes to Redis only:** LLM cache, session context, intermediate agent state
+Prisma in this repo defines all tables and runs all migrations. Both services must coordinate on schema changes to shared tables.
 
-One shared PostgreSQL instance. One migration owner (Prisma in this repo). Two connection strings: NestJS read-write, totoro-ai read-only.
+- **NestJS writes and reads:** users, user_settings, recommendations (history of consult results)
+- **FastAPI writes and reads:** places, embeddings, taste_model
+- **FastAPI writes to Redis:** LLM cache, session context, intermediate agent state
+
+Both services read from any table as needed. One shared PostgreSQL instance. One schema owner (Prisma in this repo). Two connection strings with appropriate write permissions.
+
+**Embedding dimensions must stay in sync:** pgvector column definition in Prisma must match the embedding model output in FastAPI. If the model changes, both the Prisma migration and FastAPI config must update together.
 
 ## AI Service Communication
 
@@ -88,7 +94,7 @@ Docker Compose is for local development only. Never deploy Docker containers to 
 
 ## Coding Constraints
 
-- **Prisma is the only database access layer.** No raw SQL except for pgvector operations that Prisma cannot express.
+- **Prisma is the schema owner and NestJS's database access layer.** FastAPI writes to its own tables directly. No raw SQL in NestJS except for pgvector operations that Prisma cannot express.
 - **Clerk is the only auth provider.** Do not implement custom JWT verification or session management.
 - **One NestJS module per domain.** Each business domain (places, recommendations, users) gets its own module with its own service and controller.
 - **Shared types are the contract.** If both apps need a type, it goes in `libs/shared`. If only one app uses it, keep it local to that app.

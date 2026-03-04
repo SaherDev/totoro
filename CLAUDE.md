@@ -6,7 +6,7 @@
 
 Totoro is an AI-native place decision engine. The AI IS the product — NestJS is supporting infrastructure. Users share places over time (free-text, URLs, descriptions), the system builds a taste model, and returns one confident recommendation from natural language intent.
 
-This is the **product repo**: an Nx monorepo with a Next.js frontend (`apps/web`), NestJS backend (`services/api`), and shared TypeScript types (`libs/shared`). NestJS is a **thin gateway + data owner** — it authenticates, forwards AI requests, writes data, and serves CRUD. All AI logic lives in a separate Python repo (`totoro-ai`, FastAPI) that acts as the **autonomous AI brain** with read-only database access and full control over the AI pipeline. See @docs/architecture.md for the full design and @docs/api-contract.md for the HTTP contract.
+This is the **product repo**: an Nx monorepo with a Next.js frontend (`apps/web`), NestJS backend (`services/api`), and shared TypeScript types (`libs/shared`). NestJS is a **thin gateway** — it authenticates, forwards AI requests, stores recommendation history, and serves user CRUD. All AI logic lives in a separate Python repo (`totoro-ai`, FastAPI) that acts as the **autonomous AI brain** — it writes places/embeddings/taste_model directly to PostgreSQL and has full control over the AI pipeline. See @docs/architecture.md for the full design and @docs/api-contract.md for the HTTP contract.
 
 ## Key Directories
 
@@ -70,9 +70,10 @@ yarn nx affected -t test       # Test only affected projects
 ## Architecture (details in @.claude/rules/architecture.md)
 
 - `apps/web` ↔ `services/api` via HTTP only; both import from `libs/shared`
-- NestJS: authenticate, forward AI requests, write data, serve CRUD — nothing else
+- NestJS: authenticate, forward AI requests, store recommendation history, serve user CRUD — nothing else
 - NestJS never touches Redis, LLMs, embeddings, vector search, or Google Places
-- Database writes are NestJS-only; totoro-ai gets read-only PostgreSQL access
+- DB writes split by domain: NestJS writes users/settings/recommendations; FastAPI writes places/embeddings/taste_model
+- Prisma owns all migrations; both services have write access to their own tables
 - Non-secret config from YAML (`config/*.yml`); secrets shell-exported (no `.env` files)
 - All NestJS routes use `/api/v1/` prefix
 
