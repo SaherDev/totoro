@@ -80,12 +80,14 @@ One HTTP call to totoro-ai. FastAPI writes what it generates. NestJS does not to
 2. apps/web sends the query to services/api via REST.
 3. services/api verifies auth, then forwards to totoro-ai via POST /v1/consult with user_id and location.
 4. totoro-ai handles everything internally: parses intent, queries pgvector, calls Google Places for external candidates, validates open hours, runs ranking, generates response.
-5. totoro-ai returns 1 primary recommendation + 2 alternatives with reasoning.
+5. totoro-ai returns 1 primary recommendation + 2 alternatives with reasoning, plus an array of reasoning_steps showing what the agent did at each stage.
 6. services/api stores the recommendation in the recommendations table (for history and analytics).
-7. services/api streams the response to apps/web.
-8. apps/web renders the recommendation with reasoning text.
+7. services/api returns the response to apps/web.
+8. apps/web renders the recommendation with reasoning text and agent thinking steps.
 
 One HTTP call to totoro-ai. The agent runs autonomously. NestJS stores recommendation history only.
+
+Streaming note: The current flow uses a synchronous JSON response. When the frontend needs to show agent thinking in real time (instead of after the fact), the consult endpoint will add an SSE (Server-Sent Events) mode. In SSE mode, FastAPI streams reasoning steps as they complete, and NestJS proxies the SSE stream to the frontend. Until then, the reasoning_steps array in the synchronous response is sufficient.
 
 ## API Contract (NestJS to totoro-ai)
 
@@ -125,7 +127,7 @@ One shared PostgreSQL instance. One schema owner (Prisma in this repo). Two conn
 | Database        | PostgreSQL + pgvector      | Vector similarity search         |
 | Package Manager | pnpm                       |                                  |
 | Monorepo        | Nx                         | Workspace with module boundaries |
-| Runtime         | Node 20 LTS                |                                  |
+| Runtime         | Node 20 LTS               |                                  |
 | Frontend Deploy | Vercel                     | Free Hobby tier                  |
 | Backend Deploy  | Railway                    | Hobby $5/mo                      |
 | Local Dev       | Docker Compose             | Not used in production           |
