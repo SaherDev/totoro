@@ -4,9 +4,7 @@
 
 ## Project Context
 
-Totoro is an AI-native place decision engine. The AI IS the product — NestJS is supporting infrastructure. Users share places over time (free-text, URLs, descriptions), the system builds a taste model, and returns one confident recommendation from natural language intent.
-
-This is the **product repo**: an Nx monorepo with a Next.js frontend (`apps/web`), NestJS backend (`services/api`), and shared TypeScript types (`libs/shared`). NestJS is a **thin gateway** — it authenticates, forwards AI requests, stores recommendation history, and serves user CRUD. All AI logic lives in a separate Python repo (`totoro-ai`, FastAPI) that acts as the **autonomous AI brain** — it writes places/embeddings/taste_model directly to PostgreSQL and has full control over the AI pipeline. See @docs/architecture.md for the full design and @docs/api-contract.md for the HTTP contract.
+Totoro is an AI-native place decision engine. The AI IS the product — NestJS is supporting infrastructure. Users share places over time (free-text, URLs, descriptions), the system builds a taste model, and returns one confident recommendation from natural language intent. This is the **product repo**: an Nx monorepo with a Next.js frontend (`apps/web`), NestJS backend (`services/api`), and shared TypeScript types (`libs/shared`). NestJS is a **thin gateway** — it authenticates, forwards AI requests, stores recommendation history, and serves user CRUD. All AI logic lives in a separate Python repo (`totoro-ai`, FastAPI) that acts as the **autonomous AI brain**. See @docs/architecture.md for the full design and @docs/api-contract.md for the HTTP contract.
 
 ## Key Directories
 
@@ -36,8 +34,6 @@ pnpm nx test api               # Backend tests (Jest)
 pnpm nx run-many -t test       # All tests
 
 # Lint & Build
-pnpm nx lint web
-pnpm nx lint api
 pnpm nx run-many -t lint
 pnpm nx build web
 pnpm nx build api
@@ -45,43 +41,24 @@ pnpm nx build api
 # Database
 pnpm prisma migrate dev        # Run migrations
 pnpm prisma generate           # Regenerate client
-pnpm prisma studio             # Visual DB browser
 
-# Nx utilities
-pnpm nx graph                  # Dependency graph
-pnpm nx affected -t test       # Test only affected projects
+# Deployment: Vercel (frontend), Railway (backend + AI + PostgreSQL + Redis)
 ```
 
-## Standards (details in @.claude/rules/standards.md)
+## Standards
+
+Details in @.claude/rules/standards.md, @.claude/rules/architecture.md, @.claude/rules/frontend.md, and @.claude/rules/tailwind-patterns.md.
 
 - **Zero hardcoding** — config (YAML/env vars) or constants in `libs/shared` for everything
-- **Linting** — Nx-generated ESLint configs only, no plugins, no inline disables without comments
 - **Path aliases** — `@totoro/shared`, `@totoro/ui`; app-internal imports use relative paths
 - **Naming** — files: `kebab-case.ts`, classes: `PascalCase`, DTOs: `PascalCase` + `Dto` suffix
 - **Types** — shared types in `libs/shared`, Prisma-generated DB models, no type duplication
-
-## Frontend (details in @.claude/rules/frontend.md and @.claude/rules/tailwind-patterns.md)
-
-- Tailwind v3 + shadcn/ui (copied into `libs/ui`, not installed as dependency)
-- CSS variables with raw HSL values, dark mode via `darkMode: 'class'` + `next-themes`
-- RTL support for Hebrew — logical properties only (`ms`/`me`/`ps`/`pe`, never `ml`/`mr`/`pl`/`pr`)
-- i18n via `next-intl` — URL routing `/en/` and `/he/`, all strings through translation functions
-
-## Architecture (details in @.claude/rules/architecture.md)
-
-- `apps/web` ↔ `services/api` via HTTP only; both import from `libs/shared`
-- NestJS: authenticate, forward AI requests, store recommendation history, serve user CRUD — nothing else
-- NestJS never touches Redis, LLMs, embeddings, vector search, or Google Places
-- DB writes split by domain: NestJS writes users/settings/recommendations; FastAPI writes places/embeddings/taste_model
-- Prisma owns all migrations; both services have write access to their own tables
-- Non-secret config from YAML (`config/*.yml`); secrets shell-exported (no `.env` files)
-- All NestJS routes use `/api/v1/` prefix
-
-## Commit Conventions (details in @.claude/rules/git.md)
-
-- Format: `type(scope): description #TASK_ID`
-- Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`
-- Scopes: `api`, `web`, `shared`
+- **Linting** — Nx-generated ESLint configs only, no plugins, no inline disables without comments
+- **Nx boundaries** — `apps/web` imports `libs/shared` + `libs/ui`; `services/api` imports `libs/shared` only; `libs/shared` imports nothing
+- **Architecture** — NestJS: authenticate, forward AI requests, store recommendation history, serve user CRUD — nothing else. NestJS never touches Redis, LLMs, embeddings, vector search, or Google Places. DB writes split: NestJS writes users/settings/recommendations; FastAPI writes places/embeddings/taste_model
+- **Frontend** — Tailwind v3 + shadcn/ui, CSS variables with raw HSL, dark mode via `next-themes`, RTL logical properties only (`ms`/`me`/`ps`/`pe`), i18n via `next-intl` with URL routing `/en/` and `/he/`
+- **API routes** — all NestJS routes use `/api/v1/` prefix; AI service called via two endpoints only (`POST /v1/extract-place`, `POST /v1/consult`)
+- **Commits** — `type(scope): description #TASK_ID`, types: `feat|fix|chore|docs|refactor|test`, scopes: `api|web|shared` (details in @.claude/rules/git.md)
 
 ## Workflow
 
@@ -89,27 +66,19 @@ Before implementing, ask clarifying questions if the task has ambiguity (3 or fe
 
 Before touching code, answer:
 
-1. **Which phase?** — Only build what the current phase requires.
-2. **Crosses repo boundary?** — AI/ML logic → `totoro-ai`. UI/auth/CRUD → here.
-3. **Existing pattern?** — Find a similar file and follow its conventions.
-4. **What file(s) will change?** — Read them first.
-5. **What could break?** — Identify side effects across the monorepo.
-6. **Is this the simplest change?** — Do not over-engineer.
+1. **Crosses repo boundary?** — AI/ML logic → `totoro-ai`. UI/auth/CRUD → here.
+2. **Existing pattern?** — Find a similar file and follow its conventions.
+3. **Simplest change?** — Do not over-engineer.
 
-Then: Plan (if 3+ files) → Implement → Verify (`pnpm nx affected -t test,lint`) → Report (5 lines max).
+Then: Plan (if 3+ files) → Implement → Verify (`pnpm nx affected -t test,lint`) → Completion report (5 lines max, flag any deviations from plan).
 
-## Token Efficiency
+Token efficiency: plans go in chat, not files. Do not repeat file contents after editing. Do not explain code you just wrote unless asked. Pick one: explain or execute. Keep commit messages to one line unless non-obvious.
 
-- Plans go in chat, not in separate files.
-- Do not repeat file contents back after creating or editing them.
-- Do not explain code you just wrote unless asked.
-- Do not list what you are about to do and then do it. Pick one: explain or execute.
-- Keep commit messages to one line. Add a body only if the change is non-obvious.
+## Notes
 
-## API Testing
-
-Bruno collection at `totoro-config/bruno/`. New API endpoints should have a corresponding `.bru` request file added there.
-
-## Deployment
-
-Vercel (frontend), Railway (backend + AI service + PostgreSQL + Redis). Redis is FastAPI-only. Docker Compose for local dev only.
+- **Current config**: Non-secret config from YAML (`config/*.yml`); secrets shell-exported (no `.env` files). See `scripts/env-setup.sh` for the template.
+- **Git comment char is `;`** not `#` — configured to support ClickUp task IDs in commits.
+- **Bruno API testing**: Collection at `totoro-config/bruno/`. New endpoints need a corresponding `.bru` request file.
+- **Prisma + pgvector**: PostgreSQL must have `vector` extension. Prisma uses `Unsupported("vector")` — handle vector ops via raw SQL.
+- **Embedding dimensions must stay in sync**: pgvector column in Prisma must match the model output in FastAPI. Both repos must update together.
+- **Deployment**: Vercel (frontend), Railway (backend + AI service + PostgreSQL + Redis). Redis is FastAPI-only. Docker Compose for local dev only.
