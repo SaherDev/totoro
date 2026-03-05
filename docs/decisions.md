@@ -14,6 +14,24 @@ Format:
 
 ---
 
+## ADR-009: SSE streaming as future consult response mode
+**Date:** 2026-03-05
+**Status:** accepted
+**Context:** The consult endpoint returns reasoning_steps in a synchronous JSON response. When the frontend needs to show agent thinking in real time, the API contract would need redesigning mid-build without a plan.
+**Decision:** Document SSE as a future response mode now. When needed, FastAPI streams reasoning steps as they complete, NestJS proxies the SSE stream to the frontend. The synchronous mode remains the default. No implementation until the frontend requires it.
+**Consequences:** API contract is forward-compatible. No work needed today. When SSE is implemented, NestJS must proxy the stream and the frontend must handle incremental rendering.
+
+---
+
+## ADR-008: reasoning_steps in consult response
+**Date:** 2026-03-05
+**Status:** accepted
+**Context:** When a bad recommendation comes back, there is no way to tell if intent parsing failed, retrieval missed the right place, or ranking scored incorrectly. The eval pipeline also needs per-step accuracy measurement.
+**Decision:** The consult response includes a `reasoning_steps` array. Each entry has a `step` identifier and a human-readable `summary` of what happened at that stage. totoro-ai produces it, this repo consumes and renders it.
+**Consequences:** Frontend can display agent thinking steps. DTOs must include the new field. Both repos' API contract docs updated.
+
+---
+
 ## ADR-007: Tailwind v3 + shadcn/ui over Tailwind v4
 
 **Date:** 2026-03-04
