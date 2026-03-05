@@ -123,7 +123,7 @@ One shared PostgreSQL instance. One schema owner (Prisma in this repo). Two conn
 | Backend         | NestJS                     | Modular architecture             |
 | ORM             | Prisma                     | Schema owner for all tables      |
 | Database        | PostgreSQL + pgvector      | Vector similarity search         |
-| Package Manager | Yarn (node-modules linker) |                                  |
+| Package Manager | pnpm                       |                                  |
 | Monorepo        | Nx                         | Workspace with module boundaries |
 | Runtime         | Node 20 LTS                |                                  |
 | Frontend Deploy | Vercel                     | Free Hobby tier                  |

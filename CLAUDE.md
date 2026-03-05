@@ -27,29 +27,29 @@ docs/              → Operational docs (architecture, API contract, decisions)
 
 ```bash
 # Dev servers
-yarn nx dev web                # Next.js on http://localhost:4200
-yarn nx serve api              # NestJS on http://localhost:3333/api/v1
+pnpm nx dev web                # Next.js on http://localhost:4200
+pnpm nx serve api              # NestJS on http://localhost:3333/api/v1
 
 # Testing
-yarn nx test web               # Frontend tests (Jest + RTL)
-yarn nx test api               # Backend tests (Jest)
-yarn nx run-many -t test       # All tests
+pnpm nx test web               # Frontend tests (Jest + RTL)
+pnpm nx test api               # Backend tests (Jest)
+pnpm nx run-many -t test       # All tests
 
 # Lint & Build
-yarn nx lint web
-yarn nx lint api
-yarn nx run-many -t lint
-yarn nx build web
-yarn nx build api
+pnpm nx lint web
+pnpm nx lint api
+pnpm nx run-many -t lint
+pnpm nx build web
+pnpm nx build api
 
 # Database
-yarn prisma migrate dev        # Run migrations
-yarn prisma generate           # Regenerate client
-yarn prisma studio             # Visual DB browser
+pnpm prisma migrate dev        # Run migrations
+pnpm prisma generate           # Regenerate client
+pnpm prisma studio             # Visual DB browser
 
 # Nx utilities
-yarn nx graph                  # Dependency graph
-yarn nx affected -t test       # Test only affected projects
+pnpm nx graph                  # Dependency graph
+pnpm nx affected -t test       # Test only affected projects
 ```
 
 ## Standards (details in @.claude/rules/standards.md)
@@ -96,7 +96,7 @@ Before touching code, answer:
 5. **What could break?** — Identify side effects across the monorepo.
 6. **Is this the simplest change?** — Do not over-engineer.
 
-Then: Plan (if 3+ files) → Implement → Verify (`yarn nx affected -t test,lint`) → Report (5 lines max).
+Then: Plan (if 3+ files) → Implement → Verify (`pnpm nx affected -t test,lint`) → Report (5 lines max).
 
 ## Token Efficiency
 

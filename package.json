@@ -2,16 +2,12 @@
   "name": "@totoro/source",
   "version": "0.0.0",
   "private": true,
+  "packageManager": "pnpm@10.28.2",
   "scripts": {
     "dev": "sh -c 'set -a && . ../totoro-config/.env.shared && . ../totoro-config/.env.totoro && . ../totoro-config/.env.totoro-ai && set +a && nx run-many -t dev serve -p web api'",
     "dev:web": "sh -c 'set -a && . ../totoro-config/.env.shared && . ../totoro-config/.env.totoro && set +a && nx dev web'",
     "dev:api": "sh -c 'set -a && . ../totoro-config/.env.shared && . ../totoro-config/.env.totoro && set +a && nx serve api'"
   },
-  "workspaces": [
-    "apps/*",
-    "services/*",
-    "libs/*"
-  ],
   "devDependencies": {
     "@eslint/js": "^9.8.0",
     "@nestjs/schematics": "^11.0.0",
@@ -69,5 +65,15 @@
     "react-dom": "^19.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@swc/core",
+      "esbuild",
+      "nx",
+      "@parcel/watcher",
+      "sharp",
+      "unrs-resolver"
+    ]
   }
 }
