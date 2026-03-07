@@ -132,52 +132,62 @@ Format:
 ---
 
 ## ADR-007: Tailwind v3 + shadcn/ui over Tailwind v4
-
 **Date:** 2026-03-04
-**Decision:** Use Tailwind CSS v3 with shadcn/ui as the component foundation.
-**Rationale:** shadcn/ui provides Dialog, Sheet, Toast, Skeleton, and Command out of the box — all required for Totoro's core UX: a sheet for the place details panel, a skeleton for streaming recommendation states, and a command palette style input for intent queries. shadcn is fully stable on Tailwind v3 today; since the project hasn't started implementation yet, picking the combination that works cleanly from day one avoids migration friction. shadcn components are copied into the repo (`libs/ui`), not installed as a dependency — the code is owned and understood, not just imported.
-**Alternatives:** Tailwind v4 (newer but shadcn not fully stable on it yet), Radix primitives without shadcn (more manual styling work), Material UI (heavier, less customizable with Tailwind).
-**Note:** The Tailwind patterns reference doc (`docs/tailwind-patterns.md`) was generated with v4 syntax and needs updating to v3 conventions before Phase 1 begins.
+**Status:** accepted
+**Context:** The UI needs a component library with Dialog, Sheet, Toast, Skeleton, and Command — all required for Totoro's core UX. Tailwind v4 was available but shadcn/ui was not fully stable on it at project start.
+**Decision:** Use Tailwind CSS v3 with shadcn/ui. shadcn components are copied into `libs/ui` (not installed as a package) so the code is owned and can be modified freely. Alternatives considered: Tailwind v4, Radix primitives without shadcn, Material UI.
+**Consequences:** shadcn components are fully customisable with no upstream dependency. Tailwind v3 patterns apply throughout — see `.claude/rules/tailwind-patterns.md`. If upgrading to Tailwind v4 in future, shadcn components will need re-testing.
+
+---
 
 ## ADR-006: Yarn over npm/pnpm *(superseded by ADR-020)*
-
 **Date:** 2026-03-04
 **Status:** superseded
-**Decision:** Use Yarn with `nodeLinker: node-modules`.
-**Rationale:** Better monorepo support with workspaces. The `node-modules` linker avoids PnP compatibility issues with Prisma and other native modules. Familiar tooling.
-**Alternatives:** pnpm (good monorepo support but stricter), npm (weaker workspace features).
+**Context:** A package manager was needed for the Nx monorepo at project creation. Yarn with `nodeLinker: node-modules` was chosen to avoid PnP compatibility issues with Prisma.
+**Decision:** Use Yarn with `nodeLinker: node-modules`. Alternatives considered: pnpm, npm.
+**Consequences:** Superseded by ADR-020. The repo has since migrated to pnpm.
+
+---
 
 ## ADR-005: Prisma over TypeORM
-
 **Date:** 2026-03-04
-**Decision:** Use Prisma as the ORM.
-**Rationale:** Superior TypeScript type generation from schema. Cleaner migration workflow. Better developer experience with Prisma Studio. NestJS has first-class Prisma integration.
-**Alternatives:** TypeORM (NestJS default), Drizzle, raw SQL.
+**Status:** accepted
+**Context:** NestJS needs a database access layer for PostgreSQL. The team prioritised type safety and migration ergonomics over the NestJS-default TypeORM.
+**Decision:** Use Prisma as the ORM and schema owner. Prisma generates TypeScript types from the schema and manages all migrations. Alternatives considered: TypeORM, Drizzle, raw SQL.
+**Consequences:** Prisma is the single source of truth for the database schema. All migrations run through `prisma migrate`. Vector operations that Prisma cannot express use raw SQL via `$queryRaw`.
+
+---
 
 ## ADR-004: Clerk over custom auth
-
 **Date:** 2026-03-04
-**Decision:** Use Clerk for authentication in both Next.js and NestJS.
-**Rationale:** Free tier covers 50K MAU. SDKs for both Next.js middleware and NestJS guards. Eliminates weeks of auth implementation. Focus development time on AI features instead.
-**Alternatives:** NextAuth/Auth.js, Supabase Auth, custom JWT.
+**Status:** accepted
+**Context:** Implementing auth from scratch (JWT issuance, refresh tokens, session management) would consume weeks of development time better spent on AI features.
+**Decision:** Use Clerk for authentication across both Next.js and NestJS. Clerk's free tier covers 50K MAU and provides SDKs for both runtimes. Alternatives considered: NextAuth/Auth.js, Supabase Auth, custom JWT.
+**Consequences:** Auth is fully delegated to Clerk. No custom session logic exists in this repo. The `userId` from Clerk is the canonical user identifier throughout the system.
+
+---
 
 ## ADR-003: YAML config over dotenv for non-secrets
-
 **Date:** 2026-03-04
-**Decision:** Use YAML files (`config/*.yml`) for non-secret configuration. Secrets remain in environment variables.
-**Rationale:** YAML supports structured, nested config (e.g., `ai_service.base_url`) without the flat key-value limitation of `.env`. Config files are version-controlled and environment-specific (`dev.yml`, `prod.yml`). Secrets stay in env vars because they should never be committed.
-**Alternatives:** dotenv for everything, JSON config files.
+**Status:** accepted
+**Context:** Non-secret config values like `ai_service.base_url` need structure and environment-specificity that flat `.env` files cannot provide cleanly.
+**Decision:** Use YAML files (`config/dev.yml`, `config/prod.yml`) for all non-secret configuration. Secrets remain in shell-exported environment variables sourced from `scripts/env-setup.sh`. No `.env` files. Alternatives considered: dotenv for everything, JSON config files.
+**Consequences:** Config is version-controlled and structured. Secrets never appear in config files. Adding a new non-secret value requires only a YAML edit, not a code change.
+
+---
 
 ## ADR-002: Separate AI repo (totoro-ai)
-
 **Date:** 2026-03-04
-**Decision:** Keep all AI/ML code in a separate Python repository.
-**Rationale:** Clean language separation (TypeScript vs Python). Different deployment targets (Node runtime vs Python runtime with GPU access). Different development velocity — AI experiments iterate faster without product repo CI. Communication via HTTP creates a stable contract boundary.
-**Alternatives:** Python in a monorepo subfolder, AI logic as a microservice within this repo.
+**Status:** accepted
+**Context:** All AI/ML logic requires Python, a different deployment target (Python runtime with GPU), and a faster iteration cycle than product code. Mixing languages in one repo would complicate CI, deployments, and dependency management.
+**Decision:** Keep all AI/ML code in a separate Python repository (`totoro-ai`). This repo communicates with it via HTTP only. Alternatives considered: Python in a monorepo subfolder, AI logic as a microservice within this repo.
+**Consequences:** A stable HTTP contract (see `docs/api-contract.md`) is the boundary between repos. Changes to the AI pipeline do not require touching this repo unless the contract changes. Each repo deploys independently.
+
+---
 
 ## ADR-001: Nx over Turborepo
-
 **Date:** 2026-03-04
-**Decision:** Use Nx as the monorepo tool.
-**Rationale:** Nx provides built-in module boundary enforcement, dependency graph visualization, and first-class support for both Next.js and NestJS generators. Turborepo is faster for simple cases but lacks Nx's boundary lint rules, which are critical for maintaining the `apps/web` ↔ `apps/api` separation.
-**Alternatives:** Turborepo, plain Yarn workspaces.
+**Status:** accepted
+**Context:** The monorepo contains a Next.js frontend, NestJS backend, and shared libraries. Module boundary enforcement is critical to prevent `apps/web` from importing backend code and vice versa.
+**Decision:** Use Nx as the monorepo tool. Nx provides built-in module boundary lint rules, dependency graph visualisation, and first-class generators for both Next.js and NestJS. Alternatives considered: Turborepo, plain Yarn workspaces.
+**Consequences:** Module boundaries are enforced by Nx ESLint rules. Violating a boundary produces a lint error, not a runtime failure. All task execution (build, test, lint) goes through `pnpm nx`.
