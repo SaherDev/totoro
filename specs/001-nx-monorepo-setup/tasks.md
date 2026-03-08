@@ -13,11 +13,11 @@
 
 **Purpose**: Resolve cross-cutting prerequisites not owned by any single user story.
 
-- [ ] T001 Verify `pnpm install` completes without errors from repo root (smoke check before any work)
-- [ ] T002 [P] Create `config/dev.yml` with non-secret config skeleton: `ai_service.base_url`, `web.port: 4200`, `api.port: 3333`
-- [ ] T003 [P] Create `config/prod.yml` with production config skeleton (base_url as placeholder, same keys as dev.yml)
-- [ ] T004 [P] Create `messages/en.json` with top-level namespace skeleton: `{ "common": {}, "recommendation": {}, "place": {} }`
-- [ ] T005 [P] Create `messages/he.json` with identical structure to `messages/en.json` (empty values, Hebrew locale)
+- [X] T001 Verify `pnpm install` completes without errors from repo root (smoke check before any work)
+- [X] T002 [P] Create `config/dev.yml` with non-secret config skeleton: `ai_service.base_url`, `web.port: 4200`, `api.port: 3333`
+- [X] T003 [P] Create `config/prod.yml` with production config skeleton (base_url as placeholder, same keys as dev.yml)
+- [X] T004 [P] Create `messages/en.json` with top-level namespace skeleton: `{ "common": {}, "recommendation": {}, "place": {} }`
+- [X] T005 [P] Create `messages/he.json` with identical structure to `messages/en.json` (empty values, Hebrew locale)
 
 ---
 
@@ -27,14 +27,14 @@
 
 **⚠️ CRITICAL**: US1 and US2 both depend on `libs/ui` existing and being installed.
 
-- [ ] T006 Create `libs/ui/package.json` — `name: @totoro/ui`, `"type": "module"`, `"tags": ["scope:ui"]` in `nx` field, conditional exports with `@totoro/source` pointing to `./src/index.ts`, deps: `@totoro/shared: workspace:*`, `clsx`, `tailwind-merge`, `class-variance-authority`
-- [ ] T007 [P] Create `libs/ui/tsconfig.json` — composite tsconfig extending `../../tsconfig.base.json`, `files: []`, `references` to `tsconfig.lib.json` and `tsconfig.spec.json`
-- [ ] T008 [P] Create `libs/ui/tsconfig.lib.json` — extends `../../tsconfig.base.json`, `compilerOptions`: `jsx: preserve`, `rootDir: src`, `outDir: dist`, `module: nodenext`, `moduleResolution: nodenext`, `experimentalDecorators: true`, `include: ["src/**/*.ts", "src/**/*.tsx"]`
-- [ ] T009 Create `libs/ui/src/lib/utils.ts` — export `cn(...inputs: ClassValue[])` using `clsx` + `tailwind-merge`
-- [ ] T010 Create `libs/ui/src/lib/button.tsx` — export `Button` component with `cva` variants (`default`, `muted`, `outline`, `ghost`; sizes `sm`, `default`, `lg`, `icon`); uses `cn()` from `./utils`
-- [ ] T011 Create `libs/ui/src/index.ts` — public entry point: `export * from './lib/utils.js'` and `export * from './lib/button.js'`
-- [ ] T012 [P] Create `libs/ui/eslint.config.mjs` — extends `../../eslint.config.mjs` (same pattern as `libs/shared`)
-- [ ] T013 Run `pnpm install` from repo root to link `libs/ui` into workspace node_modules as `@totoro/ui`
+- [X] T006 Create `libs/ui/package.json` — `name: @totoro/ui`, `"type": "module"`, `"tags": ["scope:ui"]` in `nx` field, conditional exports with `@totoro/source` pointing to `./src/index.ts`, deps: `@totoro/shared: workspace:*`, `clsx`, `tailwind-merge`, `class-variance-authority`
+- [X] T007 [P] Create `libs/ui/tsconfig.json` — composite tsconfig extending `../../tsconfig.base.json`, `files: []`, `references` to `tsconfig.lib.json` and `tsconfig.spec.json`
+- [X] T008 [P] Create `libs/ui/tsconfig.lib.json` — extends `../../tsconfig.base.json`, `compilerOptions`: `jsx: preserve`, `rootDir: src`, `outDir: dist`, `module: nodenext`, `moduleResolution: nodenext`, `experimentalDecorators: true`, `include: ["src/**/*.ts", "src/**/*.tsx"]`
+- [X] T009 Create `libs/ui/src/lib/utils.ts` — export `cn(...inputs: ClassValue[])` using `clsx` + `tailwind-merge`
+- [X] T010 Create `libs/ui/src/lib/button.tsx` — export `Button` component with `cva` variants (`default`, `muted`, `outline`, `ghost`; sizes `sm`, `default`, `lg`, `icon`); uses `cn()` from `./utils`
+- [X] T011 Create `libs/ui/src/index.ts` — public entry point: `export * from './lib/utils.js'` and `export * from './lib/button.js'`
+- [X] T012 [P] Create `libs/ui/eslint.config.mjs` — extends `../../eslint.config.mjs` (same pattern as `libs/shared`)
+- [X] T013 Run `pnpm install` from repo root to link `libs/ui` into workspace node_modules as `@totoro/ui`
 
 **Checkpoint**: `libs/ui` is installed. Run `pnpm nx lint ui` — must pass with no boundary violations before proceeding.
 
@@ -48,14 +48,14 @@
 
 ### Implementation
 
-- [ ] T014 [US1] Add `@totoro/shared: workspace:*` and `@totoro/ui: workspace:*` to `apps/web/package.json` dependencies
-- [ ] T015 [US1] Add frontend-specific dependencies to `apps/web/package.json`: `tailwindcss`, `autoprefixer`, `postcss`, `tailwindcss-animate`, `next-themes`, `next-intl`, `@clerk/nextjs`
-- [ ] T016 [P] [US1] Create `apps/web/tailwind.config.js` — Tailwind v3 config: `darkMode: 'class'`, content includes `./src/**/*.{ts,tsx}` and `../../libs/ui/src/**/*.{ts,tsx}`, theme extends with CSS variable color tokens (`primary`, `foreground`, `background`, `muted`, `accent`, `border`, `ring`, `destructive`) and `borderRadius` using `var(--radius)`, plugin: `tailwindcss-animate`
-- [ ] T017 [P] [US1] Create `apps/web/postcss.config.js` — `{ plugins: { tailwindcss: {}, autoprefixer: {} } }`
-- [ ] T018 [US1] Create `apps/web/src/app/globals.css` — `@tailwind base/components/utilities`, `:root` CSS variables (HSL raw values for all tokens), `.dark` overrides, `@layer base` body styles
-- [ ] T019 [US1] Run `pnpm install` to resolve new `apps/web` dependencies
-- [ ] T020 [US1] Verify `pnpm nx dev web` starts without errors and serves on port 4200 (fix any startup errors before proceeding)
-- [ ] T021 [US1] Verify `pnpm nx serve api` starts without errors and serves on port 3333 (fix any startup errors before proceeding)
+- [X] T014 [US1] Add `@totoro/shared: workspace:*` and `@totoro/ui: workspace:*` to `apps/web/package.json` dependencies
+- [X] T015 [US1] Add frontend-specific dependencies to `apps/web/package.json`: `tailwindcss`, `autoprefixer`, `postcss`, `tailwindcss-animate`, `next-themes`, `next-intl`, `@clerk/nextjs`
+- [X] T016 [P] [US1] Create `apps/web/tailwind.config.js` — Tailwind v3 config: `darkMode: 'class'`, content includes `./src/**/*.{ts,tsx}` and `../../libs/ui/src/**/*.{ts,tsx}`, theme extends with CSS variable color tokens (`primary`, `foreground`, `background`, `muted`, `accent`, `border`, `ring`, `destructive`) and `borderRadius` using `var(--radius)`, plugin: `tailwindcss-animate`
+- [X] T017 [P] [US1] Create `apps/web/postcss.config.js` — `{ plugins: { tailwindcss: {}, autoprefixer: {} } }`
+- [X] T018 [US1] Create `apps/web/src/app/globals.css` — `@tailwind base/components/utilities`, `:root` CSS variables (HSL raw values for all tokens), `.dark` overrides, `@layer base` body styles
+- [X] T019 [US1] Run `pnpm install` to resolve new `apps/web` dependencies
+- [X] T020 [US1] Verify `pnpm nx dev web` starts without errors and serves on port 4200 (fix any startup errors before proceeding)
+- [X] T021 [US1] Verify `pnpm nx serve api` starts without errors and serves on port 3333 (fix any startup errors before proceeding)
 
 **Checkpoint**: Both apps start cleanly. US1 is independently testable — stop one app, the other keeps running.
 
@@ -69,13 +69,13 @@
 
 ### Implementation
 
-- [ ] T022 [US2] Create `libs/shared/src/lib/types.ts` — `export type PlaceSource = 'saved' | 'discovered'` (used in consult API response per api-contract.md; proves shared type pipeline end-to-end)
-- [ ] T023 [US2] Remove placeholder `shared()` function from `libs/shared/src/lib/shared.ts` (or delete the file if it contains only the placeholder)
-- [ ] T024 [US2] Update `libs/shared/src/index.ts` — add `export * from './lib/types.js'`; remove export of deleted `shared.ts` if applicable
-- [ ] T025 [P] [US2] Add `import type { PlaceSource } from '@totoro/shared'` to `services/api/src/main.ts` (or a new `services/api/src/lib/types.ts`) and use the type in a comment or type assertion — verifies backend can import shared types
-- [ ] T026 [P] [US2] Update `apps/web/src/app/page.tsx` to import `PlaceSource` from `@totoro/shared` and `Button` from `@totoro/ui` — render a `<Button>` element to verify both frontend imports resolve with full type-checking
-- [ ] T027 [US2] Run `pnpm nx run-many -t lint` — must pass with zero errors across all projects
-- [ ] T028 [US2] Run typecheck across all projects (e.g., `pnpm nx run-many -t build` or equivalent) — verify zero type errors; fix any type mismatches before proceeding
+- [X] T022 [US2] Create `libs/shared/src/lib/types.ts` — `export type PlaceSource = 'saved' | 'discovered'` (used in consult API response per api-contract.md; proves shared type pipeline end-to-end)
+- [X] T023 [US2] Remove placeholder `shared()` function from `libs/shared/src/lib/shared.ts` (or delete the file if it contains only the placeholder)
+- [X] T024 [US2] Update `libs/shared/src/index.ts` — add `export * from './lib/types.js'`; remove export of deleted `shared.ts` if applicable
+- [X] T025 [P] [US2] Add `import type { PlaceSource } from '@totoro/shared'` to `services/api/src/main.ts` (or a new `services/api/src/lib/types.ts`) and use the type in a comment or type assertion — verifies backend can import shared types
+- [X] T026 [P] [US2] Update `apps/web/src/app/page.tsx` to import `PlaceSource` from `@totoro/shared` and `Button` from `@totoro/ui` — render a `<Button>` element to verify both frontend imports resolve with full type-checking
+- [X] T027 [US2] Run `pnpm nx run-many -t lint` — must pass with zero errors across all projects
+- [X] T028 [US2] Run typecheck across all projects (e.g., `pnpm nx run-many -t build` or equivalent) — verify zero type errors; fix any type mismatches before proceeding
 
 **Checkpoint**: Both path aliases (`@totoro/shared`, `@totoro/ui`) resolve correctly from all permitted consumers. Changing a shared type causes a type error in any consumer that becomes mismatched.
 
@@ -89,8 +89,8 @@
 
 ### Implementation
 
-- [ ] T029 [US3] Verify boundary enforcement works: temporarily add `import { Button } from '@totoro/ui'` to `services/api/src/main.ts`, run `pnpm nx lint api`, confirm error mentions `@nx/enforce-module-boundaries`; then remove the import and confirm lint passes
-- [ ] T030 [US3] Add or verify module boundary table in `docs/architecture.md` under a `## Module Boundaries` section — must show all four rules (apps/web, services/api, libs/ui, libs/shared) in a readable markdown table; must be accurate against the current eslint.config.mjs rules
+- [X] T029 [US3] Verify boundary enforcement works: temporarily add `import { Button } from '@totoro/ui'` to `services/api/src/main.ts`, run `pnpm nx lint api`, confirm error mentions `@nx/enforce-module-boundaries`; then remove the import and confirm lint passes
+- [X] T030 [US3] Add or verify module boundary table in `docs/architecture.md` under a `## Module Boundaries` section — must show all four rules (apps/web, services/api, libs/ui, libs/shared) in a readable markdown table; must be accurate against the current eslint.config.mjs rules
 
 **Checkpoint**: Boundary violations caught 100% of the time by lint. Table in docs/ is the single source of truth for new developers.
 
@@ -100,10 +100,10 @@
 
 **Purpose**: Final validation that all three user stories work together and the workspace is clean.
 
-- [ ] T031 Run `pnpm nx run-many -t lint` across all projects — must be zero errors; fix any remaining issues
-- [ ] T032 [P] Run `pnpm nx run-many -t test` — all existing tests pass; no broken tests from the changes in this feature
-- [ ] T033 Walk through `specs/001-nx-monorepo-setup/quickstart.md` first-run steps end-to-end and verify every command produces the expected output; update quickstart if any step is wrong
-- [ ] T034 [P] Review `docs/architecture.md` boundary table against `eslint.config.mjs` — confirm they match exactly; update docs if any discrepancy
+- [X] T031 Run `pnpm nx run-many -t lint` across all projects — must be zero errors; fix any remaining issues
+- [X] T032 [P] Run `pnpm nx run-many -t test` — all existing tests pass; no broken tests from the changes in this feature
+- [X] T033 Walk through `specs/001-nx-monorepo-setup/quickstart.md` first-run steps end-to-end and verify every command produces the expected output; update quickstart if any step is wrong
+- [X] T034 [P] Review `docs/architecture.md` boundary table against `eslint.config.mjs` — confirm they match exactly; update docs if any discrepancy
 
 ---
 
