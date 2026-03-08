@@ -15,6 +15,16 @@ Format:
 
 ---
 
+## ADR-024: Zustand for client-side UI state
+
+**Date:** 2026-03-08\
+**Status:** accepted\
+**Context:** The Next.js frontend needs minimal global client state — query input, active recommendation, modal visibility. Most data fetching is handled by TanStack Query (server state) or Next.js server components. A full state management solution like Redux would be overkill.\
+**Decision:** Use Zustand for client-side UI state in `apps/web`. TanStack Query handles all async server state (API calls, caching, mutation lifecycle). Zustand handles lightweight UI state that must be shared across components (current query string, active recommendation result, drawer/modal open state). Auth state is owned by Clerk. Locale and i18n routing is owned by `next-intl`. Theme is owned by `next-themes`. Zustand does not replace any of these.\
+**Consequences:** Client bundle stays lean (~1KB for Zustand). No Redux boilerplate. Store is defined once in `apps/web/src/store/` and consumed via hooks. If a piece of state is only needed in one component, it stays local with `useState` — Zustand is only for cross-component shared state.
+
+---
+
 ## ADR-023: @Serialize() decorator for controller response shaping
 
 **Date:** 2026-03-08\
