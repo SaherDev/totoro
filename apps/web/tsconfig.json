@@ -23,6 +23,12 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@totoro/shared": [
+        "../../libs/shared/src/index.ts"
+      ],
+      "@totoro/ui": [
+        "../../libs/ui/src/index.ts"
       ]
     },
     "types": [
@@ -30,7 +36,6 @@
       "node"
     ],
     "outDir": "dist",
-    "rootDir": "src",
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": [
@@ -54,5 +59,13 @@
     "eslint.config.js",
     "eslint.config.cjs",
     "eslint.config.mjs"
+  ],
+  "references": [
+    {
+      "path": "../../libs/ui"
+    },
+    {
+      "path": "../../libs/shared"
+    }
   ]
 }
