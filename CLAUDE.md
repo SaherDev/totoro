@@ -82,3 +82,10 @@ Token efficiency: plans go in chat, not files. Do not repeat file contents after
 - **Prisma + pgvector**: PostgreSQL must have `vector` extension. Prisma uses `Unsupported("vector")` — handle vector ops via raw SQL.
 - **Embedding dimensions must stay in sync**: pgvector column in Prisma must match the model output in FastAPI. Both repos must update together.
 - **Deployment**: Vercel (frontend), Railway (backend + AI service + PostgreSQL + Redis). Redis is FastAPI-only. Docker Compose for local dev only.
+
+## Active Technologies
+- TypeScript 5.x / Node 20 LTS + Nx (ADR-001), pnpm (ADR-020), Next.js 16 (apps/web), NestJS 11 (services/api), Tailwind v3 + shadcn/ui (ADR-007) (001-nx-monorepo-setup)
+- N/A — this is a workspace configuration feature (001-nx-monorepo-setup)
+
+## Recent Changes
+- 001-nx-monorepo-setup: Added TypeScript 5.x / Node 20 LTS + Nx (ADR-001), pnpm (ADR-020), Next.js 16 (apps/web), NestJS 11 (services/api), Tailwind v3 + shadcn/ui (ADR-007)

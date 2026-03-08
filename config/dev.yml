@@ -1,0 +1,10 @@
+ai_service:
+  base_url: http://localhost:8000
+
+web:
+  port: 4200
+
+api:
+  port: 3333
+
+feature_flags: {}

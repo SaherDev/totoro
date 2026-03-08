@@ -1,0 +1,36 @@
+{
+  "name": "@totoro/ui",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "@totoro/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "nx": {
+    "name": "ui",
+    "tags": ["scope:ui"]
+  },
+  "dependencies": {
+    "@totoro/shared": "workspace:*",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^2.3.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@nx/js": "~19.2.0",
+    "@nx/webpack": "~19.2.0",
+    "typescript": "^5.4.0"
+  }
+}

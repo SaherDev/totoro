@@ -1,5 +1,5 @@
+import { Button } from '@totoro/ui';
 import styles from './page.module.css';
-
 
 export default function Index() {
   /*
@@ -18,6 +18,9 @@ export default function Index() {
             <span> Hello there, </span>
             Welcome @totoro/web 👋
           </h1>
+          <Button variant="default" className="mt-4">
+            Test Button from @totoro/ui
+          </Button>
         </div>
 
         <div id="hero" className="rounded">
