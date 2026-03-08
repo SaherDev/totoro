@@ -5,12 +5,24 @@
 ```
 main          ← stable only, merge when a feature/phase is complete and tested
   └─ dev      ← active development, day-to-day work
-       └─ feature/<phase>-<short-description>   (e.g., feature/p1-clerk-auth)
-       └─ fix/<short-description>                (e.g., fix/prisma-migration-order)
+       └─ <number>-<feature-name>               (spec-kit feature branch, e.g., 001-nx-monorepo-setup)
+       └─ feature/<short-description>           (manual feature, e.g., feature/clerk-auth)
+       └─ fix/<short-description>               (hotfix, e.g., fix/prisma-migration-order)
 ```
 
-- Feature branches are created from `dev` and merged back into `dev`.
-- `dev` is merged into `main` only at phase milestones or when a feature is fully tested.
+### Spec-kit Features
+
+- Spec-kit auto-generates numbered branches: `001-feature-name`, `002-another-feature`, etc.
+- These are created from `dev` and merged back into `dev` when the feature is complete.
+- Numbered naming provides systematic tracking of multiple concurrent features in the monorepo.
+- When a feature is fully tested, merge branch into `dev` (squash or merge commit, your call).
+- Then merge `dev` into `main` at phase milestones (regular merge, not squash).
+
+### Manual Features & Hotfixes
+
+- Manual features use `feature/<short-description>` pattern.
+- Hotfixes use `fix/<short-description>` pattern.
+- Both are created from `dev` and merged back into `dev` following the same flow.
 - Never push directly to `main`.
 - Delete feature/fix branches after merge.
 
@@ -21,14 +33,23 @@ type(scope): description #TASK_ID
 ```
 
 **Types:** `feat`, `fix`, `chore`, `docs`, `refactor`, `test`
-**Scopes:** `api`, `web`, `shared`
-**Task ID:** ClickUp task ID (e.g., `#abc123`)
+
+**Scopes:** Target the primary affected Nx workspace package:
+- `api` — NestJS backend (services/api)
+- `web` — Next.js frontend (apps/web)
+- `shared` — Shared types & utilities (libs/shared)
+- `ui` — UI component library (libs/ui)
+- For changes affecting multiple packages, prioritize the primary one
+
+**Task ID:** ClickUp task ID (e.g., `#abc123`) — optional if no task exists
 
 Examples:
 ```
-feat(api): add Clerk auth middleware #abc123
-fix(web): correct redirect after sign-in #def456
-chore(shared): update place result DTO #ghi789
+feat(shared): add PlaceSource type
+fix(web): correct redirect after sign-in #TASK-456
+chore(api): update auth middleware
+docs(ui): add Button component examples #TASK-789
+refactor(shared): simplify DTO exports
 ```
 
 ### Rules
