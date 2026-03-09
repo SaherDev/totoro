@@ -1,4 +1,4 @@
-import { ClerkProvider } from '@clerk/nextjs';
+import { Providers } from './providers';
 import './global.css';
 
 export const metadata = {
@@ -12,10 +12,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body>{children}</body>
-      </html>
-    </ClerkProvider>
+    <html lang="en">
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
   )
 }
