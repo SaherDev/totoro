@@ -2,6 +2,7 @@ import { Injectable, NestMiddleware, UnauthorizedException, Logger } from '@nest
 import { Request, Response, NextFunction } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { verifyToken } from '@clerk/backend';
+import { PUBLIC_KEY } from '../decorators/public.decorator';
 
 /**
  * User context attached to Express Request by ClerkMiddleware.
@@ -13,6 +14,7 @@ export interface ClerkUser {
 }
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       user?: ClerkUser;
@@ -29,7 +31,7 @@ export class ClerkMiddleware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
     // If route is marked as @Public(), skip verification
     const handler = req.route?.stack?.[0]?.handle;
-    const isPublic = handler ? Reflect.getMetadata('isPublic', handler) : false;
+    const isPublic = handler ? Reflect.getMetadata(PUBLIC_KEY, handler) : false;
     if (isPublic) {
       return next();
     }

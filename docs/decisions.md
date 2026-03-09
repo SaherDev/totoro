@@ -15,6 +15,16 @@ Format:
 
 ---
 
+## ADR-030: Shell-exported secrets only (no .env or .local.yaml files for secrets)
+
+**Date:** 2026-03-09\
+**Status:** accepted\
+**Context:** Previous ADRs (025-027) documented a split approach: YAML files for backend secrets, `.env.local` for frontend. This created inconsistency and violated the zero-hardcoding principle. Standards.md explicitly prohibited `.env` files, but documentation contradicted this.\
+**Decision:** All secrets across all services (NestJS, Next.js, FastAPI) are injected as shell-exported environment variables only. No `.env.local`, `.local.yaml`, or secret template files exist in any repo. Each developer sources `scripts/env-setup.sh` (or equivalent in each repo) to export all required secrets to the shell environment. This repo's `scripts/env-setup.sh` exports `DATABASE_URL`, `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, and any AI service auth headers. NestJS and Next.js read secrets from `process.env` at startup. Secrets are NEVER committed. `.example` files are removed — setup instructions live in README or CLAUDE.md only.\
+**Consequences:** Single consistent approach across all repos and languages. No secret files in git history ever. No setup confusion — developers follow one pattern everywhere. CI/CD unchanged — it injects env vars as always. `.local.yaml` files hold non-secret config only (`ai_service.base_url`, feature flags). Supersedes ADR-025 and ADR-026 for secrets handling specifically.
+
+---
+
 ## ADR-029: Consolidated config files into .local.yaml
 
 **Date:** 2026-03-09\

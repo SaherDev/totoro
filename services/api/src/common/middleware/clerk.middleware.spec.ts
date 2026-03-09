@@ -45,6 +45,7 @@ describe('ClerkMiddleware', () => {
 
   describe('public routes', () => {
     it('should skip verification for routes marked with @Public() decorator', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       const handler = () => {};
       Reflect.defineMetadata('isPublic', true, handler);
 
@@ -74,6 +75,7 @@ describe('ClerkMiddleware', () => {
         headers: {},
         method: 'GET',
         path: '/test',
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         route: { stack: [{ handle: () => {} }] },
       } as any;
       const res = {} as any;
@@ -90,6 +92,7 @@ describe('ClerkMiddleware', () => {
         },
         method: 'GET',
         path: '/test',
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         route: { stack: [{ handle: () => {} }] },
       } as any;
       const res = {} as any;
@@ -112,6 +115,7 @@ describe('ClerkMiddleware', () => {
         headers: {
           authorization: `Bearer ${mockToken}`,
         },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         route: { stack: [{ handle: () => {} }] },
       } as any;
       const res = {} as any;
@@ -134,6 +138,7 @@ describe('ClerkMiddleware', () => {
         },
         method: 'GET',
         path: '/test',
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         route: { stack: [{ handle: () => {} }] },
       } as any;
       const res = {} as any;
@@ -155,6 +160,7 @@ describe('ClerkMiddleware', () => {
         },
         method: 'GET',
         path: '/test',
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         route: { stack: [{ handle: () => {} }] },
       } as any;
       const res = {} as any;
@@ -182,6 +188,7 @@ describe('ClerkMiddleware', () => {
         headers: {
           authorization: 'Bearer valid.token',
         },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         route: { stack: [{ handle: () => {} }] },
       } as any;
       const res = {} as any;
@@ -204,6 +211,7 @@ describe('ClerkMiddleware', () => {
         headers: {
           authorization: 'Bearer valid.token',
         },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         route: { stack: [{ handle: () => {} }] },
       } as any;
       const res = {} as any;
@@ -224,6 +232,7 @@ describe('ClerkMiddleware', () => {
         headers: {
           authorization: 'Bearer valid.token',
         },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         route: { stack: [{ handle: () => {} }] },
       } as any;
       const res = {} as any;
@@ -252,6 +261,7 @@ describe('ClerkMiddleware', () => {
         },
         method: 'GET',
         path: '/test',
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         route: { stack: [{ handle: () => {} }] },
       } as any;
       const res = {} as any;
