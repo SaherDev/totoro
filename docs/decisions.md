@@ -15,6 +15,16 @@ Format:
 
 ---
 
+## ADR-029: Consolidated config files into .local.yaml
+
+**Date:** 2026-03-09\
+**Status:** accepted\
+**Context:** Multiple config files (`app.yaml`, `models.yaml` in totoro-ai) scattered across config directories increased maintenance burden and file count. NestJS API prefix was hardcoded in `libs/shared/constants.ts` instead of being configurable. Each repo needed separate config loading logic.\
+**Decision:** Consolidate all non-secret config into `config/.local.yaml` per repo. For totoro-ai, merge `app.yaml` and `models.yaml` sections into `.local.yaml`. For totoro NestJS, add `api_prefix` to `.local.yaml` under the `app` section and remove the hardcoded constant from `libs/shared`. Both services use their framework's config service to load `.local.yaml` at startup: FastAPI uses `load_yaml_config(".local.yaml")`, NestJS uses `@nestjs/config` ConfigModule with YAML parser.\
+**Consequences:** Single source of truth per repo for all non-secret config. Fewer files to maintain. Developers see all app config in one place. `API_GLOBAL_PREFIX` constant removed; api_prefix now loaded from config. Changes to app metadata, model assignments, or API prefix go to one file. All repos follow the same consolidation pattern for consistency.
+
+---
+
 ## ADR-027: Secrets schema documentation via .example templates
 
 **Date:** 2026-03-09\
