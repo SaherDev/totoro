@@ -74,9 +74,10 @@ export class ClerkWebhookController {
         this.logger.log(`New user created: ${userId}`);
 
         const secretKey = this.configService.get<string>('auth.clerk.secret_key');
+        const aiEnabled = this.configService.get<boolean>('ai.enabled_default', true);
         const clerk = createClerkClient({ secretKey });
         await clerk.users.updateUser(userId, {
-          publicMetadata: { ai_enabled: true },
+          publicMetadata: { ai_enabled: aiEnabled },
         });
         this.logger.log(`Set ai_enabled=true for user ${userId}`);
       }
