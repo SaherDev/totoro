@@ -76,7 +76,7 @@ See `.claude/workflows.md` for the complete 5-step token-efficient workflow (ADR
 
 ## Notes
 
-- **Current config**: Non-secret config from YAML (`config/*.yml`); secrets shell-exported (no `.env` files). See `scripts/env-setup.sh` for the template.
+- **Secrets management** (ADR-025, ADR-026, ADR-027): Each service manages secrets locally. See `docs/local-secrets-setup.md` for setup instructions. NestJS loads `services/api/config/.local.yaml.example`; Next.js loads `apps/web/.env.local.example`. Copy `.example` files and fill in your secrets — these files are gitignored.
 - **Git comment char is `;`** not `#` — configured to support ClickUp task IDs in commits.
 - **Bruno API testing**: Collection at `totoro-config/bruno/`. New endpoints need a corresponding `.bru` request file.
 - **Prisma + pgvector**: PostgreSQL must have `vector` extension. Prisma uses `Unsupported("vector")` — handle vector ops via raw SQL.

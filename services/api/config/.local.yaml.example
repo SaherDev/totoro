@@ -1,0 +1,18 @@
+# Local Secrets Configuration — NestJS API
+# Copy this file to .local.yaml and fill in your actual values
+# This file is gitignored and never committed
+
+# Database Connection
+database:
+  url: postgresql://user:password@localhost:5432/totoro_dev
+
+# Clerk Authentication (see https://clerk.com)
+clerk:
+  secret_key: sk_test_xxxxxxxxxxxxx
+  publishable_key: pk_test_xxxxxxxxxxxxx
+
+# Optional: Feature Flags & Toggles
+ai_enabled: true
+
+# Optional: Port Override (from config/dev.yml by default)
+# port: 3333
