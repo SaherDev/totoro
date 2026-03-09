@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// User account managed via Clerk
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  settings        UserSettings?
+  recommendations Recommendation[]
+
+  @@map("users")
+}
+
+/// User preferences and settings
+model UserSettings {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // User preferences
+  locale String @default("en") // Language preference: "en", "he"
+  theme  String @default("system") // "light", "dark", "system"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_settings")
+}
+
+/// Recommendation history
+model Recommendation {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  query String // User's natural language query
+
+  // Full recommendation response (immutable)
+  data Json // {
+       //   primary: { place_name, address, reasoning, source },
+       //   alternatives: [{ place_name, address, reasoning, source }, ...],
+       //   reasoning_steps: [{ step, summary }, ...],
+       //   userLocation: { lat, lng }
+       // }
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("recommendations")
+}
