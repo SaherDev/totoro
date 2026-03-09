@@ -1,0 +1,41 @@
+# COPY THIS FILE TO .local.yaml AND FILL IN YOUR SECRETS
+# .local.yaml is gitignored and never committed
+
+# Application
+app:
+  environment: development
+  port: 3333
+  api_prefix: api/v1
+
+# Data Access
+database:
+  url: postgresql://user:password@localhost:5432/totoro_dev?schema=public
+
+# Authentication
+auth:
+  public_paths:
+    - /health
+    - /webhooks/clerk
+  clerk:
+    secret_key: sk_test_xxxxx_from_clerk_dashboard
+    webhook_secret: whsec_xxxxx_from_clerk_webhooks
+
+# Caching & Session
+cache:
+  redis:
+    url: redis://localhost:6379
+
+# External Services & Integrations
+integrations:
+  slack:
+    webhook_url: https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+
+# AI Service Configuration
+ai:
+  enabled_default: true
+  global_kill_switch: false
+
+# Feature Flags
+features:
+  enable_external_places: true
+  enable_slack_alerts: false
