@@ -9,7 +9,10 @@ import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // Create app with rawBody enabled for webhook signature verification
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true,
+  });
   const configService = app.get(ConfigService);
 
   const apiPrefix = configService.get<string>('app.api_prefix');

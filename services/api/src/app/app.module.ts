@@ -10,6 +10,7 @@ import * as fs from 'fs';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ClerkMiddleware } from '../common/middleware/clerk.middleware';
+import { ClerkWebhookController } from '../webhooks/clerk.webhook';
 
 const configPath = path.join(process.cwd(), 'services/api/config/.local.yaml');
 
@@ -25,7 +26,7 @@ const configPath = path.join(process.cwd(), 'services/api/config/.local.yaml');
       ],
     }),
   ],
-  controllers: [AppController],
+  controllers: [AppController, ClerkWebhookController],
   providers: [AppService],
 })
 export class AppModule implements NestModule {
