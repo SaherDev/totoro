@@ -6,6 +6,8 @@ app:
   environment: development
   port: 3333
   api_prefix: api/v1
+  cors_origins:
+    - http://localhost:4200
 
 # Data Access
 database:

@@ -17,11 +17,13 @@ async function bootstrap() {
 
   const apiPrefix = configService.get<string>('app.api_prefix');
   const port = process.env.PORT || configService.get<number>('app.port');
+  const corsOrigins = configService.get<string[]>('app.cors_origins', []);
 
   if (!port) {
     throw new Error('PORT not configured. Check config/.local.yaml');
   }
 
+  app.enableCors({ origin: corsOrigins, credentials: true });
   app.setGlobalPrefix(apiPrefix);
   await app.listen(port);
   Logger.log(`🚀 Application is running on: http://localhost:${port}/${apiPrefix}`);
