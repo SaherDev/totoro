@@ -29,10 +29,12 @@ export class ClerkMiddleware implements NestMiddleware {
   constructor(private configService: ConfigService) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
-    // If route is marked as @Public(), skip verification
-    const handler = req.route?.stack?.[0]?.handle;
-    const isPublic = handler ? Reflect.getMetadata(PUBLIC_KEY, handler) : false;
-    if (isPublic) {
+    // Skip auth for public routes (by path pattern)
+    // Note: Middleware runs before routing, so we check paths instead of decorators
+    const publicPaths = ['/health', '/webhooks/clerk'];
+    // Use originalUrl which includes the full path with query string
+    const requestUrl = (req.originalUrl || req.url || '').split('?')[0]; // Remove query string
+    if (publicPaths.some(path => requestUrl.includes(path))) {
       return next();
     }
 
