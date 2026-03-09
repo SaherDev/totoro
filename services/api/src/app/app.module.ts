@@ -12,6 +12,7 @@ import { AppService } from './app.service';
 import { ClerkMiddleware } from '../common/middleware/clerk.middleware';
 import { ClerkWebhookController } from '../webhooks/clerk.webhook';
 import { RequireAiGuard } from '../common/guards/require-ai.guard';
+import { PrismaModule } from '../prisma/prisma.module';
 
 const configPath = path.join(process.cwd(), 'services/api/config/.local.yaml');
 
@@ -26,6 +27,7 @@ const configPath = path.join(process.cwd(), 'services/api/config/.local.yaml');
         },
       ],
     }),
+    PrismaModule,
   ],
   controllers: [AppController, ClerkWebhookController],
   providers: [AppService, RequireAiGuard],
