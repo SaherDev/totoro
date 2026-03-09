@@ -32,10 +32,10 @@
 ## Phase 1: Document ADRs and Update API Contracts
 
 **Checklist:**
-- [ ] Task 1.1: Create ADR-025 (per-repo local secrets)
-- [ ] Task 1.2: Create ADR-026 (deprecate centralized totoro-config)
-- [ ] Task 1.3: Create ADR-027 (secrets schema documentation)
-- [ ] Task 1.4: Update docs/decisions.md with three new ADRs
+- [x] Task 1.1: Create ADR-025 (per-repo local secrets) ✅ (already in decisions.md)
+- [x] Task 1.2: Create ADR-026 (deprecate centralized totoro-config) ✅ (already in decisions.md)
+- [x] Task 1.3: Create ADR-027 (secrets schema documentation) ✅ (already in decisions.md)
+- [x] Task 1.4: Update docs/decisions.md with three new ADRs ✅ (ADRs added)
 
 **Files:**
 - Modify: `totoro/docs/decisions.md`
@@ -53,12 +53,12 @@ grep -n "ADR-025\|ADR-026\|ADR-027" totoro-ai/docs/decisions.md
 ## Phase 2: Set up NestJS Local Secrets (totoro/services/api)
 
 **Checklist:**
-- [ ] Task 2.1: Create `services/api/config/.local.yaml.example` with all required secret placeholders
-- [ ] Task 2.2: Create empty `services/api/config/.local.yaml` (developer creates on first run)
-- [ ] Task 2.3: Add `.local.yaml` to `.gitignore` in totoro repo
-- [ ] Task 2.4: Update NestJS ConfigModule to load `.local.yaml` and merge with environment-specific config
-- [ ] Task 2.5: Update CLAUDE.md and docs to reference local config instead of env-setup.sh
-- [ ] Task 2.6: Test that NestJS starts and loads secrets from `.local.yaml`
+- [x] Task 2.1: Create `services/api/config/.local.yaml.example` with all required secret placeholders ✅ (Clerk auth Phase 1)
+- [x] Task 2.2: Create empty `services/api/config/.local.yaml` (developer creates on first run) ✅ (Clerk auth Phase 1)
+- [x] Task 2.3: Add `.local.yaml` to `.gitignore` in totoro repo ✅ (already in place)
+- [x] Task 2.4: Update NestJS ConfigModule to load `.local.yaml` and merge with environment-specific config ✅ (Clerk auth Phase 3)
+- [x] Task 2.5: Update CLAUDE.md and docs to reference local config instead of env-setup.sh ✅ (Clerk auth - docs/local-secrets-setup.md)
+- [x] Task 2.6: Test that NestJS starts and loads secrets from `.local.yaml` ✅ (Clerk auth Phase 5 verification)
 
 **Files:**
 - Create: `services/api/config/.local.yaml.example`
