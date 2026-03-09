@@ -55,7 +55,7 @@ Details in @.claude/rules/standards.md, @.claude/rules/architecture.md, @.claude
 - **Types** — shared types in `libs/shared`, Prisma-generated DB models, no type duplication
 - **Linting** — Nx-generated ESLint configs only, no plugins, no inline disables without comments
 - **Nx boundaries** — `apps/web` imports `libs/shared` + `libs/ui`; `services/api` imports `libs/shared` only; `libs/shared` imports nothing
-- **Architecture** — NestJS: authenticate, forward AI requests, store recommendation history, serve user CRUD — nothing else. NestJS never touches Redis, LLMs, embeddings, vector search, or Google Places. DB writes split: NestJS writes users/settings/recommendations; FastAPI writes places/embeddings/taste_model
+- **Architecture** — NestJS: authenticate, forward AI requests, store recommendation history, serve user CRUD — nothing else. NestJS never touches Redis, LLMs, embeddings, vector search, or Google Places. DB writes split: NestJS writes users/settings/recommendations (Prisma owns their migrations); FastAPI writes places/embeddings/taste_model (Alembic owns their migrations)
 - **Frontend** — Tailwind v3 + shadcn/ui, CSS variables with raw HSL, dark mode via `next-themes`, RTL logical properties only (`ms`/`me`/`ps`/`pe`), i18n via `next-intl` with URL routing `/en/` and `/he/`
 - **API routes** — all NestJS routes use `/api/v1/` prefix; AI service called via two endpoints only (`POST /v1/extract-place`, `POST /v1/consult`)
 - **Commits** — `type(scope): description #TASK_ID`, types: `feat|fix|chore|docs|refactor|test`, scopes: `api|web|shared` (details in @.claude/rules/git.md)

@@ -48,13 +48,13 @@ These boundaries are enforced by Nx module boundary rules. If you get a lint err
 
 Write ownership is split by domain. Each service writes to its own tables. Neither service writes to the other's tables. This prevents race conditions and conflicting updates.
 
-Prisma in this repo defines all tables and runs all migrations. Both services must coordinate on schema changes to shared tables.
+Migration ownership is split by domain. Prisma in this repo owns and migrates product tables only (users, user_settings, recommendations). Alembic in totoro-ai owns and migrates AI tables (places, embeddings, taste_model). Never run Prisma migrations against AI tables.
 
 - **NestJS writes and reads:** users, user_settings, recommendations (history of consult results)
 - **FastAPI writes and reads:** places, embeddings, taste_model
 - **FastAPI writes to Redis:** LLM cache, session context, intermediate agent state
 
-Both services read from any table as needed. One shared PostgreSQL instance. One schema owner (Prisma in this repo). Two connection strings with appropriate write permissions.
+Both services read from any table as needed. One shared PostgreSQL instance. Two connection strings with appropriate write permissions.
 
 **Embedding dimensions must stay in sync:** pgvector column definition in Prisma must match the embedding model output in FastAPI. If the model changes, both the Prisma migration and FastAPI config must update together.
 
