@@ -2,17 +2,29 @@
 # Copy this file to .local.yaml and fill in your actual values
 # This file is gitignored and never committed
 
+# Environment
+environment: development
+
 # Database Connection
 database:
-  url: postgresql://user:password@localhost:5432/totoro_dev
+  url: postgresql://totoro:totoro_local@localhost:5432/totoro_dev?schema=public
 
 # Clerk Authentication (see https://clerk.com)
 clerk:
-  secret_key: sk_test_xxxxxxxxxxxxx
-  publishable_key: pk_test_xxxxxxxxxxxxx
+  secret_key: sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-# Optional: Feature Flags & Toggles
-ai_enabled: true
+# Redis
+redis:
+  url: redis://localhost:6379
 
-# Optional: Port Override (from config/dev.yml by default)
-# port: 3333
+# Slack Alerts
+slack:
+  webhook_url: https://hooks.slack.com/services/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
+
+# Feature Flags
+feature_flags:
+  enable_external_places: true
+  enable_slack_alerts: false
+
+# Port
+port: 3333
