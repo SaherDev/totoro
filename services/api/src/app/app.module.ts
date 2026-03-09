@@ -11,6 +11,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ClerkMiddleware } from '../common/middleware/clerk.middleware';
 import { ClerkWebhookController } from '../webhooks/clerk.webhook';
+import { RequireAiGuard } from '../common/guards/require-ai.guard';
 
 const configPath = path.join(process.cwd(), 'services/api/config/.local.yaml');
 
@@ -27,7 +28,7 @@ const configPath = path.join(process.cwd(), 'services/api/config/.local.yaml');
     }),
   ],
   controllers: [AppController, ClerkWebhookController],
-  providers: [AppService],
+  providers: [AppService, RequireAiGuard],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
