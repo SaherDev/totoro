@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { BadRequestException } from '@nestjs/common';
 import { Request } from 'express';
 import { Webhook } from 'svix';
@@ -13,12 +14,20 @@ jest.mock('svix', () => {
   };
 });
 
+const mockConfigService = {
+  get: jest.fn((key: string) => {
+    if (key === 'auth.clerk.webhook_secret') return 'whsec_test_secret';
+    return undefined;
+  }),
+};
+
 describe('ClerkWebhookController', () => {
   let controller: ClerkWebhookController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ClerkWebhookController],
+      providers: [{ provide: ConfigService, useValue: mockConfigService }],
     }).compile();
 
     controller = module.get<ClerkWebhookController>(ClerkWebhookController);
@@ -26,22 +35,14 @@ describe('ClerkWebhookController', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    delete process.env.CLERK_WEBHOOK_SECRET;
   });
 
   describe('handleClerkWebhook', () => {
     it('should verify webhook signature and handle user.created event', async () => {
-      // Setup
-      const mockSecret = 'whsec_test_secret';
-      process.env.CLERK_WEBHOOK_SECRET = mockSecret;
-
       const mockUserId = 'user_123';
       const mockPayload = {
         type: 'user.created',
-        data: {
-          id: mockUserId,
-          email: 'test@example.com',
-        },
+        data: { id: mockUserId, email: 'test@example.com' },
       };
 
       const mockReq = {
@@ -54,36 +55,19 @@ describe('ClerkWebhookController', () => {
         },
       } as unknown as Request;
 
-      // Mock svix Webhook.verify
       const mockVerify = jest.fn().mockReturnValue(mockPayload);
-      (Webhook as jest.Mock).mockImplementation(() => ({
-        verify: mockVerify,
-      }));
+      (Webhook as jest.Mock).mockImplementation(() => ({ verify: mockVerify }));
 
-      // Execute
       const result = await controller.handleClerkWebhook(
         mockReq as Parameters<typeof controller.handleClerkWebhook>[0],
       );
 
-      // Assert
       expect(result).toEqual({ success: true });
-      expect(mockVerify).toHaveBeenCalledWith(
-        JSON.stringify(mockPayload),
-        mockReq.headers,
-      );
+      expect(mockVerify).toHaveBeenCalledWith(JSON.stringify(mockPayload), mockReq.headers);
     });
 
     it('should verify webhook signature and pass through other event types', async () => {
-      // Setup
-      const mockSecret = 'whsec_test_secret';
-      process.env.CLERK_WEBHOOK_SECRET = mockSecret;
-
-      const mockPayload = {
-        type: 'user.updated',
-        data: {
-          id: 'user_123',
-        },
-      };
+      const mockPayload = { type: 'user.updated', data: { id: 'user_123' } };
 
       const mockReq = {
         rawBody: JSON.stringify(mockPayload),
@@ -96,25 +80,17 @@ describe('ClerkWebhookController', () => {
       } as unknown as Request;
 
       const mockVerify = jest.fn().mockReturnValue(mockPayload);
-      (Webhook as jest.Mock).mockImplementation(() => ({
-        verify: mockVerify,
-      }));
+      (Webhook as jest.Mock).mockImplementation(() => ({ verify: mockVerify }));
 
-      // Execute
       const result = await controller.handleClerkWebhook(
         mockReq as Parameters<typeof controller.handleClerkWebhook>[0],
       );
 
-      // Assert
       expect(result).toEqual({ success: true });
       expect(mockVerify).toHaveBeenCalled();
     });
 
     it('should reject webhook with invalid signature', async () => {
-      // Setup
-      const mockSecret = 'whsec_test_secret';
-      process.env.CLERK_WEBHOOK_SECRET = mockSecret;
-
       const mockReq = {
         rawBody: 'invalid_body',
         body: {},
@@ -125,16 +101,11 @@ describe('ClerkWebhookController', () => {
         },
       } as unknown as Request;
 
-      // Mock svix Webhook.verify to throw error
-      const mockError = new Error('Signature verification failed');
       const mockVerify = jest.fn().mockImplementation(() => {
-        throw mockError;
+        throw new Error('Signature verification failed');
       });
-      (Webhook as jest.Mock).mockImplementation(() => ({
-        verify: mockVerify,
-      }));
+      (Webhook as jest.Mock).mockImplementation(() => ({ verify: mockVerify }));
 
-      // Execute & Assert
       await expect(
         controller.handleClerkWebhook(
           mockReq as Parameters<typeof controller.handleClerkWebhook>[0],
@@ -142,17 +113,11 @@ describe('ClerkWebhookController', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw error when CLERK_WEBHOOK_SECRET is not configured', async () => {
-      // Setup
-      delete process.env.CLERK_WEBHOOK_SECRET;
+    it('should throw error when webhook_secret is not configured', async () => {
+      mockConfigService.get.mockReturnValueOnce(undefined);
 
-      const mockReq = {
-        rawBody: '{}',
-        body: {},
-        headers: {},
-      } as unknown as Request;
+      const mockReq = { rawBody: '{}', body: {}, headers: {} } as unknown as Request;
 
-      // Execute & Assert
       await expect(
         controller.handleClerkWebhook(
           mockReq as Parameters<typeof controller.handleClerkWebhook>[0],
@@ -161,17 +126,9 @@ describe('ClerkWebhookController', () => {
     });
 
     it('should fall back to JSON stringified body if rawBody is not available', async () => {
-      // Setup
-      const mockSecret = 'whsec_test_secret';
-      process.env.CLERK_WEBHOOK_SECRET = mockSecret;
-
-      const mockPayload = {
-        type: 'user.created',
-        data: { id: 'user_123' },
-      };
+      const mockPayload = { type: 'user.created', data: { id: 'user_123' } };
 
       const mockReq = {
-        // rawBody is undefined/missing
         body: mockPayload,
         headers: {
           'svix-id': 'msg_test',
@@ -181,44 +138,23 @@ describe('ClerkWebhookController', () => {
       } as unknown as Request;
 
       const mockVerify = jest.fn().mockReturnValue(mockPayload);
-      (Webhook as jest.Mock).mockImplementation(() => ({
-        verify: mockVerify,
-      }));
+      (Webhook as jest.Mock).mockImplementation(() => ({ verify: mockVerify }));
 
-      // Execute
       const result = await controller.handleClerkWebhook(
         mockReq as Parameters<typeof controller.handleClerkWebhook>[0],
       );
 
-      // Assert
       expect(result).toEqual({ success: true });
-      // Should use JSON.stringify(body) instead of rawBody
-      expect(mockVerify).toHaveBeenCalledWith(
-        JSON.stringify(mockPayload),
-        mockReq.headers,
-      );
+      expect(mockVerify).toHaveBeenCalledWith(JSON.stringify(mockPayload), mockReq.headers);
     });
 
     it('should handle Webhook.verify throwing non-Error objects', async () => {
-      // Setup
-      const mockSecret = 'whsec_test_secret';
-      process.env.CLERK_WEBHOOK_SECRET = mockSecret;
+      const mockReq = { rawBody: '{}', body: {}, headers: {} } as unknown as Request;
 
-      const mockReq = {
-        rawBody: '{}',
-        body: {},
-        headers: {},
-      } as unknown as Request;
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      const mockVerify = jest.fn().mockImplementation(() => { throw 'String error message'; });
+      (Webhook as jest.Mock).mockImplementation(() => ({ verify: mockVerify }));
 
-      // Mock svix Webhook.verify to throw a non-Error object
-      const mockVerify = jest.fn().mockImplementation(() => {
-        throw 'String error message';
-      });
-      (Webhook as jest.Mock).mockImplementation(() => ({
-        verify: mockVerify,
-      }));
-
-      // Execute & Assert
       await expect(
         controller.handleClerkWebhook(
           mockReq as Parameters<typeof controller.handleClerkWebhook>[0],

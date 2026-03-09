@@ -6,6 +6,7 @@ import {
   Logger,
   BadRequestException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { Webhook } from 'svix';
 import { Public } from '../common/decorators/public.decorator';
@@ -31,19 +32,21 @@ interface ClerkWebhookEvent {
 export class ClerkWebhookController {
   private readonly logger = new Logger(ClerkWebhookController.name);
 
+  constructor(private configService: ConfigService) {}
+
   @Post('clerk')
   @Public()
   async handleClerkWebhook(
     @Req() req: RawBodyRequest<Request>,
   ): Promise<{ success: boolean }> {
-    const CLERK_WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
+    const webhookSecret = this.configService.get<string>('auth.clerk.webhook_secret');
 
-    if (!CLERK_WEBHOOK_SECRET) {
+    if (!webhookSecret) {
       this.logger.error(
         'CLERK_WEBHOOK_SECRET not configured. Webhook verification cannot proceed.',
       );
       throw new BadRequestException(
-        'Webhook secret not configured. Check env-setup.sh and CLERK_WEBHOOK_SECRET.',
+        'Webhook secret not configured. Check services/api/config/.local.yaml → auth.clerk.webhook_secret.',
       );
     }
 
@@ -55,7 +58,7 @@ export class ClerkWebhookController {
         : JSON.stringify(req.body);
 
       // Verify webhook signature using svix
-      const wh = new Webhook(CLERK_WEBHOOK_SECRET);
+      const wh = new Webhook(webhookSecret);
       const payload = wh.verify(
         rawBody,
         req.headers as Record<string, string>,
