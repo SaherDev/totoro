@@ -15,53 +15,13 @@ Format:
 
 ---
 
-## ADR-030: Shell-exported secrets only (no .env or .local.yaml files for secrets)
+## ADR-025: Per-repo local secrets (NestJS and Next.js use .env.local, FastAPI uses config/.local.yaml)
 
 **Date:** 2026-03-09\
 **Status:** accepted\
-**Context:** Previous ADRs (025-027) documented a split approach: YAML files for backend secrets, `.env.local` for frontend. This created inconsistency and violated the zero-hardcoding principle. Standards.md explicitly prohibited `.env` files, but documentation contradicted this.\
-**Decision:** All secrets across all services (NestJS, Next.js, FastAPI) are injected as shell-exported environment variables only. No `.env.local`, `.local.yaml`, or secret template files exist in any repo. Each developer sources `scripts/env-setup.sh` (or equivalent in each repo) to export all required secrets to the shell environment. This repo's `scripts/env-setup.sh` exports `DATABASE_URL`, `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, and any AI service auth headers. NestJS and Next.js read secrets from `process.env` at startup. Secrets are NEVER committed. `.example` files are removed — setup instructions live in README or CLAUDE.md only.\
-**Consequences:** Single consistent approach across all repos and languages. No secret files in git history ever. No setup confusion — developers follow one pattern everywhere. CI/CD unchanged — it injects env vars as always. `.local.yaml` files hold non-secret config only (`ai_service.base_url`, feature flags). Supersedes ADR-025 and ADR-026 for secrets handling specifically.
-
----
-
-## ADR-029: Consolidated config files into .local.yaml
-
-**Date:** 2026-03-09\
-**Status:** accepted\
-**Context:** Multiple config files (`app.yaml`, `models.yaml` in totoro-ai) scattered across config directories increased maintenance burden and file count. NestJS API prefix was hardcoded in `libs/shared/constants.ts` instead of being configurable. Each repo needed separate config loading logic.\
-**Decision:** Consolidate all non-secret config into `config/.local.yaml` per repo. For totoro-ai, merge `app.yaml` and `models.yaml` sections into `.local.yaml`. For totoro NestJS, add `api_prefix` to `.local.yaml` under the `app` section and remove the hardcoded constant from `libs/shared`. Both services use their framework's config service to load `.local.yaml` at startup: FastAPI uses `load_yaml_config(".local.yaml")`, NestJS uses `@nestjs/config` ConfigModule with YAML parser.\
-**Consequences:** Single source of truth per repo for all non-secret config. Fewer files to maintain. Developers see all app config in one place. `API_GLOBAL_PREFIX` constant removed; api_prefix now loaded from config. Changes to app metadata, model assignments, or API prefix go to one file. All repos follow the same consolidation pattern for consistency.
-
----
-
-## ADR-027: Secrets schema documentation via .example templates
-
-**Date:** 2026-03-09\
-**Status:** accepted\
-**Context:** Each repo manages its own secrets locally, but developers need to know what keys and values are required. Without documentation, setup errors are common — missing environment variables cause runtime failures instead of clear setup instructions.\
-**Decision:** Every gitignored secrets file has a `.example` companion in the repo: `config/.local.yaml.example` (NestJS/FastAPI) and `.env.local.example` (Next.js). The `.example` files document all expected secret keys, their purpose, and format. Developers copy the `.example` file to create their local `.local.yaml` or `.env.local` and fill in their own values. The `.example` files are version-controlled; the actual files are gitignored.\
-**Consequences:** New developers can see exactly what secrets they need to provide. Setup instructions are self-documenting via the `.example` files. No secrets leak into git history. Changes to the secret schema require updating both the `.example` file and ADR-027 documentation.
-
----
-
-## ADR-026: Deprecate centralized totoro-config for secrets management
-
-**Date:** 2026-03-09\
-**Status:** accepted (supersedes the centralized env-setup pattern)\
-**Context:** Secrets were previously managed centrally in the totoro-config repo via `.env.*` files and `scripts/env-setup.sh`. This created a dependency on totoro-config for every repo and made it hard to manage repo-specific secrets without external coordination.\
-**Decision:** Deprecate all secrets management in totoro-config. Each repo (totoro, totoro-ai) now owns its secrets locally via `config/.local.yaml` (backend services) or `.env.local` (Next.js frontend). The centralized env-setup.sh is no longer used. totoro-config becomes a non-dependency for development.\
-**Consequences:** Repos are independent — no external dependency for secrets. Developers can set up and run each repo in isolation. CI/CD must inject secrets as environment variables (existing patterns apply). The `.env.*` files and `env-setup.sh` are removed from totoro-config. Future repos follow the per-repo local secrets pattern by default.
-
----
-
-## ADR-025: Per-repo local secrets management (NestJS/FastAPI YAML, Next.js env)
-
-**Date:** 2026-03-09\
-**Status:** accepted\
-**Context:** Secrets must be kept out of version control but developers need a clear, repeatable setup process. The previous centralized env-setup.sh approach created a single point of failure and made per-repo development harder.\
-**Decision:** Secrets are managed locally per repo: (1) **NestJS** (totoro/services/api) loads `config/.local.yaml` and merges it with environment-specific config from `config/dev.yml` or `config/prod.yml`; (2) **FastAPI** (totoro-ai) loads `config/.local.yaml` and merges with environment config; (3) **Next.js** (totoro/apps/web) loads `.env.local` via standard Next.js environment variable loading. All three use `.example` template files to document required keys. All `.local.yaml` and `.env.local` files are gitignored. Developers create their local files by copying the `.example` template and filling in their values.\
-**Consequences:** Secrets are decoupled from version control and source repos. Each repo can be run independently with local configuration. ConfigModule in NestJS loads both environment-specific and local config in the correct order (local overrides or augments base config). Next.js uses native `.env.local` support — no custom loader needed. CI/CD injects secrets as environment variables (not via local config files). Developers follow a consistent local setup pattern across all repos.
+**Context:** Secrets must never be stored in version control. Each service needs a simple way to manage its own secrets without external dependencies or complex setup.\
+**Decision:** Each service manages secrets locally in a gitignored file: (1) **NestJS** (totoro/services/api) reads secrets from `.env.local`; (2) **Next.js** (totoro/apps/web) reads secrets from `.env.local`; (3) **FastAPI** (totoro-ai) reads secrets from `config/.local.yaml`. All three files are gitignored and never committed. Developers create these files manually and populate them with their own secret values. No template files, no shell scripts, no other files needed.\
+**Consequences:** Each service owns its secrets. No shared dependency files. Simple setup — developers create the file and fill in values. CI/CD injects secrets as environment variables at deploy time.
 
 ---
 
