@@ -7,6 +7,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { createClerkClient } from '@clerk/backend';
 import { Request } from 'express';
 import { Webhook } from 'svix';
 import { Public } from '../common/decorators/public.decorator';
@@ -69,16 +70,15 @@ export class ClerkWebhookController {
 
       // Handle user.created event
       if (clerkEvent.type === 'user.created') {
-        const userId = clerkEvent.data.id;
+        const userId = clerkEvent.data.id as string;
         this.logger.log(`New user created: ${userId}`);
 
-        // TODO: Call Clerk Backend API to set publicMetadata.ai_enabled = true
-        // This is deferred per ADR-022. For now, log the event.
-        // When implemented, this will call:
-        // const clerk = new Clerk({ apiKey: process.env.CLERK_API_KEY });
-        // await clerk.users.updateUser(userId, {
-        //   publicMetadata: { ai_enabled: true },
-        // });
+        const secretKey = this.configService.get<string>('auth.clerk.secret_key');
+        const clerk = createClerkClient({ secretKey });
+        await clerk.users.updateUser(userId, {
+          publicMetadata: { ai_enabled: true },
+        });
+        this.logger.log(`Set ai_enabled=true for user ${userId}`);
       }
 
       // For any other event type, log and return success

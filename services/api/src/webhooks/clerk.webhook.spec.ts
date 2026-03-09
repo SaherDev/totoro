@@ -14,6 +14,13 @@ jest.mock('svix', () => {
   };
 });
 
+const mockUpdateUser = jest.fn().mockResolvedValue({});
+jest.mock('@clerk/backend', () => ({
+  createClerkClient: jest.fn(() => ({
+    users: { updateUser: mockUpdateUser },
+  })),
+}));
+
 const mockConfigService = {
   get: jest.fn((key: string) => {
     if (key === 'auth.clerk.webhook_secret') return 'whsec_test_secret';
