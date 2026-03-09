@@ -24,7 +24,7 @@ Totoro is split across two repositories. This repo (totoro) is the product layer
 │  - User management and settings                     │
 │  - Recommendation history storage                   │
 │  - Forwards AI requests to totoro-ai                │
-│  - Schema owner: Prisma manages all migrations      │
+│  - Prisma manages product table migrations only      │
 └────────────┬────────────────────┬───────────────────┘
              │ SQL (read-write)   │ HTTP (JSON)
              │                    │
@@ -98,7 +98,7 @@ Streaming note: The current flow uses a synchronous JSON response. When the fron
 
 ## Database Table Ownership
 
-Prisma in this repo defines all tables and runs all migrations. Write ownership is split by domain.
+Prisma in this repo defines and migrates product tables only. Alembic in totoro-ai defines and migrates AI tables. Write ownership is split by domain.
 
 NestJS writes and reads:
 
@@ -114,7 +114,7 @@ FastAPI writes and reads:
 
 Both services read from any table as needed. They write to different tables. No write conflicts.
 
-One shared PostgreSQL instance. One schema owner (Prisma in this repo). Two connection strings with appropriate write permissions.
+One shared PostgreSQL instance. Migration ownership split: Prisma owns users, user_settings, recommendations. Alembic in totoro-ai owns places, embeddings, taste_model. Never run Prisma migrations against AI tables. Two connection strings with appropriate write permissions.
 
 ## Technology Stack
 
