@@ -1,6 +1,2 @@
--- pgvector extension
--- Note: pgvector must be installed on the PostgreSQL instance
--- For local development, you may need to run:
--- docker exec totoro-postgres apk add postgre-contrib
--- Or use a Docker image with pgvector pre-installed
--- CREATE EXTENSION IF NOT EXISTS vector;
+-- Enable pgvector extension for vector similarity search
+CREATE EXTENSION IF NOT EXISTS vector;
