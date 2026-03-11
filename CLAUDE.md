@@ -15,7 +15,7 @@ libs/shared/       → Shared TypeScript types, DTOs, constants
 libs/ui/           → Design system (shadcn/ui components, cva variants, cn() utility)
 messages/          → i18n translation files (en.json, he.json)
 config/            → YAML configuration files (dev.yml, prod.yml, test.yml)
-scripts/           → Shell scripts (env-setup.sh)
+scripts/           → Shell scripts (utilities)
 prisma/            → Prisma schema and migrations
 docs/              → Operational docs (architecture, API contract, decisions)
 .claude/rules/     → Claude Code rules (git, architecture, frontend, standards)
@@ -78,7 +78,7 @@ See `.claude/workflows.md` for the complete 5-step token-efficient workflow (ADR
 
 ## Notes
 
-- **Secrets management** (ADR-025, ADR-026, ADR-027): Each service manages secrets locally via shell-exported variables. See `docs/decisions.md` for the architecture decision. Never create `.env` files; use `source scripts/env-setup.sh` to export secrets instead.
+- **Secrets management** (ADR-025): Each service manages secrets locally in a gitignored file. NestJS (`services/api`) uses `.env.local`. Next.js (`apps/web`) uses `.env.local`. FastAPI (`totoro-ai`) uses `config/.local.yaml`. Never commit secret files. Developers create these files manually and fill in values. CI/CD injects secrets as environment variables at deploy time.
 - **Git comment char is `;`** not `#` — configured to support ClickUp task IDs in commits.
 - **Bruno API testing**: Collection at `totoro-config/bruno/`. New endpoints need a corresponding `.bru` request file.
 - **Prisma + pgvector**: PostgreSQL must have `vector` extension. Prisma uses `Unsupported("vector")` — handle vector ops via raw SQL.
