@@ -15,7 +15,7 @@ Format:
 
 ---
 
-## ADR-031: Interfaces implemented only via classes, never via factory functions
+## ADR-030: Interfaces implemented only via classes, never via factory functions
 
 **Date:** 2026-03-11\
 **Status:** accepted\
@@ -35,6 +35,7 @@ Format:
 **Split reads and mutations.** Reads are plain async functions (queries) — no `'use server'` directive. Next.js caching works normally on them. Mutations have `'use server'` and are called from forms and Client Components via Server Actions. Both go through the same transport layer underneath.
 
 Structure:
+
 ```
 apps/web/src/api/
   types.ts              — HttpClient interface (get, post)
@@ -55,12 +56,12 @@ Components never import HttpClient, FetchClient, or getApiClient. Usage:
 
 ```ts
 // Server Component — read
-import { getPlaces } from '@/api'
-const places = await getPlaces()
+import { getPlaces } from "@/api";
+const places = await getPlaces();
 
 // Client Component or form — mutation
-import { extractPlace } from '@/api'
-await extractPlace({ input })
+import { extractPlace } from "@/api";
+await extractPlace({ input });
 ```
 
 **Instance lifecycle:** `getApiClient()` creates a fresh `FetchClient` on every call. This is fine because `FetchClient` is stateless — the constructor must stay cheap and do no I/O. If the constructor ever needs to do async work (e.g., connection pooling), refactor to a singleton pattern.
@@ -70,6 +71,20 @@ await extractPlace({ input })
 See `docs/examples/consult-example.ts` for the full flow.
 
 **Consequences:** Swapping transports requires changing one class. Components stay thin — one function call, typed response. Reads benefit from Next.js caching. Mutations run as Server Actions. No DI library needed. Request/response types come from `@totoro/shared` when implemented.
+
+---
+
+## ADR-028: 5-Step Token-Efficient Workflow (Clarify → Plan → Implement → Verify → Complete)
+
+**Date:** 2026-03-09\
+**Status:** accepted\
+**Context:** Previous workflow was unclear about when to use agents, causing token waste through unnecessary subagent dispatches and review loops. Needed a standardized approach that scales from simple 1-file tasks to complex multi-repo changes.\
+**Decision:** Adopt 5-step workflow with specific Claude model per step: (1) **Clarify** (Haiku) — If ambiguous, ask 5 questions; (2) **Plan** (Sonnet) — If 3+ files, create docs/plans/\*.md with phases + Constitution Check against docs/decisions.md; (3) **Implement** (Haiku/Sonnet per complexity) — Follow plan checklist, write code, commit; (4) **Verify** (Haiku) — Run commands, all must pass; (5) **Complete** (Haiku) — Mark task done. See `.claude/workflows.md` for flow, `.claude/constitution.md` for check process.\
+**Consequences:** Average task cost reduced from 250K to 13-18K tokens (~95% savings). Clear decision points on when to plan vs implement. Constitution Check catches architectural violations early (in Plan phase, not Implement phase). Plan doc becomes single source of truth for implementation. Workflow applies consistently across all repos (totoro, totoro-ai, future repos).
+
+---
+
+## ADR-027: _(reserved — unused)_
 
 ---
 
@@ -90,16 +105,6 @@ See `docs/examples/consult-example.ts` for the full flow.
 **Context:** Secrets must never be stored in version control. Each service needs a simple way to manage its own secrets without external dependencies or complex setup.\
 **Decision:** Each service manages secrets locally in a gitignored file: (1) **NestJS** (totoro/services/api) reads secrets from `.env.local`; (2) **Next.js** (totoro/apps/web) reads secrets from `.env.local`; (3) **FastAPI** (totoro-ai) reads secrets from `config/.local.yaml`. All three files are gitignored and never committed. Developers create these files manually and populate them with their own secret values. No template files, no shell scripts, no other files needed.\
 **Consequences:** Each service owns its secrets. No shared dependency files. Simple setup — developers create the file and fill in values. CI/CD injects secrets as environment variables at deploy time.
-
----
-
-## ADR-028: 5-Step Token-Efficient Workflow (Clarify → Plan → Implement → Verify → Complete)
-
-**Date:** 2026-03-09\
-**Status:** accepted\
-**Context:** Previous workflow was unclear about when to use agents, causing token waste through unnecessary subagent dispatches and review loops. Needed a standardized approach that scales from simple 1-file tasks to complex multi-repo changes.\
-**Decision:** Adopt 5-step workflow with specific Claude model per step: (1) **Clarify** (Haiku) — If ambiguous, ask 5 questions; (2) **Plan** (Sonnet) — If 3+ files, create docs/plans/*.md with phases + Constitution Check against docs/decisions.md; (3) **Implement** (Haiku/Sonnet per complexity) — Follow plan checklist, write code, commit; (4) **Verify** (Haiku) — Run commands, all must pass; (5) **Complete** (Haiku) — Mark task done. See `.claude/workflows.md` for flow, `.claude/constitution.md` for check process.\
-**Consequences:** Average task cost reduced from 250K to 13-18K tokens (~95% savings). Clear decision points on when to plan vs implement. Constitution Check catches architectural violations early (in Plan phase, not Implement phase). Plan doc becomes single source of truth for implementation. Workflow applies consistently across all repos (totoro, totoro-ai, future repos).
 
 ---
 
