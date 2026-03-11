@@ -1,3 +1,7 @@
+// TODO: This is a temporary test page. Delete when real pages are built.
+// Note: Uses inline fetch() calls (does not follow ADR-029 injected client pattern).
+// When this is replaced, use the new API client pattern from apps/web/src/api/.
+
 'use client';
 
 import { SignInButton, SignUpButton, UserButton, useAuth, useUser } from '@clerk/nextjs';
