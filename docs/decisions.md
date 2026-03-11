@@ -30,12 +30,15 @@ Format:
 **Date:** 2026-03-11\
 **Status:** accepted\
 **Context:** Fetch calls are written inline inside Server Components and Server Actions, making it hard to swap the HTTP client, reuse calls, or change the base URL in one place. Testing and future transport swaps (axios, GraphQL) require tight coupling to a specific implementation.\
-**Decision:** Create an API client layer at `apps/web/src/api/` with an injectable `HttpClient` interface. Each transport (fetch, axios, GraphQL) implements this interface as a class (`FetchClient implements HttpClient`). Nothing outside `apps/web/src/api/` imports fetch, axios, or any HTTP library directly. Two entry points based on Next.js context:
+**Decision:** Create an API client layer at `apps/web/src/api/` with an injectable `HttpClient` interface. Each transport (fetch, axios, GraphQL) implements this interface as a class (`FetchClient implements HttpClient`). Nothing outside `apps/web/src/api/` imports fetch, axios, or any HTTP library directly.
 
-- **Server** (`getApiClient()`): Used in Server Components and Server Actions. Gets token from Clerk's server SDK (`auth()`).
-- **Client** (`useApiClient()`): Used in Client Components. Gets token from Clerk's client hook (`useAuth()`). Creates client once per component lifecycle via `useMemo`.
+Four layers:
+1. **HttpClient interface** (`types.ts`) — defines `get<T>` and `post<T>`
+2. **FetchClient class** (`transports/fetch.transport.ts`) — implements HttpClient using fetch
+3. **getApiClient()** (`server.ts`) — creates FetchClient with Clerk server token (`auth()`)
+4. **API functions** (`apis/*.api.ts`) — typed, domain-specific server actions (`'use server'`). Each function calls `getApiClient()` internally. Components import and call these directly.
 
-Both return the same `FetchClient` instance. Components stay thin — they call the client and render. No inline fetch, no manual headers, no URL construction.
+Components never import HttpClient, FetchClient, or getApiClient. They just call `consult(query)` or `extractPlace(input)` and get typed data back. Works identically in Server Components (`await` in render) and Client Components (`await` in event handler).
 
 Structure:
 ```
@@ -43,12 +46,17 @@ apps/web/src/api/
   types.ts              — HttpClient interface (get, post)
   transports/
     fetch.transport.ts  — FetchClient class implementing HttpClient
-  client.ts             — createApiClient() factory (used by server.ts and hooks.ts)
-  server.ts             — getApiClient() for Server Components / Server Actions
-  hooks.ts              — useApiClient() hook for Client Components
+  server.ts             — getApiClient() using Clerk server SDK
+  apis/
+    consult.api.ts      — 'use server', exports consult()
+    places.api.ts       — 'use server', exports extractPlace()
 ```
 
-**Consequences:** Swapping transports requires changing one class in `client.ts`. Testing can inject a mock transport. The interface is minimal — add `put` and `delete` only when needed. Request/response types come from `@totoro/shared` when domain-specific API functions are added.
+No separate Server Action wrappers needed — the API functions ARE server actions. No `useApiClient()` hook needed — server actions work from Client Components via Next.js. The hook is only added later if client-side streaming (SSE) is needed.
+
+See `docs/examples/consult-example.ts` for the full flow.
+
+**Consequences:** Swapping transports requires changing one class. Components stay thin — one function call, typed response. No DI library needed for the frontend. Request/response types come from `@totoro/shared` when implemented.
 
 ---
 
