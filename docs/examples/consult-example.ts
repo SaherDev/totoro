@@ -1,18 +1,14 @@
-// Full consult flow — from component to NestJS
-// Shows all layers + query vs mutation split
+// Full API client flow — ADR-029
+// Each section maps to a real file in apps/web/src/api/
 
-// ============================================================================
-// LAYER 1: HttpClient interface (apps/web/src/api/types.ts)
-// ============================================================================
+// === apps/web/src/api/types.ts ===
 
-interface HttpClient {
+export interface HttpClient {
   get<T>(path: string): Promise<T>
   post<T>(path: string, body: unknown): Promise<T>
 }
 
-// ============================================================================
-// LAYER 2: FetchClient class (apps/web/src/api/transports/fetch.transport.ts)
-// ============================================================================
+// === apps/web/src/api/transports/fetch.transport.ts ===
 
 class FetchClient implements HttpClient {
   constructor(
@@ -46,59 +42,52 @@ class FetchClient implements HttpClient {
   }
 }
 
-// ============================================================================
-// LAYER 3: getApiClient (apps/web/src/api/server.ts)
-// ============================================================================
-
+// === apps/web/src/api/server.ts ===
 // import { auth } from '@clerk/nextjs/server'
+
+async function getApiClient() {
+  // const { getToken } = await auth()
+  // return new FetchClient(process.env.NEXT_PUBLIC_API_URL!, getToken)
+}
+
+// === apps/web/src/api/queries/places.query.ts ===
+// Plain async function — no 'use server'. Next.js caching works normally.
+
+interface Place {
+  id: string
+  place_name: string
+  address: string
+}
+
+async function getPlaces(): Promise<Place[]> {
+  const client = await getApiClient() as any
+  return client.get<Place[]>('/places')
+}
+
+// === apps/web/src/api/mutations/consult.mutation.ts ===
+// 'use server' — called from Client Components via Server Actions
+
+interface ConsultResponse {
+  primary: { place_name: string; address: string; reasoning: string; source: string }
+  alternatives: { place_name: string; address: string; reasoning: string; source: string }[]
+  reasoning_steps: { step: string; summary: string }[]
+}
+
+async function consult(
+  query: string,
+  location?: { lat: number; lng: number }
+): Promise<ConsultResponse> {
+  const client = await getApiClient() as any
+  return client.post<ConsultResponse>('/recommendations/consult', { query, location })
+}
+
+// === apps/web/src/app/places/page.tsx ===
+// Server Component — no 'use client', just await and render
 //
-// export async function getApiClient() {
-//   const { getToken } = await auth()
-//   return new FetchClient(process.env.NEXT_PUBLIC_API_URL!, getToken)
-// }
-
-// ============================================================================
-// QUERY — plain async function, no 'use server'
-// (apps/web/src/api/queries/places.query.ts)
-// Next.js caching works normally on these
-// ============================================================================
-
-// import { getApiClient } from '../server'
-//
-// export async function getPlaces() {
-//   const client = await getApiClient()
-//   return client.get<Place[]>('/places')
-// }
-
-// ============================================================================
-// MUTATION — 'use server' directive
-// (apps/web/src/api/mutations/consult.mutation.ts)
-// Called from forms and Client Components via Server Actions
-// ============================================================================
-
-// 'use server'
-//
-// import { getApiClient } from '../server'
-//
-// interface ConsultResponse {
-//   primary: { place_name: string; address: string; reasoning: string; source: string }
-//   alternatives: { place_name: string; address: string; reasoning: string; source: string }[]
-//   reasoning_steps: { step: string; summary: string }[]
-// }
-//
-// export async function consult(query: string, location?: { lat: number; lng: number }) {
-//   const client = await getApiClient()
-//   return client.post<ConsultResponse>('/recommendations/consult', { query, location })
-// }
-
-// ============================================================================
-// SERVER COMPONENT — uses query directly (no 'use server' needed)
-// ============================================================================
-
 // import { getPlaces } from '@/api'
 //
 // export default async function PlacesPage() {
-//   const places = await getPlaces()  // ← query, cached by Next.js
+//   const places = await getPlaces()
 //   return (
 //     <ul>
 //       {places.map(p => <li key={p.id}>{p.place_name}</li>)}
@@ -106,13 +95,12 @@ class FetchClient implements HttpClient {
 //   )
 // }
 
-// ============================================================================
-// CLIENT COMPONENT — uses mutation via server action
-// ============================================================================
-
+// === apps/web/src/app/consult/consult-input.tsx ===
+// Client Component — calls 'use server' mutation, renders result
+// consult() runs on the server, Next.js bridges the call automatically
+//
 // 'use client'
 //
-// import { useState } from 'react'
 // import { consult } from '@/api'
 //
 // export function ConsultInput() {
@@ -123,7 +111,7 @@ class FetchClient implements HttpClient {
 //   async function handleClick() {
 //     setLoading(true)
 //     try {
-//       const data = await consult(query)  // ← mutation, server action
+//       const data = await consult(query)
 //       setResult(data)
 //     } finally {
 //       setLoading(false)
