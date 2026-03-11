@@ -20,7 +20,7 @@ Format:
 **Date:** 2026-03-11\
 **Status:** accepted\
 **Context:** When defining injectable abstractions (like HttpClient), there are two patterns: factory functions that return objects, or classes that implement the interface. Factory functions are lighter but obscure the shape of what's being created. Classes are more explicit and composable.\
-**Decision:** All interfaces in the codebase are implemented via classes that explicitly implement the interface (e.g., `class FetchTransport implements HttpClient`). Never use factory functions to return objects that satisfy an interface. This makes the type visible in code and enables constructor-based dependency injection.\
+**Decision:** All interfaces in the codebase are implemented via classes that explicitly implement the interface (e.g., `class FetchClient implements HttpClient`). Never use factory functions to return objects that satisfy an interface. This makes the type visible in code and enables constructor-based dependency injection.\
 **Consequences:** Every transport is a class. Every service is a class. Dependency injection (both manual and framework-based like NestJS) works the same way everywhere. Code is more discoverable — developers see the concrete type, not a factory.
 
 ---
@@ -30,21 +30,25 @@ Format:
 **Date:** 2026-03-11\
 **Status:** accepted\
 **Context:** Fetch calls are written inline inside Server Components and Server Actions, making it hard to swap the HTTP client, reuse calls, or change the base URL in one place. Testing and future transport swaps (axios, GraphQL) require tight coupling to a specific implementation.\
-**Decision:** Create an API client layer at `apps/web/src/api/` with an injectable `HttpClient` interface. Each transport (fetch, axios, GraphQL) implements this interface as a class. The client file instantiates and exports one transport — this is the only place to swap implementations. Domain-specific API functions (endpoints, request/response types) are imported from `libs/shared`. Nothing outside `apps/web/api/` imports fetch, axios, or any HTTP library directly.
+**Decision:** Create an API client layer at `apps/web/src/api/` with an injectable `HttpClient` interface. Each transport (fetch, axios, GraphQL) implements this interface as a class (`FetchClient implements HttpClient`). Nothing outside `apps/web/src/api/` imports fetch, axios, or any HTTP library directly. Two entry points based on Next.js context:
+
+- **Server** (`getApiClient()`): Used in Server Components and Server Actions. Gets token from Clerk's server SDK (`auth()`).
+- **Client** (`useApiClient()`): Used in Client Components. Gets token from Clerk's client hook (`useAuth()`). Creates client once per component lifecycle via `useMemo`.
+
+Both return the same `FetchClient` instance. Components stay thin — they call the client and render. No inline fetch, no manual headers, no URL construction.
 
 Structure:
 ```
 apps/web/src/api/
-  types.ts              — HttpClient interface
+  types.ts              — HttpClient interface (get, post)
   transports/
-    fetch.transport.ts  — FetchTransport class implementing HttpClient
-  client.ts             — instantiates and exports the transport
-  index.ts              — re-exports HttpClient and transport
+    fetch.transport.ts  — FetchClient class implementing HttpClient
+  client.ts             — createApiClient() factory (used by server.ts and hooks.ts)
+  server.ts             — getApiClient() for Server Components / Server Actions
+  hooks.ts              — useApiClient() hook for Client Components
 ```
 
-The `HttpClient` interface exposes `get<T>(path)` and `post<T>(path, body)`. Request/response types come from `@totoro/shared` (shared library). Server Components and Actions call typed API functions that use the injected transport internally.
-
-**Consequences:** Swapping transports (fetch → axios → GraphQL) requires changing one line in `client.ts`. Testing can inject a mock transport without importing fetch. The interface is minimal — add `put` and `delete` only when needed. API types are shared between frontend and backend, reducing duplication.
+**Consequences:** Swapping transports requires changing one class in `client.ts`. Testing can inject a mock transport. The interface is minimal — add `put` and `delete` only when needed. Request/response types come from `@totoro/shared` when domain-specific API functions are added.
 
 ---
 

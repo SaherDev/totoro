@@ -1,10 +1,9 @@
-import { FetchTransport } from './transports/fetch.transport'
+import { FetchClient } from './transports/fetch.transport'
 
 /**
- * Factory for creating the API client with a given token getter.
- * Token getter is provided at call time (from useAuth() in components
- * or from getToken() in server actions).
+ * Server-side: use getApiClient() from ./server.ts
+ * Client-side: use useApiClient() from ./hooks.ts
  */
 export function createApiClient(getToken: () => Promise<string>) {
-  return new FetchTransport(process.env.NEXT_PUBLIC_API_URL!, getToken)
+  return new FetchClient(process.env.NEXT_PUBLIC_API_URL!, getToken)
 }

@@ -1,6 +1,6 @@
 import { HttpClient } from '../types'
 
-export class FetchTransport implements HttpClient {
+export class FetchClient implements HttpClient {
   constructor(
     private baseUrl: string,
     private getToken: () => Promise<string>
