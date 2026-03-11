@@ -32,13 +32,7 @@ Format:
 **Context:** Fetch calls are written inline inside Server Components and Server Actions, making it hard to swap the HTTP client, reuse calls, or change the base URL in one place. Testing and future transport swaps (axios, GraphQL) require tight coupling to a specific implementation.\
 **Decision:** Create an API client layer at `apps/web/src/api/` with an injectable `HttpClient` interface. Each transport (fetch, axios, GraphQL) implements this interface as a class (`FetchClient implements HttpClient`). Nothing outside `apps/web/src/api/` imports fetch, axios, or any HTTP library directly.
 
-Four layers:
-1. **HttpClient interface** (`types.ts`) — defines `get<T>` and `post<T>`
-2. **FetchClient class** (`transports/fetch.transport.ts`) — implements HttpClient using fetch
-3. **getApiClient()** (`server.ts`) — creates FetchClient with Clerk server token (`auth()`)
-4. **API functions** (`apis/*.api.ts`) — typed, domain-specific server actions (`'use server'`). Each function calls `getApiClient()` internally. Components import and call these directly.
-
-Components never import HttpClient, FetchClient, or getApiClient. They just call `consult(query)` or `extractPlace(input)` and get typed data back. Works identically in Server Components (`await` in render) and Client Components (`await` in event handler).
+**Split reads and mutations.** Reads are plain async functions (queries) — no `'use server'` directive. Next.js caching works normally on them. Mutations have `'use server'` and are called from forms and Client Components via Server Actions. Both go through the same transport layer underneath.
 
 Structure:
 ```
@@ -47,12 +41,27 @@ apps/web/src/api/
   transports/
     fetch.transport.ts  — FetchClient class implementing HttpClient
   server.ts             — getApiClient() using Clerk server SDK
-  apis/
-    consult.api.ts      — 'use server', exports consult()
-    places.api.ts       — 'use server', exports extractPlace()
+  queries/
+    places.query.ts     — plain async functions, no directive
+  mutations/
+    places.mutation.ts  — 'use server'
+    consult.mutation.ts — 'use server'
+  index.ts              — re-exports all queries and mutations
 ```
 
-No separate Server Action wrappers needed — the API functions ARE server actions. No `useApiClient()` hook needed — server actions work from Client Components via Next.js. The hook is only added later if client-side streaming (SSE) is needed.
+**The rule:** Reads are queries, mutations are Server Actions, both go through the same transport layer.
+
+Components never import HttpClient, FetchClient, or getApiClient. Usage:
+
+```ts
+// Server Component — read
+import { getPlaces } from '@/api'
+const places = await getPlaces()
+
+// Client Component or form — mutation
+import { extractPlace } from '@/api'
+await extractPlace({ input })
+```
 
 **Instance lifecycle:** `getApiClient()` creates a fresh `FetchClient` on every call. This is fine because `FetchClient` is stateless — the constructor must stay cheap and do no I/O. If the constructor ever needs to do async work (e.g., connection pooling), refactor to a singleton pattern.
 
@@ -60,7 +69,7 @@ No separate Server Action wrappers needed — the API functions ARE server actio
 
 See `docs/examples/consult-example.ts` for the full flow.
 
-**Consequences:** Swapping transports requires changing one class. Components stay thin — one function call, typed response. No DI library needed for the frontend. Request/response types come from `@totoro/shared` when implemented.
+**Consequences:** Swapping transports requires changing one class. Components stay thin — one function call, typed response. Reads benefit from Next.js caching. Mutations run as Server Actions. No DI library needed. Request/response types come from `@totoro/shared` when implemented.
 
 ---
 

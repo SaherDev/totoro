@@ -1,5 +1,5 @@
 // Full consult flow — from component to NestJS
-// Shows all 4 layers + both component types
+// Shows all layers + query vs mutation split
 
 // ============================================================================
 // LAYER 1: HttpClient interface (apps/web/src/api/types.ts)
@@ -58,8 +58,22 @@ class FetchClient implements HttpClient {
 // }
 
 // ============================================================================
-// LAYER 4: API function (apps/web/src/api/apis/consult.api.ts)
-// This is a Server Action ('use server') — components call it directly
+// QUERY — plain async function, no 'use server'
+// (apps/web/src/api/queries/places.query.ts)
+// Next.js caching works normally on these
+// ============================================================================
+
+// import { getApiClient } from '../server'
+//
+// export async function getPlaces() {
+//   const client = await getApiClient()
+//   return client.get<Place[]>('/places')
+// }
+
+// ============================================================================
+// MUTATION — 'use server' directive
+// (apps/web/src/api/mutations/consult.mutation.ts)
+// Called from forms and Client Components via Server Actions
 // ============================================================================
 
 // 'use server'
@@ -78,32 +92,28 @@ class FetchClient implements HttpClient {
 // }
 
 // ============================================================================
-// SERVER COMPONENT (apps/web/src/app/consult/page.tsx)
-// No 'use client', no state, no hooks — just await and render
+// SERVER COMPONENT — uses query directly (no 'use server' needed)
 // ============================================================================
 
-// import { consult } from '@/api/apis/consult.api'
+// import { getPlaces } from '@/api'
 //
-// export default async function ConsultPage() {
-//   const result = await consult('best ramen nearby')
-//
+// export default async function PlacesPage() {
+//   const places = await getPlaces()  // ← query, cached by Next.js
 //   return (
-//     <div>
-//       <h2>{result.primary.place_name}</h2>
-//       <p>{result.primary.reasoning}</p>
-//     </div>
+//     <ul>
+//       {places.map(p => <li key={p.id}>{p.place_name}</li>)}
+//     </ul>
 //   )
 // }
 
 // ============================================================================
-// CLIENT COMPONENT (apps/web/src/app/consult/consult-input.tsx)
-// Thin — just calls consult() and renders. No API knowledge.
+// CLIENT COMPONENT — uses mutation via server action
 // ============================================================================
 
 // 'use client'
 //
 // import { useState } from 'react'
-// import { consult } from '@/api/apis/consult.api'
+// import { consult } from '@/api'
 //
 // export function ConsultInput() {
 //   const [query, setQuery] = useState('')
@@ -113,7 +123,7 @@ class FetchClient implements HttpClient {
 //   async function handleClick() {
 //     setLoading(true)
 //     try {
-//       const data = await consult(query)
+//       const data = await consult(query)  // ← mutation, server action
 //       setResult(data)
 //     } finally {
 //       setLoading(false)
@@ -126,12 +136,6 @@ class FetchClient implements HttpClient {
 //       <button onClick={handleClick} disabled={loading}>
 //         {loading ? 'Thinking...' : 'Ask Totoro'}
 //       </button>
-//       {result && (
-//         <div>
-//           <h3>{result.primary.place_name}</h3>
-//           <p>{result.primary.reasoning}</p>
-//         </div>
-//       )}
 //     </div>
 //   )
 // }
