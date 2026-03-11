@@ -15,6 +15,16 @@ Format:
 
 ---
 
+## ADR-031: Interfaces implemented only via classes, never via factory functions
+
+**Date:** 2026-03-11\
+**Status:** accepted\
+**Context:** When defining injectable abstractions (like HttpClient), there are two patterns: factory functions that return objects, or classes that implement the interface. Factory functions are lighter but obscure the shape of what's being created. Classes are more explicit and composable.\
+**Decision:** All interfaces in the codebase are implemented via classes that explicitly implement the interface (e.g., `class FetchTransport implements HttpClient`). Never use factory functions to return objects that satisfy an interface. This makes the type visible in code and enables constructor-based dependency injection.\
+**Consequences:** Every transport is a class. Every service is a class. Dependency injection (both manual and framework-based like NestJS) works the same way everywhere. Code is more discoverable — developers see the concrete type, not a factory.
+
+---
+
 ## ADR-029: Injected HTTP client transport for apps/web
 
 **Date:** 2026-03-11\
