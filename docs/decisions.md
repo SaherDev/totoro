@@ -15,6 +15,29 @@ Format:
 
 ---
 
+## ADR-029: Injected HTTP client transport for apps/web
+
+**Date:** 2026-03-11\
+**Status:** accepted\
+**Context:** Fetch calls are written inline inside Server Components and Server Actions, making it hard to swap the HTTP client, reuse calls, or change the base URL in one place. Testing and future transport swaps (axios, GraphQL) require tight coupling to a specific implementation.\
+**Decision:** Create an API client layer at `apps/web/src/api/` with an injectable `HttpClient` interface. Each transport (fetch, axios, GraphQL) implements this interface as a class. The client file instantiates and exports one transport — this is the only place to swap implementations. Domain-specific API functions (endpoints, request/response types) are imported from `libs/shared`. Nothing outside `apps/web/api/` imports fetch, axios, or any HTTP library directly.
+
+Structure:
+```
+apps/web/src/api/
+  types.ts              — HttpClient interface
+  transports/
+    fetch.transport.ts  — FetchTransport class implementing HttpClient
+  client.ts             — instantiates and exports the transport
+  index.ts              — re-exports HttpClient and transport
+```
+
+The `HttpClient` interface exposes `get<T>(path)` and `post<T>(path, body)`. Request/response types come from `@totoro/shared` (shared library). Server Components and Actions call typed API functions that use the injected transport internally.
+
+**Consequences:** Swapping transports (fetch → axios → GraphQL) requires changing one line in `client.ts`. Testing can inject a mock transport without importing fetch. The interface is minimal — add `put` and `delete` only when needed. API types are shared between frontend and backend, reducing duplication.
+
+---
+
 ## ADR-026: Database migration ownership split between Prisma and Alembic
 
 **Date:** 2026-03-09\
