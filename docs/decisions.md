@@ -54,6 +54,10 @@ apps/web/src/api/
 
 No separate Server Action wrappers needed — the API functions ARE server actions. No `useApiClient()` hook needed — server actions work from Client Components via Next.js. The hook is only added later if client-side streaming (SSE) is needed.
 
+**Instance lifecycle:** `getApiClient()` creates a fresh `FetchClient` on every call. This is fine because `FetchClient` is stateless — the constructor must stay cheap and do no I/O. If the constructor ever needs to do async work (e.g., connection pooling), refactor to a singleton pattern.
+
+**Error handling:** `FetchClient` throws a typed `ApiError` (extending `Error`) with `status`, `statusText`, and parsed response body. API functions do not catch or normalise errors — they let the error propagate to the caller. Components handle errors via try/catch or React error boundaries. This keeps the API layer thin and gives components full control over error UX.
+
 See `docs/examples/consult-example.ts` for the full flow.
 
 **Consequences:** Swapping transports requires changing one class. Components stay thin — one function call, typed response. No DI library needed for the frontend. Request/response types come from `@totoro/shared` when implemented.
