@@ -101,6 +101,9 @@
     "startTalking": "Start talking",
     "placeholder": "Ask Anything",
     "attach": "Attach",
+    "addPlace": {
+      "title": "Add place"
+    },
     "attachFile": "Attach file",
     "takePhoto": "Take photo",
     "voiceMode": "Voice mode",

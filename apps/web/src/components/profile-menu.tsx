@@ -8,7 +8,6 @@ import { useUser, useClerk } from '@clerk/nextjs';
 import { cn } from '@totoro/ui';
 import {
   Settings,
-  Palette,
   MessageSquare,
   LogOut,
 } from 'lucide-react';
@@ -38,11 +37,6 @@ export function ProfileMenu() {
   }, [open]);
 
   const menuItems = [
-    {
-      icon: Palette,
-      label: t('designSystem'),
-      action: () => router.push('/design-system'),
-    },
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     { icon: Settings, label: t('settings'), action: () => {} },
     // eslint-disable-next-line @typescript-eslint/no-empty-function

@@ -77,14 +77,16 @@ export type AgentFlow = "recommend" | "add-place";
 interface AgentResponseBubbleProps {
   hasError?: boolean;
   flow?: AgentFlow;
+  content?: string;
 }
 
 export function AgentResponseBubble({
   hasError = false,
   flow = "recommend",
+  content,
 }: AgentResponseBubbleProps) {
   const t = useTranslations();
-  const [phase, setPhase] = useState<Phase>("thinking");
+  const [phase, setPhase] = useState<Phase>(content ? "result" : "thinking");
   const [activeStep, setActiveStep] = useState(0);
   const stepKeys = flow === "add-place" ? ADD_PLACE_STEP_KEYS : RECOMMEND_STEP_KEYS;
   const stepIcons = flow === "add-place" ? ADD_PLACE_STEP_ICONS : RECOMMEND_STEP_ICONS;
@@ -182,6 +184,23 @@ export function AgentResponseBubble({
               </p>
               <p className="font-body text-xs text-muted-foreground">
                 {t("agent.tryAgain")}
+              </p>
+            </div>
+          </motion.div>
+        ) : content ? (
+          <motion.div
+            key="echo-result"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex items-center gap-3"
+          >
+            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(140,35%,90%)] p-1.5">
+              <TotoroResultCard />
+            </div>
+            <div>
+              <p className="font-display text-sm text-foreground">
+                {content}
               </p>
             </div>
           </motion.div>

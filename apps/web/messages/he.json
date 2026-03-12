@@ -101,6 +101,9 @@
     "startTalking": "התחל לדבר",
     "placeholder": "שאל כל דבר",
     "attach": "צרף",
+    "addPlace": {
+      "title": "הוסף מקום"
+    },
     "attachFile": "צרף קובץ",
     "takePhoto": "צלם תמונה",
     "voiceMode": "מצב קול",

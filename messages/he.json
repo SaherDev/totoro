@@ -1,5 +1,72 @@
 {
   "common": {},
   "recommendation": {},
-  "place": {}
+  "place": {},
+  "chat": {
+    "listening": "מאזין...",
+    "startTalking": "התחל לדבר",
+    "placeholder": "לאן נלך?",
+    "attach": "צרף",
+    "addPlace": {
+      "title": "הוסף מקום"
+    },
+    "attachFile": "צרף קובץ",
+    "takePhoto": "צלם תמונה",
+    "exitVoice": "יציאה מהמצב קולי",
+    "voiceMode": "מצב קולי",
+    "speakerOn": "רמקול פעיל",
+    "speakerOff": "רמקול כבוי",
+    "close": "סגור",
+    "send": "שלח"
+  },
+  "home": {
+    "whereTo": "לאן?",
+    "moodPrompt": "שתף את הרגש או הויבז של מקום ואנחנו נמצא את המקום המושלם",
+    "listening": "מאזין...",
+    "tapToTalk": "הקש לדברות",
+    "voicePrompt": "תאר את המקום שאתה מחפש בקוליך",
+    "suggestions": {
+      "cheapDinner": "ארוחת ערב זולה קרוב",
+      "bestCoffee": "הקפה הטוב לעבודה ממנו",
+      "dateNight": "מקום לערב זיווגי",
+      "brunch": "ברנץ עם חברים",
+      "savePlace": "שמור קישור מקום זה"
+    }
+  },
+  "profile": {
+    "designSystem": "מערכת עיצוב",
+    "settings": "הגדרות",
+    "giveFeedback": "תן משוב",
+    "privacy": "פרטיות",
+    "terms": "תנאים",
+    "logOut": "התנתק"
+  },
+  "agent": {
+    "steps": {
+      "listen": "מאזין לתחושתך",
+      "read": "קורא את המקומות השמורים שלך",
+      "move": "חיפוש אפשרויות קרובות",
+      "check": "בדיקת פרטים",
+      "evaluate": "מציאת ההתאמה המושלמת"
+    },
+    "almostDone": "כמעט שם...",
+    "takesAbout": "זה בדרך כלל לוקח כמה שניות",
+    "somethingWrong": "משהו השתבש",
+    "tryAgain": "אנא נסה שוב"
+  },
+  "addPlace": {
+    "steps": {
+      "receive": "קבלת המקום שלך",
+      "extract": "חילוץ פרטים"
+    },
+    "almostDone": "כמעט שמור...",
+    "takesAbout": "חילוץ והחסכון...",
+    "savedTitle": "שמור!",
+    "savedSubtitle": "המקום שלך נוסף לאוסף שלך"
+  },
+  "result": {
+    "heresPick": "הנה הבחירה שלי",
+    "basedOnTaste": "בהתאם לטעם שלך",
+    "alsoWorth": "כדאי גם לשקול"
+  }
 }

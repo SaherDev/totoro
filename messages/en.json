@@ -1,5 +1,72 @@
 {
   "common": {},
   "recommendation": {},
-  "place": {}
+  "place": {},
+  "chat": {
+    "listening": "Listening...",
+    "startTalking": "Start talking",
+    "placeholder": "Where should we go?",
+    "attach": "Attach",
+    "addPlace": {
+      "title": "Add place"
+    },
+    "attachFile": "Attach file",
+    "takePhoto": "Take photo",
+    "exitVoice": "Exit voice mode",
+    "voiceMode": "Voice mode",
+    "speakerOn": "Speaker on",
+    "speakerOff": "Speaker off",
+    "close": "Close",
+    "send": "Send"
+  },
+  "home": {
+    "whereTo": "Where to?",
+    "moodPrompt": "Share a place mood or vibe and we'll find the perfect spot",
+    "listening": "Listening...",
+    "tapToTalk": "Tap to talk",
+    "voicePrompt": "Describe the place you're looking for with your voice",
+    "suggestions": {
+      "cheapDinner": "Cheap dinner nearby",
+      "bestCoffee": "Best coffee to work from",
+      "dateNight": "Date night spot",
+      "brunch": "Brunch with friends",
+      "savePlace": "Save this place link"
+    }
+  },
+  "profile": {
+    "designSystem": "Design System",
+    "settings": "Settings",
+    "giveFeedback": "Give feedback",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "logOut": "Log out"
+  },
+  "agent": {
+    "steps": {
+      "listen": "Listening to your vibe",
+      "read": "Reading your saved places",
+      "move": "Searching nearby options",
+      "check": "Checking details",
+      "evaluate": "Finding the perfect match"
+    },
+    "almostDone": "Almost there...",
+    "takesAbout": "This usually takes a few seconds",
+    "somethingWrong": "Something went wrong",
+    "tryAgain": "Please try again"
+  },
+  "addPlace": {
+    "steps": {
+      "receive": "Receiving your place",
+      "extract": "Extracting details"
+    },
+    "almostDone": "Almost saved...",
+    "takesAbout": "Extracting and saving...",
+    "savedTitle": "Saved!",
+    "savedSubtitle": "Your place is added to your collection"
+  },
+  "result": {
+    "heresPick": "Here's my pick",
+    "basedOnTaste": "Based on your taste",
+    "alsoWorth": "Also worth considering"
+  }
 }
