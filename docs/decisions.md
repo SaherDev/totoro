@@ -15,6 +15,38 @@ Format:
 
 ---
 
+## ADR-031: Agent Skills Integration in Development Workflow
+
+**Date:** 2026-03-12\
+**Status:** accepted\
+**Context:** The Totoro project uses Claude Code with 8 agent skills installed to enhance development efficiency. Without a documented integration strategy, skills may be underutilized or invoked at the wrong workflow stage, wasting tokens or missing optimization opportunities.\
+**Decision:** Agent skills are scoped to specific workflow stages (from ADR-028) and invoked only when task context matches their domain. The mapping is:
+
+| Workflow Step | Active Skills | Activation Trigger |
+|---------------|---------------|-------------------|
+| **Clarify** | `nestjs-expert`, `nextjs16-skills` | Architecture questions, design uncertainty |
+| **Plan** | `composition-patterns` | Multi-file changes, architecture decisions |
+| **Implement** | `web-design-guidelines`, `react-best-practices`, `clerk-auth`, `nestjs-expert` | Writing code for respective domains |
+| **Verify** | _(built-in)_ | `pnpm nx affected -t test,lint` |
+| **Complete** | `vercel-deploy-claimable`, `use-railway` | Deployment required |
+
+**Skill Details:**
+
+- `nestjs-expert` — NestJS patterns, module architecture, dependency injection, guard/middleware design
+- `nextjs16-skills` — Next.js 16 features, server/client component patterns, data fetching, middleware
+- `composition-patterns` — Component composition, architectural refactoring, multi-layer design decisions
+- `web-design-guidelines` — UI/UX consistency, component design, accessibility, design systems
+- `react-best-practices` — React patterns, performance optimization, hooks, state management
+- `clerk-auth` — Clerk authentication integration with Next.js, SDK usage, session handling
+- `vercel-deploy-claimable` — Vercel deployment workflows, environment setup, optimization
+- `use-railway` — Railway infrastructure, service provisioning, environment variables, troubleshooting
+
+**Invocation Rule:** A skill is invoked only if task context shows (1) the skill domain is directly relevant, AND (2) the workflow step matches the table above. Example: Implementing a NestJS guard uses `nestjs-expert` in the Implement phase; optimizing a React component uses `react-best-practices` in the Implement phase; designing a module structure uses `composition-patterns` in the Plan phase.
+
+**Consequences:** Skills reduce implementation time and token cost by providing focused guidance. Skills are available in every session for this project (installed in `.claude/skills/`). Developers invoking Claude Code get domain-specific support without manual configuration. Token efficiency improves through targeted skill use instead of exploratory implementations.
+
+---
+
 ## ADR-030: Interfaces implemented only via classes, never via factory functions
 
 **Date:** 2026-03-11\
