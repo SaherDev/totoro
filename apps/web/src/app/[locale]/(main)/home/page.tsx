@@ -3,11 +3,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
 import { NavBar, NavBarLogo, NavBarActions } from '@/components/NavBar';
 import { ProfileMenu } from '@/components/profile-menu';
 import { ChatInput } from '@/components/ChatInput';
 import { TotoroCard } from '@totoro/ui';
+import { TotoroHomeInput } from '@/components/illustrations/totoro-illustrations';
 
 type Message = {
   id: string;
@@ -87,14 +87,7 @@ export default function HomePage() {
 
                 {/* Illustration */}
                 <div className="mb-12 h-40 w-full max-w-sm">
-                  <Image
-                    src="/illustrations/totoro-home-input.svg"
-                    alt="Totoro"
-                    width={300}
-                    height={200}
-                    className="h-full w-full object-contain"
-                    priority
-                  />
+                  <TotoroHomeInput />
                 </div>
 
                 {/* Suggestion Chips */}
