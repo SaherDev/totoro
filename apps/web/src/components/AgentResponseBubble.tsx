@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTranslation } from "react-i18next";
+import { useTranslations } from "next-intl";
 import { PlaceCard, AlternativeCard } from "@/components/PlaceCard";
 import {
   TotoroAddPlace,
@@ -83,7 +83,7 @@ export function AgentResponseBubble({
   hasError = false,
   flow = "recommend",
 }: AgentResponseBubbleProps) {
-  const { t } = useTranslation();
+  const t = useTranslations();
   const [phase, setPhase] = useState<Phase>("thinking");
   const [activeStep, setActiveStep] = useState(0);
   const stepKeys = flow === "add-place" ? ADD_PLACE_STEP_KEYS : RECOMMEND_STEP_KEYS;
