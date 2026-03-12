@@ -142,7 +142,10 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
               <Tooltip>
                 <TooltipTrigger asChild>
                   <PopoverTrigger asChild>
-                    <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition-all duration-200 hover:bg-muted/80">
+                    <button
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition-all duration-200 hover:bg-muted/80"
+                      suppressHydrationWarning
+                    >
                       <Plus className="h-4 w-4" />
                     </button>
                   </PopoverTrigger>

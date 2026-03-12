@@ -83,6 +83,7 @@ export function HomeEmptyState({
               key={suggestion}
               onClick={() => onSuggestion(suggestion)}
               className="rounded-full bg-card px-5 py-2.5 font-body text-sm text-foreground shadow-totoro-md transition-all duration-200 hover:shadow-totoro-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-totoro-sm"
+              suppressHydrationWarning
             >
               {suggestion}
             </button>
