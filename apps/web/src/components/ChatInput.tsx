@@ -137,32 +137,34 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
         {/* Action buttons row */}
         <div className="flex items-center gap-2">
           {/* Plus button */}
-          <Popover>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <PopoverTrigger asChild>
-                  <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition-all duration-200 hover:bg-muted/80">
-                    <Plus className="h-4 w-4" />
+          <div suppressHydrationWarning>
+            <Popover>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <button className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition-all duration-200 hover:bg-muted/80">
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5">
+                  {t("attach")}
+                </TooltipContent>
+              </Tooltip>
+              <PopoverContent side="top" align="start" className="w-auto p-1.5 rounded-2xl border-border/50 bg-popover shadow-lg">
+                <div className="flex flex-col gap-0.5">
+                  <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-body text-foreground hover:bg-muted transition-colors">
+                    <Paperclip className="h-4 w-4 text-muted-foreground" />
+                    {t("attachFile")}
                   </button>
-                </PopoverTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5">
-                {t("attach")}
-              </TooltipContent>
-            </Tooltip>
-            <PopoverContent side="top" align="start" className="w-auto p-1.5 rounded-2xl border-border/50 bg-popover shadow-lg">
-              <div className="flex flex-col gap-0.5">
-                <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-body text-foreground hover:bg-muted transition-colors">
-                  <Paperclip className="h-4 w-4 text-muted-foreground" />
-                  {t("attachFile")}
-                </button>
-                <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-body text-foreground hover:bg-muted transition-colors">
-                  <Camera className="h-4 w-4 text-muted-foreground" />
-                  {t("takePhoto")}
-                </button>
-              </div>
-            </PopoverContent>
-          </Popover>
+                  <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-body text-foreground hover:bg-muted transition-colors">
+                    <Camera className="h-4 w-4 text-muted-foreground" />
+                    {t("takePhoto")}
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
 
           <div className="flex-1" />
 
