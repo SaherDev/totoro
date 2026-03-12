@@ -96,5 +96,13 @@
     "speakerOff": "Speaker off",
     "send": "Send",
     "close": "Close"
+  },
+  "places": {
+    "saved": "Saved places",
+    "history": "Recommendation history",
+    "noSaved": "No saved places yet",
+    "noSavedDesc": "Start saving places you love to build your personal collection",
+    "noHistory": "No recommendations yet",
+    "noHistoryDesc": "Your recommendation history will appear here as you explore"
   }
 }
