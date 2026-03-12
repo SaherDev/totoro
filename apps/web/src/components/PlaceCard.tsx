@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { cn, Badge, Button, TotoroCard, TotoroCardContent } from "@totoro/ui";
-import { useTranslation } from "react-i18next";
+import { useTranslations } from "next-intl";
 import { ReasoningBlock } from "@/components/ReasoningBlock";
 import { MapPin, Navigation, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,7 +28,7 @@ export function PlaceCard({
   onSelect,
   className,
 }: PlaceCardProps) {
-  const { t } = useTranslation();
+  const t = useTranslations();
 
   return (
     <TotoroCard
@@ -84,7 +84,7 @@ export function AlternativeCard({
   onSelect,
   className,
 }: Omit<PlaceCardProps, "isPrimary">) {
-  const { t } = useTranslation();
+  const t = useTranslations();
   const [open, setOpen] = useState(false);
 
   return (

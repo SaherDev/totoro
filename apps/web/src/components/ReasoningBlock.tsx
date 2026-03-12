@@ -1,5 +1,5 @@
 import { cn } from "@totoro/ui";
-import { useTranslation } from "react-i18next";
+import { useTranslations } from "next-intl";
 
 interface ReasoningBlockProps {
   reasoning: string;
@@ -7,7 +7,7 @@ interface ReasoningBlockProps {
 }
 
 export function ReasoningBlock({ reasoning, className }: ReasoningBlockProps) {
-  const { t } = useTranslation();
+  const t = useTranslations();
 
   return (
     <div
