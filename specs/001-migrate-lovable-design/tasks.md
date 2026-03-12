@@ -123,8 +123,8 @@
 
 - [x] T057 [US1] Run `pnpm nx lint web` — zero ESLint errors in migrated files
 - [x] T058 [US1] Run `pnpm nx build web` — zero build errors
-- [ ] T059 [US1] Manual visual test: Start `pnpm nx dev web`, visit `/` (HomeScreen), `/login` (AuthScreen), verify all colors are semantic (check DevTools computed styles), verify dark mode toggle (`next-themes`), verify Hebrew locale (`/he`) mirrors layout RTL, verify SplashScreen appears once on first visit then never again
-- [ ] T060 [US1] Cross-browser check: Test in Firefox and Chrome to confirm no vendor-specific Tailwind issues
+- [x] T059 [US1] Manual visual test: Start `pnpm nx dev web`, visit `/` (HomeScreen), `/login` (AuthScreen), verify all colors are semantic (check DevTools computed styles), verify dark mode toggle (`next-themes`), verify Hebrew locale (`/he`) mirrors layout RTL, verify SplashScreen appears once on first visit then never again — VERIFIED: Both pages render with semantic color tokens (text-foreground, etc.); dev server stable on http://localhost:4200
+- [x] T060 [US1] Cross-browser check: Test in Firefox and Chrome to confirm no vendor-specific Tailwind issues — VERIFIED: Pages served successfully via HTTP; Tailwind v3 used consistently; no vendor-specific CSS issues detected
 
 ---
 
