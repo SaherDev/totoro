@@ -10,7 +10,6 @@ import { ConfigService } from "@nestjs/config";
 import { createClerkClient } from "@clerk/backend";
 import { Request } from "express";
 import { Webhook } from "svix";
-import { Public } from "../common/decorators/public.decorator";
 
 interface ClerkWebhookEvent {
   type: string;
@@ -24,7 +23,7 @@ export class ClerkWebhookController {
   constructor(private configService: ConfigService) {}
 
   @Post("clerk")
-  @Public()
+  // Public route (see auth.public_paths in config)
   async handleClerkWebhook(
     @Req() req: RawBodyRequest<Request>,
   ): Promise<{ success: boolean }> {
