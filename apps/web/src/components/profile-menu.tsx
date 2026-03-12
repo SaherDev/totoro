@@ -1,0 +1,144 @@
+'use client';
+
+import { useRef, useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { useUser, useClerk } from '@clerk/nextjs';
+import { cn } from '@totoro/ui';
+import {
+  Settings,
+  Palette,
+  MessageSquare,
+  LogOut,
+} from 'lucide-react';
+import { TotoroAvatar } from './TotoroAvatar';
+import { UserCard } from './user-card';
+import { ThemeSegment } from './theme-toggle';
+
+export function ProfileMenu() {
+  const t = useTranslations('profile');
+  const router = useRouter();
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const menuItems = [
+    {
+      icon: Palette,
+      label: t('designSystem'),
+      action: () => router.push('/design-system'),
+    },
+    { icon: Settings, label: t('settings'), action: () => {} },
+    { icon: MessageSquare, label: t('giveFeedback'), action: () => {} },
+  ];
+
+  const handleLogout = async () => {
+    await signOut();
+    router.push('/login');
+  };
+
+  const displayName = user?.firstName || user?.username || 'User';
+  const avatarInitial = displayName.charAt(0).toUpperCase();
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="focus:outline-none"
+        suppressHydrationWarning
+      >
+        <TotoroAvatar
+          fallback={avatarInitial}
+          src={user?.imageUrl}
+          size="sm"
+          className={cn(
+            'ring-2 ring-transparent transition-all duration-200 cursor-pointer',
+            open && 'ring-accent'
+          )}
+        />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 4 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            className="absolute end-0 top-full mt-2 z-50 w-72 rounded-2xl border border-border bg-card shadow-totoro-lg overflow-hidden"
+          >
+            {/* Profile Header */}
+            <UserCard onSetupProfile={() => router.push('/profile/setup')} />
+
+            <div className="h-px bg-border" />
+
+            {/* Menu Items */}
+            <div className="py-2 px-2">
+              {menuItems.map(({ icon: Icon, label, action }) => (
+                <button
+                  key={label}
+                  onClick={() => {
+                    action();
+                    setOpen(false);
+                  }}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-foreground font-body text-sm hover:bg-muted transition-colors"
+                >
+                  <Icon className="w-4 h-4 text-muted-foreground" />
+                  <span className="flex-1 text-start">{label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="h-px bg-border" />
+
+            {/* Theme Segment */}
+            <div className="px-5 py-3">
+              <ThemeSegment />
+            </div>
+
+            <div className="h-px bg-border" />
+
+            {/* Logout */}
+            <div className="py-2 px-2">
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setOpen(false);
+                }}
+                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-foreground font-body text-sm hover:bg-muted transition-colors"
+              >
+                <LogOut className="w-4 h-4 text-muted-foreground" />
+                <span className="flex-1 text-start">{t('logOut')}</span>
+              </button>
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-3 border-t border-border flex items-center gap-4">
+              <span className="font-body text-[11px] text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+                {t('privacy')}
+              </span>
+              <span className="font-body text-[11px] text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+                {t('terms')}
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

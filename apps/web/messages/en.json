@@ -45,5 +45,27 @@
       "goHere": "Go here",
       "showAlternatives": "Show alternatives"
     }
+  },
+  "profile": {
+    "designSystem": "Design System",
+    "settings": "Settings",
+    "giveFeedback": "Give feedback",
+    "logOut": "Log out",
+    "privacy": "Privacy",
+    "terms": "Terms"
+  },
+  "chat": {
+    "listening": "Listening...",
+    "startTalking": "Start talking",
+    "placeholder": "What kind of place are you looking for?",
+    "attach": "Attach",
+    "attachFile": "Attach file",
+    "takePhoto": "Take photo",
+    "voiceMode": "Voice mode",
+    "exitVoice": "Exit voice",
+    "speakerOn": "Speaker on",
+    "speakerOff": "Speaker off",
+    "send": "Send",
+    "close": "Close"
   }
 }

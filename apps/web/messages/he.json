@@ -45,5 +45,27 @@
       "goHere": "בואנו נלך",
       "showAlternatives": "הצג אפשרויות חלופיות"
     }
+  },
+  "profile": {
+    "designSystem": "מערכת עיצוב",
+    "settings": "הגדרות",
+    "giveFeedback": "תן משוב",
+    "logOut": "התנתק",
+    "privacy": "פרטיות",
+    "terms": "תנאים"
+  },
+  "chat": {
+    "listening": "מאזין...",
+    "startTalking": "התחל לדבר",
+    "placeholder": "איזה מקום אתה מחפש?",
+    "attach": "צרף",
+    "attachFile": "צרף קובץ",
+    "takePhoto": "צלם תמונה",
+    "voiceMode": "מצב קול",
+    "exitVoice": "צא מהקול",
+    "speakerOn": "הרמקול דלוק",
+    "speakerOff": "הרמקול כבוי",
+    "send": "שלח",
+    "close": "סגור"
   }
 }

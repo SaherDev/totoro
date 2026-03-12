@@ -1,6 +1,8 @@
+'use client';
+
 import { useState, useRef } from "react";
 import { cn } from "@totoro/ui";
-import { useTranslation } from "react-i18next";
+import { useTranslations } from "next-intl";
 import { Send, Mic, MicOff, Volume2, X, Plus, Paperclip, Camera } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@totoro/ui";
@@ -16,7 +18,7 @@ interface ChatInputProps {
 }
 
 function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange, onListeningChange }: ChatInputProps) {
-  const { t } = useTranslation();
+  const t = useTranslations('chat');
   const [value, setValue] = useState("");
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -107,7 +109,7 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
             <div className="flex items-center gap-2">
               <Mic className="w-4 h-4 text-muted-foreground" />
               <span className="font-body text-sm text-muted-foreground">
-                {isListening ? t("home.listening") : t("chat.startTalking")}
+                {isListening ? t("listening") : t("startTalking")}
               </span>
             </div>
           </motion.div>
@@ -122,9 +124,10 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onInput={handleInput}
-          placeholder={placeholder || t("chat.placeholder")}
+          placeholder={placeholder || t("placeholder")}
           disabled={disabled || isVoiceMode}
           rows={1}
+          suppressHydrationWarning
           className={cn(
             "w-full resize-none bg-transparent px-3 py-2.5 font-body text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none disabled:opacity-50",
             isVoiceMode && "opacity-30"
@@ -144,18 +147,18 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
                 </PopoverTrigger>
               </TooltipTrigger>
               <TooltipContent side="top" className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5">
-                {t("chat.attach")}
+                {t("attach")}
               </TooltipContent>
             </Tooltip>
             <PopoverContent side="top" align="start" className="w-auto p-1.5 rounded-2xl border-border/50 bg-popover shadow-lg">
               <div className="flex flex-col gap-0.5">
                 <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-body text-foreground hover:bg-muted transition-colors">
                   <Paperclip className="h-4 w-4 text-muted-foreground" />
-                  {t("chat.attachFile")}
+                  {t("attachFile")}
                 </button>
                 <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-body text-foreground hover:bg-muted transition-colors">
                   <Camera className="h-4 w-4 text-muted-foreground" />
-                  {t("chat.takePhoto")}
+                  {t("takePhoto")}
                 </button>
               </div>
             </PopoverContent>
@@ -179,7 +182,7 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
               </button>
             </TooltipTrigger>
             <TooltipContent side="top" className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5">
-              {isVoiceMode ? t("chat.exitVoice") : t("chat.voiceMode")}
+              {isVoiceMode ? t("exitVoice") : t("voiceMode")}
             </TooltipContent>
           </Tooltip>
 
@@ -199,7 +202,7 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
               </button>
             </TooltipTrigger>
             <TooltipContent side="top" className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5">
-              {isSpeakerOn ? t("chat.speakerOn") : t("chat.speakerOff")}
+              {isSpeakerOn ? t("speakerOn") : t("speakerOff")}
             </TooltipContent>
           </Tooltip>
 
@@ -215,7 +218,7 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
                 </button>
               </TooltipTrigger>
               <TooltipContent side="top" className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5">
-                {t("chat.close")}
+                {t("close")}
               </TooltipContent>
             </Tooltip>
           ) : (
@@ -235,7 +238,7 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
                 </button>
               </TooltipTrigger>
               <TooltipContent side="top" className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5">
-                {t("chat.send")}
+                {t("send")}
               </TooltipContent>
             </Tooltip>
           )}
