@@ -2,7 +2,14 @@ import { Injectable, NestMiddleware, UnauthorizedException, Logger } from '@nest
 import { Request, Response, NextFunction } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { verifyToken } from '@clerk/backend';
-import { PUBLIC_KEY } from '../decorators/public.decorator';
+
+/**
+ * Clerk public metadata schema. Clerk returns this in JWT public_metadata field.
+ * Users can have custom metadata like ai_enabled set via Clerk API or webhook.
+ */
+interface ClerkPublicMetadata {
+  ai_enabled?: boolean;
+}
 
 /**
  * User context attached to Express Request by ClerkMiddleware.
@@ -66,8 +73,8 @@ export class ClerkMiddleware implements NestMiddleware {
 
       // Get ai_enabled from public_metadata, default to config value
       const aiEnabledDefault = this.configService.get<boolean>('ai.enabled_default', true);
-      const publicMetadata = verifiedSession.public_metadata as any;
-      const ai_enabled = publicMetadata?.ai_enabled ?? aiEnabledDefault;
+      const publicMetadata = (verifiedSession.public_metadata ?? {}) as ClerkPublicMetadata;
+      const ai_enabled = publicMetadata.ai_enabled ?? aiEnabledDefault;
 
       // Attach user to request
       req.user = {
