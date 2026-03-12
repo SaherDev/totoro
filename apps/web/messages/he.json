@@ -1,0 +1,124 @@
+{
+  "splash": {
+    "title": "טוטורו",
+    "subtitle": "מנוע המלצות מקומות מופעל בבינה מלאכותית",
+    "tapToContinue": "הקש בכל מקום כדי להמשיך"
+  },
+  "auth": {
+    "continueGoogle": "המשך עם Google",
+    "continueApple": "המשך עם Apple",
+    "continueEmail": "המשך עם דוא״ל",
+    "or": "או",
+    "terms": "בהמשך, אתה מסכים לשלנו",
+    "termsOfService": "תנאי השירות",
+    "and": "ו",
+    "privacyPolicy": "מדיניות הפרטיות",
+    "cantLogin": "לא יכול להתחבר?",
+    "clickHere": "לחץ כאן"
+  },
+  "home": {
+    "whereTo": "מה עולה בדעתך?",
+    "moodPrompt": "ספר לי מה אתה בהוד רוח, או הדבק קישור למקום כדי לשמור אותו",
+    "listening": "מאזין...",
+    "tapToTalk": "הקש לדיבור",
+    "voicePrompt": "תאר את המקום שאתה מחפש בקול שלך",
+    "suggestions": {
+      "cheapDinner": "ארוחת ערב זולה קרוב",
+      "bestCoffee": "הקפה הטוב ביותר כדי לעבוד",
+      "dateNight": "ערב רומנטי",
+      "brunch": "ברנץ עם חברים",
+      "savePlace": "שמור קישור למקום זה"
+    }
+  },
+  "place": {
+    "topPick": "הבחירה המובילה",
+    "fromSaves": "מהשמירות שלך",
+    "discovered": "התגלה",
+    "letsGo": "בואנו נלך",
+    "whyThisPlace": "למה המקום הזה"
+  },
+  "agent": {
+    "steps": {
+      "listen": "מאזין להעדפות שלך",
+      "read": "קורא את המקומות השמורים שלך",
+      "move": "מחפש בסביבה",
+      "check": "בודק זמינות",
+      "evaluate": "הערכת התאמות"
+    },
+    "almostDone": "כמעט סיימתי...",
+    "takesAbout": "לוקח כ-20 שניות",
+    "somethingWrong": "משהו השתבש",
+    "tryAgain": "אנא נסה שוב"
+  },
+  "addPlace": {
+    "title": "הוספת מקום",
+    "subtitle": "שתף קישור למקום כדי לשמור אותו",
+    "placeholder": "הדבק קישור למקום...",
+    "cancel": "ביטול",
+    "save": "שמור",
+    "processing": "הוספת מקום...",
+    "extracting": "מחלץ פרטי מקום",
+    "success": "המקום נשמר!",
+    "successDesc": "נוסף לאוסף שלך",
+    "errors": {
+      "urlRequired": "נדרש URL",
+      "invalidUrl": "אנא הזן URL תקין"
+    },
+    "steps": {
+      "receive": "קיבלתי את הקישור שלך",
+      "extract": "מחלץ פרטי מקום"
+    },
+    "almostDone": "כמעט שמור...",
+    "takesAbout": "לוקח כ-10 שניות",
+    "savedTitle": "המקום נשמר!",
+    "savedSubtitle": "נוסף לאוסף שלך"
+  },
+  "result": {
+    "heresPick": "הנה הבחירה שלי",
+    "basedOnTaste": "בהתאם לטעם שלך",
+    "alsoWorth": "כדאי גם לשקול"
+  },
+  "recommendation": {
+    "source": {
+      "saved": "מהשמירות שלך",
+      "discovered": "התגלה"
+    },
+    "action": {
+      "goHere": "בואנו נלך",
+      "showAlternatives": "הצג אפשרויות חלופיות"
+    }
+  },
+  "profile": {
+    "designSystem": "מערכת עיצוב",
+    "settings": "הגדרות",
+    "giveFeedback": "תן משוב",
+    "logOut": "התנתק",
+    "privacy": "פרטיות",
+    "terms": "תנאים"
+  },
+  "chat": {
+    "listening": "מאזין...",
+    "startTalking": "התחל לדבר",
+    "placeholder": "שאל כל דבר",
+    "attach": "צרף",
+    "addPlace": {
+      "title": "הוסף מקום"
+    },
+    "attachFile": "צרף קובץ",
+    "takePhoto": "צלם תמונה",
+    "voiceMode": "מצב קול",
+    "exitVoice": "צא מהקול",
+    "speakerOn": "הרמקול דלוק",
+    "speakerOff": "הרמקול כבוי",
+    "send": "שלח",
+    "close": "סגור"
+  },
+  "places": {
+    "saved": "מקומות שמורים",
+    "history": "היסטוריית המלצות",
+    "noSaved": "אין מקומות שמורים עדיין",
+    "noSavedDesc": "התחל לשמור מקומות שאתה אוהב כדי לבנות את האוסף האישי שלך",
+    "noHistory": "אין המלצות עדיין",
+    "noHistoryDesc": "היסטוריית ההמלצות שלך תופיע כאן כשתחקור"
+  }
+}

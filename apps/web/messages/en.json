@@ -1,0 +1,124 @@
+{
+  "splash": {
+    "title": "Totoro",
+    "subtitle": "Your AI-powered place recommendation engine",
+    "tapToContinue": "Tap anywhere to continue"
+  },
+  "auth": {
+    "continueGoogle": "Continue with Google",
+    "continueApple": "Continue with Apple",
+    "continueEmail": "Continue with Email",
+    "or": "or",
+    "terms": "By continuing, you agree to our",
+    "termsOfService": "Terms of Service",
+    "and": "and",
+    "privacyPolicy": "Privacy Policy",
+    "cantLogin": "Can't sign in?",
+    "clickHere": "Click here"
+  },
+  "home": {
+    "whereTo": "What's on your mind?",
+    "moodPrompt": "Tell me what you're in the mood for, or paste a place link to save it",
+    "listening": "Listening...",
+    "tapToTalk": "Tap to talk",
+    "voicePrompt": "Describe the place you're looking for with your voice",
+    "suggestions": {
+      "cheapDinner": "Cheap dinner nearby",
+      "bestCoffee": "Best coffee to work from",
+      "dateNight": "Date night spot",
+      "brunch": "Brunch with friends",
+      "savePlace": "Save this place link"
+    }
+  },
+  "place": {
+    "topPick": "Top pick",
+    "fromSaves": "From your saves",
+    "discovered": "Discovered",
+    "letsGo": "Let's go",
+    "whyThisPlace": "Why this place"
+  },
+  "agent": {
+    "steps": {
+      "listen": "Listening to your preferences",
+      "read": "Reading your saved places",
+      "move": "Searching nearby",
+      "check": "Checking availability",
+      "evaluate": "Evaluating matches"
+    },
+    "almostDone": "Almost done...",
+    "takesAbout": "Takes about 20 seconds",
+    "somethingWrong": "Something went wrong",
+    "tryAgain": "Please try again"
+  },
+  "addPlace": {
+    "title": "Add a place",
+    "subtitle": "Share a place link to save it",
+    "placeholder": "Paste a place link...",
+    "cancel": "Cancel",
+    "save": "Save",
+    "processing": "Adding place...",
+    "extracting": "Extracting place details",
+    "success": "Place saved!",
+    "successDesc": "Added to your collection",
+    "errors": {
+      "urlRequired": "URL is required",
+      "invalidUrl": "Please enter a valid URL"
+    },
+    "steps": {
+      "receive": "Got your link",
+      "extract": "Extracting place details"
+    },
+    "almostDone": "Almost saved...",
+    "takesAbout": "Takes about 10 seconds",
+    "savedTitle": "Place saved!",
+    "savedSubtitle": "Added to your collection"
+  },
+  "result": {
+    "heresPick": "Here's my pick",
+    "basedOnTaste": "Based on your taste",
+    "alsoWorth": "Also worth considering"
+  },
+  "recommendation": {
+    "source": {
+      "saved": "From your saves",
+      "discovered": "Discovered"
+    },
+    "action": {
+      "goHere": "Go here",
+      "showAlternatives": "Show alternatives"
+    }
+  },
+  "profile": {
+    "designSystem": "Design System",
+    "settings": "Settings",
+    "giveFeedback": "Give feedback",
+    "logOut": "Log out",
+    "privacy": "Privacy",
+    "terms": "Terms"
+  },
+  "chat": {
+    "listening": "Listening...",
+    "startTalking": "Start talking",
+    "placeholder": "Ask Anything",
+    "attach": "Attach",
+    "addPlace": {
+      "title": "Add place"
+    },
+    "attachFile": "Attach file",
+    "takePhoto": "Take photo",
+    "voiceMode": "Voice mode",
+    "exitVoice": "Exit voice",
+    "speakerOn": "Speaker on",
+    "speakerOff": "Speaker off",
+    "send": "Send",
+    "close": "Close"
+  },
+  "places": {
+    "saved": "Saved places",
+    "history": "Recommendation history",
+    "noSaved": "No saved places yet",
+    "noSavedDesc": "Start saving places you love to build your personal collection",
+    "noHistory": "No recommendations yet",
+    "noHistoryDesc": "Your recommendation history will appear here as you explore"
+  }
+}

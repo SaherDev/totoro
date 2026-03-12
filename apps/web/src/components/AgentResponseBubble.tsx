@@ -1,0 +1,266 @@
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
+import { PlaceCard, AlternativeCard } from "@/components/PlaceCard";
+import {
+  TotoroAddPlace,
+  TotoroAddPlaceProcessing,
+  TotoroAddPlaceSuccess,
+  TotoroResultCard,
+  TotoroError,
+  TotoroStepListen,
+  TotoroStepRead,
+  TotoroStepMove,
+  TotoroStepCheck,
+  TotoroStepEvaluate,
+  TotoroStepComplete,
+} from "@/components/illustrations/totoro-illustrations";
+
+const RECOMMEND_STEP_KEYS = [
+  "agent.steps.listen",
+  "agent.steps.read",
+  "agent.steps.move",
+  "agent.steps.check",
+  "agent.steps.evaluate",
+];
+
+const RECOMMEND_STEP_ICONS = [
+  TotoroStepListen,
+  TotoroStepRead,
+  TotoroStepMove,
+  TotoroStepCheck,
+  TotoroStepEvaluate,
+];
+
+const ADD_PLACE_STEP_KEYS = [
+  "addPlace.steps.receive",
+  "addPlace.steps.extract",
+];
+
+const ADD_PLACE_STEP_ICONS = [
+  TotoroAddPlace,
+  TotoroAddPlaceProcessing,
+];
+
+const MOCK_RESULTS = {
+  primary: {
+    name: "Osteria Francescana",
+    address: "Via Stella 22, Modena",
+    reasoning: "It matches your love for Italian cuisine, is within your budget, and has stellar reviews.",
+    source: "discovered" as const,
+    cuisine: "Italian",
+    priceRange: "$$",
+  },
+  alternatives: [
+    {
+      name: "Trattoria da Mario",
+      address: "Piazza del Mercato 5",
+      reasoning: "From your saved places. Reliable, affordable, and only 8 minutes away.",
+      source: "saved" as const,
+      cuisine: "Italian",
+      priceRange: "$",
+    },
+    {
+      name: "Noma Pop-Up",
+      address: "Refshaleøen 96",
+      reasoning: "A wild card — different style but matches your recent interest in fermented foods.",
+      source: "discovered" as const,
+      cuisine: "Nordic",
+      priceRange: "$$$",
+    },
+  ],
+};
+
+type Phase = "thinking" | "result" | "error";
+export type AgentFlow = "recommend" | "add-place";
+
+interface AgentResponseBubbleProps {
+  hasError?: boolean;
+  flow?: AgentFlow;
+  content?: string;
+}
+
+export function AgentResponseBubble({
+  hasError = false,
+  flow = "recommend",
+  content,
+}: AgentResponseBubbleProps) {
+  const t = useTranslations();
+  const [phase, setPhase] = useState<Phase>(content ? "result" : "thinking");
+  const [activeStep, setActiveStep] = useState(0);
+  const stepKeys = flow === "add-place" ? ADD_PLACE_STEP_KEYS : RECOMMEND_STEP_KEYS;
+  const stepIcons = flow === "add-place" ? ADD_PLACE_STEP_ICONS : RECOMMEND_STEP_ICONS;
+
+  useEffect(() => {
+    if (phase !== "thinking") return;
+    if (hasError) {
+      if (activeStep < 2) {
+        const timer = setTimeout(() => setActiveStep((s) => s + 1), 1400);
+        return () => clearTimeout(timer);
+      } else {
+        const done = setTimeout(() => setPhase("error"), 500);
+        return () => clearTimeout(done);
+      }
+    }
+    if (activeStep < stepKeys.length) {
+      const timer = setTimeout(() => setActiveStep((s) => s + 1), 1400);
+      return () => clearTimeout(timer);
+    } else {
+      const done = setTimeout(() => setPhase("result"), 500);
+      return () => clearTimeout(done);
+    }
+  }, [activeStep, phase, hasError, stepKeys.length]);
+
+  const currentStepKey = stepKeys[Math.min(activeStep, stepKeys.length - 1)];
+  const StepIcon = activeStep >= stepKeys.length
+    ? flow === "add-place"
+      ? TotoroAddPlaceSuccess
+      : TotoroStepComplete
+    : stepIcons[activeStep] ?? TotoroStepListen;
+
+  return (
+    <div className="flex gap-3 items-start">
+      <AnimatePresence mode="wait">
+        {phase === "thinking" ? (
+          <motion.div
+            key="thinking"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
+            className="flex items-center gap-3"
+          >
+            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(220,40%,93%)] p-1.5">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeStep}
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.7 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-full h-full"
+                >
+                  <StepIcon />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            <div className="flex flex-col gap-0.5">
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={activeStep}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.2 }}
+                  className="font-display text-sm text-foreground font-medium"
+                >
+                  {activeStep < stepKeys.length
+                    ? t(currentStepKey)
+                    : flow === "add-place"
+                      ? t("addPlace.almostDone")
+                      : t("agent.almostDone")}
+                </motion.p>
+              </AnimatePresence>
+              <p className="font-body text-xs text-muted-foreground">
+                {flow === "add-place" ? t("addPlace.takesAbout") : t("agent.takesAbout")}
+              </p>
+            </div>
+          </motion.div>
+        ) : phase === "error" ? (
+          <motion.div
+            key="error"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex items-center gap-3"
+          >
+            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(0,30%,92%)] p-1.5">
+              <TotoroError />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <p className="font-display text-sm text-foreground font-medium">
+                {t("agent.somethingWrong")}
+              </p>
+              <p className="font-body text-xs text-muted-foreground">
+                {t("agent.tryAgain")}
+              </p>
+            </div>
+          </motion.div>
+        ) : content ? (
+          <motion.div
+            key="echo-result"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex items-center gap-3"
+          >
+            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(140,35%,90%)] p-1.5">
+              <TotoroResultCard />
+            </div>
+            <div>
+              <p className="font-display text-sm text-foreground">
+                {content}
+              </p>
+            </div>
+          </motion.div>
+        ) : flow === "add-place" ? (
+          <motion.div
+            key="add-place-result"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex items-center gap-3"
+          >
+            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(140,35%,90%)] p-1.5 anim-bounce">
+              <TotoroAddPlaceSuccess />
+            </div>
+            <div>
+              <p className="font-display text-lg text-foreground">
+                {t("addPlace.savedTitle")}
+              </p>
+              <p className="font-body text-xs text-muted-foreground">
+                {t("addPlace.savedSubtitle")}
+              </p>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="result"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col gap-4 w-full"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(140,35%,90%)] p-1.5 anim-sway-gentle">
+                <TotoroResultCard />
+              </div>
+              <div>
+                <p className="font-display text-lg text-foreground">
+                  {t("result.heresPick")}
+                </p>
+                <p className="font-body text-xs text-muted-foreground">
+                  {t("result.basedOnTaste")}
+                </p>
+              </div>
+            </div>
+
+            <PlaceCard {...MOCK_RESULTS.primary} isPrimary />
+
+            <div>
+              <p className="font-body text-xs text-muted-foreground mb-2">
+                {t("result.alsoWorth")}
+              </p>
+              <div className="flex flex-col gap-2">
+                {MOCK_RESULTS.alternatives.map((alt, i) => (
+                  <AlternativeCard key={i} {...alt} />
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

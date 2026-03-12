@@ -1,0 +1,330 @@
+/*
+ * Totoro Design System — CSS Custom Properties & Tokens
+ * All colors HSL. Semantic token names for light/dark mode swap.
+ * Inspired by Studio Ghibli warmth: cream, forest, earth, lantern gold.
+ */
+
+@layer base {
+  [data-theme="light"],
+  :root {
+    /* --- Surfaces --- */
+    --background: 40 30% 96%;
+    --foreground: 25 55% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 25 55% 14%;
+    --popover: 40 28% 98%;
+    --popover-foreground: 25 55% 14%;
+
+    /* --- Primary: Deep Charcoal --- */
+    --primary: 30 10% 16%;
+    --primary-foreground: 40 30% 96%;
+
+    /* --- Secondary: Warm Beige --- */
+    --secondary: 35 22% 91%;
+    --secondary-foreground: 25 45% 22%;
+
+    /* --- Muted --- */
+    --muted: 35 18% 93%;
+    --muted-foreground: 25 14% 50%;
+
+    /* --- Accent: Lantern Gold --- */
+    --accent: 38 78% 55%;
+    --accent-foreground: 25 55% 14%;
+
+    /* --- Destructive --- */
+    --destructive: 0 65% 52%;
+    --destructive-foreground: 40 30% 96%;
+
+    /* --- Chrome --- */
+    --border: 35 20% 88%;
+    --input: 35 20% 88%;
+    --ring: 30 10% 16%;
+
+    /* --- Radius --- */
+    --radius: 1.25rem;
+
+    /* --- Shadows (Flighty-inspired: soft, lifted cards) --- */
+    --shadow-sm: 0 1px 3px 0 hsl(25 20% 20% / 0.04);
+    --shadow-md: 0 6px 20px -4px hsl(25 20% 20% / 0.07), 0 2px 6px -2px hsl(25 20% 20% / 0.04);
+    --shadow-lg: 0 16px 48px -8px hsl(25 20% 20% / 0.10), 0 6px 12px -4px hsl(25 20% 20% / 0.05);
+    --shadow-glow: 0 0 32px -4px hsl(38 78% 55% / 0.25);
+
+    /* --- Typography --- */
+    --font-display: 'DM Serif Display', serif;
+    --font-body: 'DM Sans', sans-serif;
+
+    /* --- Sidebar --- */
+    --sidebar-background: 40 28% 98%;
+    --sidebar-foreground: 25 55% 14%;
+    --sidebar-primary: 30 10% 16%;
+    --sidebar-primary-foreground: 40 30% 96%;
+    --sidebar-accent: 35 22% 91%;
+    --sidebar-accent-foreground: 25 45% 22%;
+    --sidebar-border: 35 20% 88%;
+    --sidebar-ring: 30 10% 16%;
+
+    /* --- Extended semantic tokens --- */
+    --color-surface: 40 28% 98%;
+    --color-surface-raised: 38 25% 95%;
+    --color-text-primary: 25 55% 14%;
+    --color-text-secondary: 25 14% 50%;
+    --color-text-tertiary: 25 10% 65%;
+    --color-accent-gold: 38 78% 55%;
+    --color-accent-gold-soft: 38 60% 90%;
+    --color-forest: 30 10% 16%;
+    --color-forest-soft: 30 8% 92%;
+    --color-cream: 40 30% 96%;
+    --color-warm-white: 40 28% 98%;
+  }
+
+  [data-theme="dark"],
+  .dark {
+    /* --- Surfaces (lighter dark) --- */
+    --background: 25 12% 15%;
+    --foreground: 40 18% 88%;
+    --card: 25 10% 19%;
+    --card-foreground: 40 18% 88%;
+    --popover: 25 10% 17%;
+    --popover-foreground: 40 18% 88%;
+
+    /* --- Primary --- */
+    --primary: 40 18% 88%;
+    --primary-foreground: 25 12% 15%;
+
+    /* --- Secondary --- */
+    --secondary: 25 8% 24%;
+    --secondary-foreground: 40 14% 78%;
+
+    /* --- Muted --- */
+    --muted: 25 8% 22%;
+    --muted-foreground: 25 8% 58%;
+
+    /* --- Accent: Lantern Gold --- */
+    --accent: 38 78% 55%;
+    --accent-foreground: 25 15% 10%;
+
+    /* --- Destructive --- */
+    --destructive: 0 65% 52%;
+    --destructive-foreground: 40 18% 88%;
+
+    /* --- Chrome --- */
+    --border: 25 8% 26%;
+    --input: 25 8% 26%;
+    --ring: 40 18% 88%;
+
+    /* --- Shadows --- */
+    --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.2);
+    --shadow-md: 0 6px 20px -4px hsl(0 0% 0% / 0.3), 0 2px 6px -2px hsl(0 0% 0% / 0.2);
+    --shadow-lg: 0 16px 48px -8px hsl(0 0% 0% / 0.4), 0 6px 12px -4px hsl(0 0% 0% / 0.25);
+    --shadow-glow: 0 0 32px -4px hsl(38 78% 55% / 0.2);
+
+    /* --- Sidebar --- */
+    --sidebar-background: 25 10% 17%;
+    --sidebar-foreground: 40 18% 88%;
+    --sidebar-primary: 40 18% 88%;
+    --sidebar-primary-foreground: 25 12% 15%;
+    --sidebar-accent: 25 8% 24%;
+    --sidebar-accent-foreground: 40 14% 78%;
+    --sidebar-border: 25 8% 26%;
+    --sidebar-ring: 40 18% 88%;
+
+    /* --- Extended --- */
+    --color-surface: 25 10% 17%;
+    --color-surface-raised: 25 8% 21%;
+    --color-text-primary: 40 18% 88%;
+    --color-text-secondary: 25 8% 58%;
+    --color-text-tertiary: 25 6% 45%;
+    --color-accent-gold: 38 78% 55%;
+    --color-accent-gold-soft: 38 35% 24%;
+    --color-forest: 40 18% 88%;
+    --color-forest-soft: 25 8% 22%;
+    --color-cream: 25 12% 15%;
+    --color-warm-white: 25 10% 17%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: var(--font-body);
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+  }
+}
+
+/* === Primary Keyframes === */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.025); }
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(1.5deg); }
+}
+
+@keyframes sway {
+  0%, 100% { transform: rotate(-2.5deg); }
+  50% { transform: rotate(2.5deg); }
+}
+
+@keyframes sway-gentle {
+  0%, 100% { transform: rotate(-1.5deg); }
+  50% { transform: rotate(1.5deg); }
+}
+
+@keyframes nod {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  30% { transform: rotate(6deg); }
+}
+
+@keyframes peek {
+  0%, 100% { transform: translateY(0); }
+  30%, 60% { transform: translateY(-5px); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-6px); }
+  50% { transform: translateY(0); }
+  75% { transform: translateY(-3px); }
+}
+
+/* === Element-level Effects === */
+@keyframes eye-blink {
+  0%, 42%, 48%, 100% { transform: scaleY(1); }
+  45% { transform: scaleY(0.08); }
+}
+
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(0.6); }
+}
+
+@keyframes rain-fall {
+  0% { transform: translateY(0); opacity: 0.7; }
+  100% { transform: translateY(8px); opacity: 0; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.55; }
+}
+
+@keyframes line-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 0.2; }
+}
+
+@keyframes leaf-pulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(0.6); }
+}
+
+/* Utility classes for the design system */
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+  .font-body {
+    font-family: var(--font-body);
+  }
+  .shadow-totoro-sm {
+    box-shadow: var(--shadow-sm);
+  }
+  .shadow-totoro-md {
+    box-shadow: var(--shadow-md);
+  }
+  .shadow-totoro-lg {
+    box-shadow: var(--shadow-lg);
+  }
+  .shadow-totoro-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Animation classes */
+  .anim-breathe {
+    animation: breathe 3.2s ease-in-out infinite;
+    transform-origin: center bottom;
+  }
+
+  .anim-bob {
+    animation: bob 2.8s ease-in-out infinite;
+  }
+
+  .anim-float {
+    animation: float 3.5s ease-in-out infinite;
+    transform-origin: center bottom;
+  }
+
+  .anim-sway {
+    animation: sway 3.0s ease-in-out infinite;
+    transform-origin: center bottom;
+  }
+
+  .anim-sway-gentle {
+    animation: sway-gentle 4.0s ease-in-out infinite;
+    transform-origin: center bottom;
+  }
+
+  .anim-nod {
+    animation: nod 3.0s ease-in-out infinite;
+    transform-origin: center 70%;
+  }
+
+  .anim-peek {
+    animation: peek 3.5s ease-in-out infinite;
+  }
+
+  .anim-bounce {
+    animation: bounce 2.0s ease-in-out infinite;
+  }
+
+  /* Element effects */
+  .anim-eye-blink {
+    animation: eye-blink 4.0s ease-in-out infinite;
+    transform-origin: center center;
+  }
+
+  .anim-star-twinkle {
+    animation: star-twinkle 2.0s ease-in-out infinite;
+  }
+
+  .anim-rain-fall {
+    animation: rain-fall 1.8s ease-in-out infinite;
+  }
+
+  .anim-glow-pulse {
+    animation: glow-pulse 2.5s ease-in-out infinite;
+  }
+
+  .anim-line-pulse {
+    animation: line-pulse 2.0s ease-in-out infinite;
+  }
+
+  .anim-leaf-pulse {
+    animation: leaf-pulse 2.0s ease-in-out infinite;
+  }
+
+  /* Stagger delays */
+  .anim-delay-100 { animation-delay: 0.1s; }
+  .anim-delay-200 { animation-delay: 0.2s; }
+  .anim-delay-300 { animation-delay: 0.3s; }
+  .anim-delay-400 { animation-delay: 0.4s; }
+  .anim-delay-500 { animation-delay: 0.5s; }
+  .anim-delay-600 { animation-delay: 0.6s; }
+  .anim-delay-700 { animation-delay: 0.7s; }
+}
