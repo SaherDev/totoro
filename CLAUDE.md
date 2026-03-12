@@ -74,6 +74,8 @@ See `.claude/workflows.md` for the complete 5-step token-efficient workflow (ADR
 
 **Constitution Check:** Verify plan aligns with `docs/decisions.md` (see `.claude/constitution.md`).
 
+**Agent Skills Integration:** Skills (see ADR-031) auto-trigger based on code domain and workflow stage, not user prompt keywords. All skills follow the same principles as the codebase — if skill guidance conflicts with project standards (CLAUDE.md, architecture.md, ADR-*), project standards take precedence. Skills are guides, not constraints.
+
 **Model assignments and token costs:** See `.claude/workflows.md` (source of truth).
 
 ## Notes
