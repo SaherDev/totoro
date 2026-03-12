@@ -43,7 +43,9 @@ export function ProfileMenu() {
       label: t('designSystem'),
       action: () => router.push('/design-system'),
     },
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     { icon: Settings, label: t('settings'), action: () => {} },
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     { icon: MessageSquare, label: t('giveFeedback'), action: () => {} },
   ];
 
