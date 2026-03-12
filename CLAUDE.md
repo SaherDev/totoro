@@ -89,6 +89,8 @@ See `.claude/workflows.md` for the complete 5-step token-efficient workflow (ADR
 - **Deployment**: Vercel (frontend), Railway (backend + AI service + PostgreSQL + Redis). Redis is FastAPI-only. Docker Compose for local dev only.
 
 ## Active Technologies
+- TypeScript 5.x / Node 20 LTS + Next.js 16, Tailwind v3, shadcn/ui, next-intl, next-themes, tailwindcss-animate (already installed), framer-motion (pending approval), next/font/google (001-migrate-lovable-design)
+- N/A (frontend-only migration) (001-migrate-lovable-design)
 
 - TypeScript 5.x / Node 20 LTS + Nx (ADR-001), pnpm (ADR-020), Next.js 16 (apps/web), NestJS 11 (services/api), Tailwind v3 + shadcn/ui (ADR-007) (001-nx-monorepo-setup)
 - N/A — this is a workspace configuration feature (001-nx-monorepo-setup)

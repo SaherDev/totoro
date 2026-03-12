@@ -1,0 +1,49 @@
+{
+  "splash": {
+    "title": "Totoro",
+    "subtitle": "Your AI-powered place recommendation engine",
+    "tapToContinue": "Tap anywhere to continue"
+  },
+  "auth": {
+    "continueGoogle": "Continue with Google",
+    "continueApple": "Continue with Apple",
+    "continueEmail": "Continue with Email",
+    "or": "or",
+    "terms": "By continuing, you agree to our",
+    "termsOfService": "Terms of Service",
+    "and": "and",
+    "privacyPolicy": "Privacy Policy",
+    "cantLogin": "Can't sign in?",
+    "clickHere": "Click here"
+  },
+  "home": {
+    "whereTo": "Where to?",
+    "moodPrompt": "Tell me what kind of place you're looking for, and I'll recommend something perfect",
+    "listening": "Listening...",
+    "tapToTalk": "Tap to talk",
+    "voicePrompt": "Describe the place you're looking for with your voice",
+    "suggestions": {
+      "cheapDinner": "Cheap dinner",
+      "bestCoffee": "Best coffee",
+      "dateNight": "Date night",
+      "brunch": "Brunch",
+      "savePlace": "Save a place"
+    }
+  },
+  "place": {
+    "topPick": "Top pick",
+    "fromSaves": "From your saves",
+    "discovered": "Discovered",
+    "letsGo": "Let's go"
+  },
+  "recommendation": {
+    "source": {
+      "saved": "From your saves",
+      "discovered": "Discovered"
+    },
+    "action": {
+      "goHere": "Go here",
+      "showAlternatives": "Show alternatives"
+    }
+  }
+}

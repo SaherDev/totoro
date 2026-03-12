@@ -1,0 +1,49 @@
+{
+  "splash": {
+    "title": "טוטורו",
+    "subtitle": "מנוע המלצות מקומות מופעל בבינה מלאכותית",
+    "tapToContinue": "הקש בכל מקום כדי להמשיך"
+  },
+  "auth": {
+    "continueGoogle": "המשך עם Google",
+    "continueApple": "המשך עם Apple",
+    "continueEmail": "המשך עם דוא״ל",
+    "or": "או",
+    "terms": "בהמשך, אתה מסכים לשלנו",
+    "termsOfService": "תנאי השירות",
+    "and": "ו",
+    "privacyPolicy": "מדיניות הפרטיות",
+    "cantLogin": "לא יכול להתחבר?",
+    "clickHere": "לחץ כאן"
+  },
+  "home": {
+    "whereTo": "לאן?",
+    "moodPrompt": "ספר לי אילו מקום אתה מחפש, והמלצתי משהו מושלם",
+    "listening": "מאזין...",
+    "tapToTalk": "הקש לדיבור",
+    "voicePrompt": "תאר את המקום שאתה מחפש בקול שלך",
+    "suggestions": {
+      "cheapDinner": "ארוחת ערב זולה",
+      "bestCoffee": "הקפה הטוב ביותר",
+      "dateNight": "ערב הרומנטי",
+      "brunch": "ברנץ",
+      "savePlace": "שמור מקום"
+    }
+  },
+  "place": {
+    "topPick": "הבחירה המובילה",
+    "fromSaves": "מהשמירות שלך",
+    "discovered": "התגלה",
+    "letsGo": "בואנו נלך"
+  },
+  "recommendation": {
+    "source": {
+      "saved": "מהשמירות שלך",
+      "discovered": "התגלה"
+    },
+    "action": {
+      "goHere": "בואנו נלך",
+      "showAlternatives": "הצג אפשרויות חלופיות"
+    }
+  }
+}
