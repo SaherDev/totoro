@@ -17,17 +17,17 @@
     "clickHere": "Click here"
   },
   "home": {
-    "whereTo": "Where to?",
-    "moodPrompt": "Tell me what kind of place you're looking for, and I'll recommend something perfect",
+    "whereTo": "What's on your mind?",
+    "moodPrompt": "Tell me what you're in the mood for, or paste a place link to save it",
     "listening": "Listening...",
     "tapToTalk": "Tap to talk",
     "voicePrompt": "Describe the place you're looking for with your voice",
     "suggestions": {
-      "cheapDinner": "Cheap dinner",
-      "bestCoffee": "Best coffee",
-      "dateNight": "Date night",
-      "brunch": "Brunch",
-      "savePlace": "Save a place"
+      "cheapDinner": "Cheap dinner nearby",
+      "bestCoffee": "Best coffee to work from",
+      "dateNight": "Date night spot",
+      "brunch": "Brunch with friends",
+      "savePlace": "Save this place link"
     }
   },
   "place": {
@@ -57,7 +57,7 @@
   "chat": {
     "listening": "Listening...",
     "startTalking": "Start talking",
-    "placeholder": "What kind of place are you looking for?",
+    "placeholder": "Ask Anything",
     "attach": "Attach",
     "attachFile": "Attach file",
     "takePhoto": "Take photo",

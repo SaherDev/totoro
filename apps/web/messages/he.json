@@ -17,17 +17,17 @@
     "clickHere": "לחץ כאן"
   },
   "home": {
-    "whereTo": "לאן?",
-    "moodPrompt": "ספר לי אילו מקום אתה מחפש, והמלצתי משהו מושלם",
+    "whereTo": "מה עולה בדעתך?",
+    "moodPrompt": "ספר לי מה אתה בהוד רוח, או הדבק קישור למקום כדי לשמור אותו",
     "listening": "מאזין...",
     "tapToTalk": "הקש לדיבור",
     "voicePrompt": "תאר את המקום שאתה מחפש בקול שלך",
     "suggestions": {
-      "cheapDinner": "ארוחת ערב זולה",
-      "bestCoffee": "הקפה הטוב ביותר",
-      "dateNight": "ערב הרומנטי",
-      "brunch": "ברנץ",
-      "savePlace": "שמור מקום"
+      "cheapDinner": "ארוחת ערב זולה קרוב",
+      "bestCoffee": "הקפה הטוב ביותר כדי לעבוד",
+      "dateNight": "ערב רומנטי",
+      "brunch": "ברנץ עם חברים",
+      "savePlace": "שמור קישור למקום זה"
     }
   },
   "place": {
@@ -57,7 +57,7 @@
   "chat": {
     "listening": "מאזין...",
     "startTalking": "התחל לדבר",
-    "placeholder": "איזה מקום אתה מחפש?",
+    "placeholder": "שאל כל דבר",
     "attach": "צרף",
     "attachFile": "צרף קובץ",
     "takePhoto": "צלם תמונה",
