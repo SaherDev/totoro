@@ -34,7 +34,36 @@
     "topPick": "הבחירה המובילה",
     "fromSaves": "מהשמירות שלך",
     "discovered": "התגלה",
-    "letsGo": "בואנו נלך"
+    "letsGo": "בואנו נלך",
+    "whyThisPlace": "למה המקום הזה"
+  },
+  "agent": {
+    "steps": {
+      "listen": "מאזין להעדפות שלך",
+      "read": "קורא את המקומות השמורים שלך",
+      "move": "מחפש בסביבה",
+      "check": "בודק זמינות",
+      "evaluate": "הערכת התאמות"
+    },
+    "almostDone": "כמעט סיימתי...",
+    "takesAbout": "לוקח כ-20 שניות",
+    "somethingWrong": "משהו השתבש",
+    "tryAgain": "אנא נסה שוב"
+  },
+  "addPlace": {
+    "steps": {
+      "receive": "קיבלתי את הקישור שלך",
+      "extract": "מחלץ פרטי מקום"
+    },
+    "almostDone": "כמעט שמור...",
+    "takesAbout": "לוקח כ-10 שניות",
+    "savedTitle": "המקום נשמר!",
+    "savedSubtitle": "נוסף לאוסף שלך"
+  },
+  "result": {
+    "heresPick": "הנה הבחירה שלי",
+    "basedOnTaste": "בהתאם לטעם שלך",
+    "alsoWorth": "כדאי גם לשקול"
   },
   "recommendation": {
     "source": {

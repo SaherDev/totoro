@@ -34,7 +34,36 @@
     "topPick": "Top pick",
     "fromSaves": "From your saves",
     "discovered": "Discovered",
-    "letsGo": "Let's go"
+    "letsGo": "Let's go",
+    "whyThisPlace": "Why this place"
+  },
+  "agent": {
+    "steps": {
+      "listen": "Listening to your preferences",
+      "read": "Reading your saved places",
+      "move": "Searching nearby",
+      "check": "Checking availability",
+      "evaluate": "Evaluating matches"
+    },
+    "almostDone": "Almost done...",
+    "takesAbout": "Takes about 20 seconds",
+    "somethingWrong": "Something went wrong",
+    "tryAgain": "Please try again"
+  },
+  "addPlace": {
+    "steps": {
+      "receive": "Got your link",
+      "extract": "Extracting place details"
+    },
+    "almostDone": "Almost saved...",
+    "takesAbout": "Takes about 10 seconds",
+    "savedTitle": "Place saved!",
+    "savedSubtitle": "Added to your collection"
+  },
+  "result": {
+    "heresPick": "Here's my pick",
+    "basedOnTaste": "Based on your taste",
+    "alsoWorth": "Also worth considering"
   },
   "recommendation": {
     "source": {
