@@ -50,8 +50,7 @@ export function ProfileMenu() {
   ];
 
   const handleLogout = async () => {
-    await signOut();
-    router.push('/login');
+    await signOut({ redirectUrl: '/' });
   };
 
   const displayName = user?.firstName || user?.username || 'User';
