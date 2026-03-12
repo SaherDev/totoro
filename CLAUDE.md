@@ -59,6 +59,7 @@ Details in @.claude/rules/standards.md, @.claude/rules/architecture.md, @.claude
 - **Frontend** — Tailwind v3 + shadcn/ui, CSS variables with raw HSL, dark mode via `next-themes`, RTL logical properties only (`ms`/`me`/`ps`/`pe`), i18n via `next-intl` with URL routing `/en/` and `/he/`
 - **API routes** — all NestJS routes use `/api/v1/` prefix; AI service called via two endpoints only (`POST /v1/extract-place`, `POST /v1/consult`)
 - **Commits** — `type(scope): description #TASK_ID`, types: `feat|fix|chore|docs|refactor|test`, scopes: `api|web|shared` (details in @.claude/rules/git.md)
+- **Code quality** — single responsibility, constructor injection only, strategy pattern over if/switch on type, repository pattern for all DB access, no duplication (extract to `libs/shared`), new behavior = new class not an edit. Violations must be fixed before presenting code.
 
 ## Workflow
 
@@ -74,7 +75,7 @@ See `.claude/workflows.md` for the complete 5-step token-efficient workflow (ADR
 
 **Constitution Check:** Verify plan aligns with `docs/decisions.md` (see `.claude/constitution.md`).
 
-**Agent Skills Integration:** Skills (see ADR-031) auto-trigger based on code domain and workflow stage, not user prompt keywords. All skills follow the same principles as the codebase — if skill guidance conflicts with project standards (CLAUDE.md, architecture.md, ADR-*), project standards take precedence. Skills are guides, not constraints.
+**Agent Skills Integration:** Skills (see ADR-031) auto-trigger based on code domain and workflow stage, not user prompt keywords. All skills follow the same principles as the codebase — if skill guidance conflicts with project standards (CLAUDE.md, architecture.md, ADR-\*), project standards take precedence. Skills are guides, not constraints.
 
 **Model assignments and token costs:** See `.claude/workflows.md` (source of truth).
 
@@ -88,8 +89,10 @@ See `.claude/workflows.md` for the complete 5-step token-efficient workflow (ADR
 - **Deployment**: Vercel (frontend), Railway (backend + AI service + PostgreSQL + Redis). Redis is FastAPI-only. Docker Compose for local dev only.
 
 ## Active Technologies
+
 - TypeScript 5.x / Node 20 LTS + Nx (ADR-001), pnpm (ADR-020), Next.js 16 (apps/web), NestJS 11 (services/api), Tailwind v3 + shadcn/ui (ADR-007) (001-nx-monorepo-setup)
 - N/A — this is a workspace configuration feature (001-nx-monorepo-setup)
 
 ## Recent Changes
+
 - 001-nx-monorepo-setup: Added TypeScript 5.x / Node 20 LTS + Nx (ADR-001), pnpm (ADR-020), Next.js 16 (apps/web), NestJS 11 (services/api), Tailwind v3 + shadcn/ui (ADR-007)
