@@ -113,7 +113,7 @@ export default function HomePage() {
           <TotoroCard elevation="floating" className="overflow-hidden">
             <div className="p-2">
               <ChatInput
-                onSend={handleSend}
+                disabled={true} onSend={handleSend}
                 onVoiceModeChange={setIsVoiceMode}
                 onListeningChange={setIsListening}
                 onAddPlace={() => setIsAddPlaceModalOpen(true)}
