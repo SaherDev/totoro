@@ -11,25 +11,25 @@ import { Request } from 'express';
 import { ClerkUser } from '../middleware/clerk.middleware';
 
 /**
- * @RequireAi() guard validates that the user can access AI-powered endpoints.
+ * @RequiresAi() guard validates that the user can access AI-powered endpoints.
  *
  * Checks:
  * 1. If ai.global_kill_switch is true → throw ServiceUnavailableException (503)
  * 2. If user.ai_enabled is false → throw ForbiddenException (403)
  * 3. Otherwise → allow access (return true)
  *
- * Use with @UseGuards(RequireAiGuard) on endpoints that call the AI service.
+ * Use with @RequiresAi() decorator on endpoints that call the AI service.
  *
  * @example
  * @Post('/consult')
- * @UseGuards(RequireAiGuard)
+ * @RequiresAi()
  * async consult(@Body() query: QueryDto) {
  *   return this.recommendationService.consult(query);
  * }
  */
 @Injectable()
-export class RequireAiGuard implements CanActivate {
-  private readonly logger = new Logger('RequireAiGuard');
+export class AiEnabledGuard implements CanActivate {
+  private readonly logger = new Logger('AiEnabledGuard');
 
   constructor(private configService: ConfigService) {}
 
@@ -46,7 +46,7 @@ export class RequireAiGuard implements CanActivate {
 
     // Check user AI access
     if (!user) {
-      this.logger.error('RequireAiGuard called without authenticated user');
+      this.logger.error('AiEnabledGuard called without authenticated user');
       throw new ForbiddenException('User context not found');
     }
 

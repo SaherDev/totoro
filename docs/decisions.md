@@ -84,14 +84,31 @@ apps/web/src/api/
 
 **The rule:** Reads are queries, mutations are Server Actions, both go through the same transport layer.
 
-Components never import HttpClient, FetchClient, or getApiClient. Usage:
+**Client-side hook for token management:** Client components need tokens from Clerk when calling the API. The `useApiClient()` hook in `apps/web/src/api/hooks.ts` wraps `createApiClient()` with Clerk's `useAuth().getToken()`:
+
+```ts
+// apps/web/src/api/hooks.ts
+export function useApiClient() {
+  const { getToken } = useAuth();
+  return createApiClient(async () => {
+    const token = await getToken();
+    return token ?? '';
+  });
+}
+```
+
+Components never import HttpClient, FetchClient, createApiClient, or getApiClient directly. Usage:
 
 ```ts
 // Server Component — read
 import { getPlaces } from "@/api";
 const places = await getPlaces();
 
-// Client Component or form — mutation
+// Client Component — use the hook
+const api = useApiClient();
+const result = await api.post('/consult', { query });
+
+// Or use Server Actions (mutations)
 import { extractPlace } from "@/api";
 await extractPlace({ input });
 ```
@@ -165,8 +182,8 @@ See `docs/examples/consult-example.ts` for the full flow.
 **Date:** 2026-03-08\
 **Status:** accepted\
 **Context:** AI requests to totoro-ai are expensive and may need to be disabled — either globally (service outage, cost control) or per-user (abuse, account restriction). This must be enforced at the NestJS boundary before any forwarding happens.\
-**Decision:** `AiEnabledGuard` in `services/api/src/auth/ai-enabled.guard.ts` runs after `ClerkAuthGuard` on AI routes only. It checks two things in order: (1) `ai_service.enabled` boolean from YAML config — if false, blocks all AI requests with 403, requires redeploy to change; (2) `req.user.publicMetadata.ai_enabled` from the Clerk JWT — if false, blocks that user's AI requests with 403, defaults to true if the field is absent. Applied via `@UseGuards(AiEnabledGuard)` on `POST /recommendations/consult` and `POST /places`. New users get `ai_enabled: true` set in Clerk `publicMetadata` via the `user.created` webhook handler.\
-**Consequences:** AI can be killed globally via a config change and redeploy. Individual users can be disabled via Clerk dashboard or API without touching the codebase. Guard order matters — `ClerkAuthGuard` must run first to populate `req.user`.
+**Decision:** `AiEnabledGuard` in `services/api/src/common/guards/ai-enabled.guard.ts` runs after `ClerkMiddleware` on AI routes only. It checks two things in order: (1) `ai.global_kill_switch` boolean from YAML config — if true, blocks all AI requests with 503, requires redeploy to change; (2) `req.user.ai_enabled` from the verified Clerk JWT — if false, blocks that user's AI requests with 403, defaults to true if the field is absent. Applied via the `@RequiresAi()` decorator (shorthand for `@UseGuards(AiEnabledGuard)`) on endpoints that call the AI service. New users get `ai_enabled: true` set in Clerk `publicMetadata` via the `user.created` webhook handler.\
+**Consequences:** AI can be killed globally via a config change and redeploy. Individual users can be disabled via Clerk dashboard or API without touching the codebase. The `@RequiresAi()` decorator provides a clean, reusable pattern for guard application across multiple endpoints. Guard order matters — `ClerkMiddleware` must run first to populate `req.user`.
 
 ---
 
@@ -250,13 +267,18 @@ See `docs/examples/consult-example.ts` for the full flow.
 
 ---
 
-## ADR-013: Clerk auth guard applied globally with @Public() opt-out
+## ADR-013: Clerk auth middleware applied globally with public path opt-out
 
 **Date:** 2026-03-07\
 **Status:** accepted\
-**Context:** Every authenticated endpoint needs Clerk token verification. Applying a guard per-controller would be error-prone — a missed guard means an unprotected endpoint. A global guard with opt-out is safer.\
-**Decision:** `ClerkAuthGuard` in `services/api/src/auth/clerk-auth.guard.ts` uses `@clerk/backend` SDK to verify the bearer token from the `Authorization` header. It is registered as a global guard via `APP_GUARD` in `AppModule`. A `@Public()` custom decorator (using `SetMetadata`) marks health check and unauthenticated endpoints to skip verification. The verified `userId` is attached to `request.auth` for downstream use. Implementation is pending.\
-**Consequences:** All endpoints are authenticated by default — no endpoint is accidentally left open. Adding a public endpoint requires explicit `@Public()` opt-in. `userId` is available in all controllers via the request object without re-verifying downstream.
+**Context:** Every authenticated endpoint needs Clerk token verification. Applying checks per-controller would be error-prone — a missed guard means an unprotected endpoint. A global check with opt-out is safer. Auth must be enforced at both the Next.js edge (for page protection) and the NestJS API (for endpoint protection).\
+**Decision:** Two complementary layers:
+
+1. **Frontend (Next.js edge):** `clerkMiddleware()` from `@clerk/nextjs/server` in `apps/web/src/middleware.ts` protects all routes except those matched by `createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)'])`. Unauthenticated requests are redirected to sign-in at the edge (before the app loads).
+
+2. **Backend (NestJS):** `ClerkMiddleware` in `services/api/src/common/middleware/clerk.middleware.ts` verifies bearer tokens from the `Authorization` header using the `@clerk/backend` SDK. Routes matching `auth.public_paths` from config (e.g., `/health`, `/webhooks/clerk`) skip verification. The verified user context (`userId`, `ai_enabled`) is attached to `req.user` for downstream use. A `@Public()` decorator marks routes as documentation; the middleware uses config, not decorators, to determine public access.
+
+**Consequences:** All pages are protected at the edge — no unprotected pages. All API endpoints are authenticated by default. Public endpoints are explicitly listed in config, not marked with decorators. `req.user` is available in all NestJS controllers without re-verifying downstream. Clerk tokens are automatically handled by middleware, not repeated in every handler. Config is the single source of truth for public routes.
 
 ---
 

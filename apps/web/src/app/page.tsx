@@ -1,6 +1,5 @@
 // TODO: Temporary test page. Delete when real pages are built.
-// Uses inline fetch() — does not follow ADR-029.
-// Replace with useApiClient() hook from apps/web/src/api/hooks.ts
+// Uses inline fetch() — should use useApiClient() hook from apps/web/src/api/hooks.ts for production code.
 
 'use client';
 

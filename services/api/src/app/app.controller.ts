@@ -3,21 +3,9 @@ import {
   Get,
   Post,
   Request,
-  UseGuards,
 } from '@nestjs/common';
 import { AppService } from './app.service';
-import { Public } from '../common/decorators/public.decorator';
-import { RequireAiGuard } from '../common/guards/require-ai.guard';
-import { ClerkUser } from '../common/middleware/clerk.middleware';
-
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace Express {
-    interface Request {
-      user?: ClerkUser;
-    }
-  }
-}
+import { RequiresAi } from '../common/decorators/requires-ai.decorator';
 
 @Controller()
 export class AppController {
@@ -30,9 +18,9 @@ export class AppController {
 
   /**
    * Health check endpoint (public, no auth required)
+   * Public routes are determined by auth.public_paths in config, not decorators.
    */
   @Get('health')
-  @Public()
   health() {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }
@@ -52,7 +40,7 @@ export class AppController {
    * Extract place endpoint (requires valid Clerk token + AI enabled)
    */
   @Post('extract-place')
-  @UseGuards(RequireAiGuard)
+  @RequiresAi()
   extractPlace(@Request() req) {
     return {
       message: 'Extract place endpoint (AI-gated)',
@@ -65,7 +53,7 @@ export class AppController {
    * Consult endpoint (requires valid Clerk token + AI enabled)
    */
   @Post('consult')
-  @UseGuards(RequireAiGuard)
+  @RequiresAi()
   consult(@Request() req) {
     return {
       message: 'Consult endpoint (AI-gated)',

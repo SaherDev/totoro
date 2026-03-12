@@ -1,17 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { ForbiddenException, ServiceUnavailableException, ExecutionContext } from '@nestjs/common';
-import { RequireAiGuard } from './require-ai.guard';
+import { AiEnabledGuard } from './ai-enabled.guard';
 import { ClerkUser } from '../middleware/clerk.middleware';
 
-describe('RequireAiGuard', () => {
-  let guard: RequireAiGuard;
+describe('AiEnabledGuard', () => {
+  let guard: AiEnabledGuard;
   let configService: ConfigService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        RequireAiGuard,
+        AiEnabledGuard,
         {
           provide: ConfigService,
           useValue: {
@@ -27,7 +27,7 @@ describe('RequireAiGuard', () => {
       ],
     }).compile();
 
-    guard = module.get<RequireAiGuard>(RequireAiGuard);
+    guard = module.get<AiEnabledGuard>(AiEnabledGuard);
     configService = module.get<ConfigService>(ConfigService);
   });
 
