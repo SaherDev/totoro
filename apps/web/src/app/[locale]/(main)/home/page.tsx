@@ -50,6 +50,7 @@ export default function HomePage() {
       id: `agent-${Date.now() + 1}`,
       type: 'agent-response',
       flow: isAddPlace ? 'add-place' : 'recommend',
+      content: text,
     };
 
     setMessages((prev) => [...prev, userMsg, agentMsg]);
@@ -113,7 +114,7 @@ export default function HomePage() {
           <TotoroCard elevation="floating" className="overflow-hidden">
             <div className="p-2">
               <ChatInput
-                disabled={true} onSend={handleSend}
+                onSend={handleSend}
                 onVoiceModeChange={setIsVoiceMode}
                 onListeningChange={setIsListening}
                 onAddPlace={() => setIsAddPlaceModalOpen(true)}
