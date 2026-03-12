@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { cn } from "@totoro/ui";
 import { useTranslations } from "next-intl";
-import { Send, Mic, MicOff, Volume2, X, Plus, Paperclip, Camera } from "lucide-react";
+import { Send, Mic, MicOff, Volume2, X, Plus, Paperclip, Camera, Link as LinkIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@totoro/ui";
 import { Popover, PopoverContent, PopoverTrigger } from "@totoro/ui";
@@ -15,9 +15,10 @@ interface ChatInputProps {
   className?: string;
   onVoiceModeChange?: (active: boolean) => void;
   onListeningChange?: (listening: boolean) => void;
+  onAddPlace?: () => void;
 }
 
-function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange, onListeningChange }: ChatInputProps) {
+function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange, onListeningChange, onAddPlace }: ChatInputProps) {
   const t = useTranslations('chat');
   const [value, setValue] = useState("");
   const [isVoiceMode, setIsVoiceMode] = useState(false);
@@ -156,6 +157,13 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
               </Tooltip>
               <PopoverContent side="top" align="start" className="w-auto p-1.5 rounded-2xl border-border/50 bg-popover shadow-lg">
                 <div className="flex flex-col gap-0.5">
+                  <button
+                    onClick={() => onAddPlace?.()}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-body text-foreground hover:bg-muted transition-colors"
+                  >
+                    <LinkIcon className="h-4 w-4 text-muted-foreground" />
+                    {t("addPlace.title") || "Add place"}
+                  </button>
                   <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-body text-foreground hover:bg-muted transition-colors">
                     <Paperclip className="h-4 w-4 text-muted-foreground" />
                     {t("attachFile")}

@@ -51,6 +51,19 @@
     "tryAgain": "אנא נסה שוב"
   },
   "addPlace": {
+    "title": "הוספת מקום",
+    "subtitle": "שתף קישור למקום כדי לשמור אותו",
+    "placeholder": "הדבק קישור למקום...",
+    "cancel": "ביטול",
+    "save": "שמור",
+    "processing": "הוספת מקום...",
+    "extracting": "מחלץ פרטי מקום",
+    "success": "המקום נשמר!",
+    "successDesc": "נוסף לאוסף שלך",
+    "errors": {
+      "urlRequired": "נדרש URL",
+      "invalidUrl": "אנא הזן URL תקין"
+    },
     "steps": {
       "receive": "קיבלתי את הקישור שלך",
       "extract": "מחלץ פרטי מקום"

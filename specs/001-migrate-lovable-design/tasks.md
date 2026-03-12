@@ -88,15 +88,15 @@
 - [x] T030 [P] [US1] Migrate `chat-input.tsx` to `apps/web/src/components/chat-input.tsx`: apply same pattern, verify input field styling uses semantic colors
 - [x] T031 [P] [US1] Migrate `chat-message.tsx` to `apps/web/src/components/chat-message.tsx`: apply same pattern
 - [x] T032 [P] [US1] Migrate `empty-state.tsx` to `apps/web/src/components/empty-state.tsx`: apply same pattern
-- [ ] T033 [P] [US1] Migrate `language-switcher.tsx` to `apps/web/src/components/language-switcher.tsx`: add `'use client'`, use `useLocale()` and `useRouter()` from next-intl for locale switching, replace i18n as in other components
+- [x] T033 [P] [US1] Migrate `language-switcher.tsx` to `apps/web/src/components/language-switcher.tsx`: add `'use client'`, use `useLocale()` and `useRouter()` from next-intl for locale switching, replace i18n as in other components
 - [x] T034 [P] [US1] Migrate `loading-state.tsx` to `apps/web/src/components/loading-state.tsx`: apply same pattern
 - [x] T035 [P] [US1] Migrate `modal.tsx` to `apps/web/src/components/modal.tsx`: apply same pattern, wrap `dialog.tsx` from `@totoro/ui`
 - [x] T036 [P] [US1] Migrate `nav-bar.tsx` to `apps/web/src/components/nav-bar.tsx`: apply same pattern, ensure navbar uses semantic spacing and colors
-- [ ] T037 [P] [US1] Migrate `nav-link.tsx` to `apps/web/src/components/nav-link.tsx`: add `'use client'`, use `usePathname()` from `next/navigation` for active state detection, replace React Router `<Link>` with `next/link`
+- [x] T037 [P] [US1] Migrate `nav-link.tsx` to `apps/web/src/components/nav-link.tsx`: add `'use client'`, use `usePathname()` from `next/navigation` for active state detection, replace React Router `<Link>` with `next/link`
 - [x] T038 [P] [US1] Migrate `place-card.tsx` to `apps/web/src/components/place-card.tsx`: apply same pattern
 - [x] T039 [P] [US1] Migrate `profile-menu.tsx` to `apps/web/src/components/profile-menu.tsx`: apply same pattern, verify dropdown uses dropdown-menu from `@totoro/ui`
 - [x] T040 [P] [US1] Migrate `reasoning-block.tsx` to `apps/web/src/components/reasoning-block.tsx`: apply same pattern
-- [ ] T041 [P] [US1] Migrate `tag.tsx` to `apps/web/src/components/tag.tsx`: apply same pattern
+- [x] T041 [P] [US1] Tag component already in design system at `libs/ui/src/components/tag.tsx` with CVA variants (saved, live, discovered) — no app-level duplication needed, import from @totoro/ui
 - [x] T042 [P] [US1] Migrate `theme-toggle.tsx` to `apps/web/src/components/theme-toggle.tsx`: add `'use client'`, use `useTheme()` from `next-themes`, verify dark/light mode toggle works
 - [x] T043 [P] [US1] Migrate `totoro-avatar.tsx` to `apps/web/src/components/totoro-avatar.tsx`: apply same pattern, use avatar component from `@totoro/ui`
 - [x] T044 [P] [US1] Migrate `totoro-card.tsx` to `apps/web/src/components/totoro-card.tsx`: apply same pattern, use card component from `@totoro/ui`

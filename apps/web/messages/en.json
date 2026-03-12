@@ -51,6 +51,19 @@
     "tryAgain": "Please try again"
   },
   "addPlace": {
+    "title": "Add a place",
+    "subtitle": "Share a place link to save it",
+    "placeholder": "Paste a place link...",
+    "cancel": "Cancel",
+    "save": "Save",
+    "processing": "Adding place...",
+    "extracting": "Extracting place details",
+    "success": "Place saved!",
+    "successDesc": "Added to your collection",
+    "errors": {
+      "urlRequired": "URL is required",
+      "invalidUrl": "Please enter a valid URL"
+    },
     "steps": {
       "receive": "Got your link",
       "extract": "Extracting place details"

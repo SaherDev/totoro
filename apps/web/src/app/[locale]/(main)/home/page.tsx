@@ -8,6 +8,7 @@ import { ChatInput } from '@/components/ChatInput';
 import { ChatMessage } from '@/components/ChatMessage';
 import { AgentResponseBubble } from '@/components/AgentResponseBubble';
 import { HomeEmptyState } from '@/components/home-empty-state';
+import { AddPlaceModal } from '@/components/add-place-modal';
 import { TotoroCard } from '@totoro/ui';
 
 type MessageItem = {
@@ -22,6 +23,7 @@ export default function HomePage() {
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isAddPlaceModalOpen, setIsAddPlaceModalOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when messages change
@@ -51,6 +53,11 @@ export default function HomePage() {
     };
 
     setMessages((prev) => [...prev, userMsg, agentMsg]);
+  };
+
+  const handleAddPlaceSubmit = (url: string) => {
+    handleSend(url);
+    setIsAddPlaceModalOpen(false);
   };
 
   const isEmpty = messages.length === 0;
@@ -109,11 +116,19 @@ export default function HomePage() {
                 onSend={handleSend}
                 onVoiceModeChange={setIsVoiceMode}
                 onListeningChange={setIsListening}
+                onAddPlace={() => setIsAddPlaceModalOpen(true)}
               />
             </div>
           </TotoroCard>
         </div>
       </div>
+
+      {/* Add Place Modal */}
+      <AddPlaceModal
+        isOpen={isAddPlaceModalOpen}
+        onClose={() => setIsAddPlaceModalOpen(false)}
+        onSubmit={handleAddPlaceSubmit}
+      />
     </div>
   );
 }
