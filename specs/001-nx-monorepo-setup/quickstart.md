@@ -21,8 +21,9 @@ git config core.commentChar ";"
 # 3. Install all dependencies (one command, covers all apps and libs)
 pnpm install
 
-# 4. Load secrets (from external totoro-config repo — ask a team member)
-source scripts/env-setup.sh
+# 4. Create local config files with your secrets
+# Create .env.local in the root (NestJS will use it)
+# Create .env.local in apps/web (Next.js will use it)
 ```
 
 ## Running the Apps
@@ -99,7 +100,7 @@ Violations are reported as **lint errors** — run `pnpm nx run-many -t lint` to
 
 Non-secret configuration lives in `config/dev.yml` (development) and `config/prod.yml` (production). Access via NestJS `ConfigService` — never read env vars directly in application code.
 
-Secrets are shell-exported from `scripts/env-setup.sh`. No `.env` files.
+Secrets are stored in per-repo local files: `.env.local` for NestJS and Next.js (in their respective roots). These files are gitignored and must be created locally with your own secret values. CI/CD injects secrets as environment variables at deploy time.
 
 ## Commit Format
 

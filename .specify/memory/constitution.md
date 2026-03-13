@@ -51,8 +51,8 @@ Current binding decisions:
 ## IV. Configuration Rules
 
 - Non-secret config → `config/dev.yml` / `config/prod.yml` / `config/test.yml`
-- Secrets → shell-exported env vars via `source scripts/env-setup.sh`
-- No `.env` files — ever
+- Secrets → per-repo local files (`.env.local` for NestJS and Next.js, `config/.local.yaml` for FastAPI), gitignored
+- No `.env` files committed — developers create these locally with their own secret values
 - Constants shared across apps → `libs/shared/src/lib/constants.ts`
 - Nothing hardcoded: URLs, ports, thresholds, labels must come from config or a named constant
 

@@ -70,11 +70,11 @@ Both services read from any table as needed. One shared PostgreSQL instance. Two
 | What | Where | Example |
 |------|-------|---------|
 | Non-secret config | `config/*.yml` | `ai_service.base_url`, feature flags |
-| Secrets | Shell-exported env vars | `DATABASE_URL`, `CLERK_SECRET_KEY` |
-| Secret template | `scripts/env-setup.sh` | Placeholder exports, gitignored |
+| Secrets (NestJS/Next.js) | `.env.local` in root | `DATABASE_URL`, `CLERK_SECRET_KEY` |
+| Secrets (FastAPI) | `config/.local.yaml` in root | `OPENAI_API_KEY`, LLM API keys |
 | Database schema | `prisma/schema.prisma` | Models, relations, vector columns |
 
-Never put secrets in YAML files. Never put non-secret config in environment variables if it can go in YAML. Never use `.env` files — secrets are shell-exported via `source scripts/env-setup.sh`.
+Never put secrets in YAML files. Never put non-secret config in environment variables if it can go in YAML. Never commit `.env` files or secret files — developers create these locally with their own values.
 
 ## API Versioning
 

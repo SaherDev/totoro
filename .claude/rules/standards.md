@@ -38,5 +38,5 @@
 - **YAML config**: The `config/` directory is NOT for secrets. Pattern: `config/dev.yml` contains `ai_service.base_url` and similar non-secret settings. Load via NestJS `ConfigModule` with a custom YAML loader.
 - **Free-text place input**: The frontend sends a raw string to the API. The API forwards it to totoro-ai for parsing. totoro-ai writes the place and embedding directly to PostgreSQL and returns a confirmation (place_id + metadata). This repo never parses place names, URLs, or extracts metadata — that is the AI repo's job.
 - **totoro-ai returns 1+2**: One primary recommendation plus two alternatives. Each has: place name, address, reasoning text, source (saved vs discovered). Do not expect or depend on additional fields until they are added.
-- **No .env files**: Secrets are shell-exported (`source scripts/env-setup.sh`). The `env-setup.sh` file is gitignored. Never create `.env` files.
+- **No .env files**: Secrets are stored in per-repo local files (`.env.local` for NestJS/Next.js, `config/.local.yaml` for FastAPI). These files are gitignored and created locally by developers. Never commit secret files.
 - **git comment character**: This repo uses `;` as git's comment character (not `#`) to support ClickUp task IDs in commit messages. Run `git config --global core.commentChar ";"` once per machine.

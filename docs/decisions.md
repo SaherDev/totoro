@@ -296,8 +296,8 @@ See `docs/examples/consult-example.ts` for the full flow.
 
 **Date:** 2026-03-07\
 **Status:** accepted\
-**Context:** If `PORT` is not set (e.g., `env-setup.sh` was not sourced), the NestJS app would start on an undefined port and fail silently or bind to `NaN`. Developers would see a confusing error rather than a clear fix instruction.\
-**Decision:** `services/api/src/main.ts` checks `process.env.PORT` after calling `NestFactory.create()`. If absent, it throws `new Error('PORT environment variable is not set. Run: source scripts/env-setup.sh')` before calling `app.listen()`. This is already implemented in `bootstrap()` in `services/api/src/main.ts`.\
+**Context:** If `PORT` is not set (e.g., `.env.local` is missing or incomplete), the NestJS app would start on an undefined port and fail silently or bind to `NaN`. Developers would see a confusing error rather than a clear fix instruction.\
+**Decision:** `services/api/src/main.ts` checks `process.env.PORT` after calling `NestFactory.create()`. If absent, it throws `new Error('PORT environment variable is not set. Create a .env.local file and populate it with your secrets.')` before calling `app.listen()`. This is already implemented in `bootstrap()` in `services/api/src/main.ts`.\
 **Consequences:** Misconfigured environments fail fast with a clear fix instruction. No silent startup on port `undefined`. Pattern established for future required env-var guards at bootstrap.
 
 ---
@@ -377,7 +377,7 @@ See `docs/examples/consult-example.ts` for the full flow.
 **Date:** 2026-03-04\
 **Status:** accepted\
 **Context:** Non-secret config values like `ai_service.base_url` need structure and environment-specificity that flat `.env` files cannot provide cleanly.\
-**Decision:** Use YAML files (`config/dev.yml`, `config/prod.yml`) for all non-secret configuration. Secrets remain in shell-exported environment variables sourced from `scripts/env-setup.sh`. No `.env` files. Alternatives considered: dotenv for everything, JSON config files.\
+**Decision:** Use YAML files (`config/dev.yml`, `config/prod.yml`) for all non-secret configuration. Secrets are stored in per-repo local files (`.env.local` for NestJS/Next.js, `config/.local.yaml` for FastAPI), gitignored and created locally by developers. No committed `.env` or secret files. Alternatives considered: dotenv for everything, JSON config files, environment variable-based secrets.\
 **Consequences:** Config is version-controlled and structured. Secrets never appear in config files. Adding a new non-secret value requires only a YAML edit, not a code change.
 
 ---
