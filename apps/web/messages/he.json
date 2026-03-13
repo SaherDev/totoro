@@ -111,7 +111,8 @@
     "speakerOn": "הרמקול דלוק",
     "speakerOff": "הרמקול כבוי",
     "send": "שלח",
-    "close": "סגור"
+    "close": "סגור",
+    "pasted": "הודבק"
   },
   "places": {
     "saved": "מקומות שמורים",

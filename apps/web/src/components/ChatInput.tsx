@@ -1,12 +1,23 @@
-'use client';
+"use client";
 
-import { useState, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Camera,
+  Mic,
+  MicOff,
+  Paperclip,
+  Plus,
+  Send,
+  Volume2,
+  X,
+} from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@totoro/ui";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@totoro/ui";
+import { useRef, useState } from "react";
+
 import { cn } from "@totoro/ui";
 import { useTranslations } from "next-intl";
-import { Send, Mic, MicOff, Volume2, X, Plus, Paperclip, Camera } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@totoro/ui";
-import { Popover, PopoverContent, PopoverTrigger } from "@totoro/ui";
+import { PastePreview } from "./PastePreview";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -17,12 +28,20 @@ interface ChatInputProps {
   onListeningChange?: (listening: boolean) => void;
 }
 
-function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange, onListeningChange }: ChatInputProps) {
-  const t = useTranslations('chat');
+function ChatInput({
+  onSend,
+  disabled,
+  placeholder,
+  className,
+  onVoiceModeChange,
+  onListeningChange,
+}: ChatInputProps) {
+  const t = useTranslations("chat");
   const [value, setValue] = useState("");
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
+  const [pastedItems, setPastedItems] = useState<Array<{ id: string; content: string }>>([]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = () => {
@@ -45,7 +64,8 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
   const handleInput = () => {
     if (inputRef.current) {
       inputRef.current.style.height = "auto";
-      inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 240) + "px";
+      inputRef.current.style.height =
+        Math.min(inputRef.current.scrollHeight, 240) + "px";
     }
   };
 
@@ -71,6 +91,23 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+
+    try {
+      const pastedText = e.clipboardData.getData("text/plain");
+
+      if (pastedText && pastedText.trim()) {
+        const id = `paste-${Date.now()}`;
+
+        // Add new paste to list
+        setPastedItems((prev) => [...prev, { id, content: pastedText }]);
+      }
+    } catch (err) {
+      console.error("❌ Error accessing clipboard:", err);
+    }
+  };
+
   return (
     <div className={cn("flex flex-col gap-2", className)}>
       {/* Voice mode */}
@@ -92,7 +129,7 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
                   "w-full h-full rounded-full transition-all duration-500",
                   isListening
                     ? "bg-gradient-to-br from-accent via-primary to-accent/60 shadow-lg"
-                    : "bg-muted"
+                    : "bg-muted",
                 )}
               />
               <button
@@ -117,20 +154,30 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
       </AnimatePresence>
 
       {/* Input bar */}
-      <div className="flex flex-col gap-1 p-1">
+      <div className="flex flex-col gap-3 p-1">
+        {/* Paste previews - horizontal scroll */}
+        {pastedItems.length > 0 && (
+          <div className="flex flex-nowrap gap-2 overflow-x-auto pb-2">
+            {pastedItems.map((item) => (
+              <PastePreview key={item.id} content={item.content} />
+            ))}
+          </div>
+        )}
+
         <textarea
           ref={inputRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onInput={handleInput}
+          onPaste={handlePaste}
           placeholder={placeholder || t("placeholder")}
           disabled={disabled || isVoiceMode}
           rows={1}
           suppressHydrationWarning
           className={cn(
             "w-full resize-none bg-transparent px-3 py-2.5 font-body text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none disabled:opacity-50",
-            isVoiceMode && "opacity-30"
+            isVoiceMode && "opacity-30",
           )}
         />
 
@@ -150,11 +197,18 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
                     </button>
                   </PopoverTrigger>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5">
+                <TooltipContent
+                  side="top"
+                  className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5"
+                >
                   {t("attach")}
                 </TooltipContent>
               </Tooltip>
-              <PopoverContent side="top" align="start" className="w-auto p-1.5 rounded-2xl border-border/50 bg-popover shadow-lg">
+              <PopoverContent
+                side="top"
+                align="start"
+                className="w-auto p-1.5 rounded-2xl border-border/50 bg-popover shadow-lg"
+              >
                 <div className="flex flex-col gap-0.5">
                   <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-body text-foreground hover:bg-muted transition-colors">
                     <Paperclip className="h-4 w-4 text-muted-foreground" />
@@ -180,13 +234,20 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
                   "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition-all duration-200",
                   isVoiceMode
                     ? "bg-accent text-accent-foreground shadow-totoro-sm"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80",
                 )}
               >
-                {isVoiceMode ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                {isVoiceMode ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
               </button>
             </TooltipTrigger>
-            <TooltipContent side="top" className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5">
+            <TooltipContent
+              side="top"
+              className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5"
+            >
               {isVoiceMode ? t("exitVoice") : t("voiceMode")}
             </TooltipContent>
           </Tooltip>
@@ -200,13 +261,16 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
                   "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition-all duration-200",
                   isSpeakerOn
                     ? "bg-accent text-accent-foreground shadow-totoro-sm"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80",
                 )}
               >
                 <Volume2 className="h-4 w-4" />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="top" className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5">
+            <TooltipContent
+              side="top"
+              className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5"
+            >
               {isSpeakerOn ? t("speakerOn") : t("speakerOff")}
             </TooltipContent>
           </Tooltip>
@@ -222,7 +286,10 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
                   <X className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="top" className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5">
+              <TooltipContent
+                side="top"
+                className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5"
+              >
                 {t("close")}
               </TooltipContent>
             </Tooltip>
@@ -236,13 +303,16 @@ function ChatInput({ onSend, disabled, placeholder, className, onVoiceModeChange
                     "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition-all duration-200",
                     value.trim()
                       ? "bg-primary text-primary-foreground shadow-totoro-sm hover:shadow-totoro-md active:scale-95"
-                      : "bg-muted text-muted-foreground"
+                      : "bg-muted text-muted-foreground",
                   )}
                 >
                   <Send className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="top" className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5">
+              <TooltipContent
+                side="top"
+                className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5"
+              >
                 {t("send")}
               </TooltipContent>
             </Tooltip>

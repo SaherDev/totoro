@@ -111,7 +111,8 @@
     "speakerOn": "Speaker on",
     "speakerOff": "Speaker off",
     "send": "Send",
-    "close": "Close"
+    "close": "Close",
+    "pasted": "Pasted"
   },
   "places": {
     "saved": "Saved places",
