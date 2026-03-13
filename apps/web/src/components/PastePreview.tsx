@@ -34,9 +34,9 @@ export function PastePreview({ content, maxLength = 200 }: PastePreviewProps) {
           transition={{ duration: 0.15 }}
         >
           {/* Paste card */}
-          <div className="shrink-0 rounded-lg border border-border bg-background p-2 w-28 text-start">
+          <div className="shrink-0 rounded-xl border border-border bg-white dark:bg-zinc-900 p-2.5 w-36 text-start">
             {/* Content preview */}
-            <div className="mb-2 max-h-16 overflow-hidden">
+            <div className="mb-2 max-h-24 overflow-hidden">
               <pre className="text-[9px] font-mono text-muted-foreground whitespace-pre-wrap break-words leading-tight">
                 {displayContent}
               </pre>
