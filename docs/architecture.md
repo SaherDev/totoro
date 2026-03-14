@@ -131,3 +131,32 @@ One shared PostgreSQL instance. Migration ownership split: Prisma owns users, us
 | Frontend Deploy | Vercel                     | Free Hobby tier                  |
 | Backend Deploy  | Railway                    | Hobby $5/mo                      |
 | Local Dev       | Docker Compose             | Not used in production           |
+
+---
+
+## Design Patterns
+
+These are structural constraints that define how the system is layered.
+They describe what lives where and what crosses which boundary.
+Behavioral and implementation patterns live in docs/decisions.md.
+
+### Facade — Controllers
+Controllers are the HTTP entry point only. Each controller method
+makes exactly one service call and returns the result. No Prisma
+queries, no AiServiceClient calls, no business logic appear inside
+any controller file. All orchestration lives in the service layer.
+Guards and pipes via decorators do not count as logic inside the
+method body.
+
+### Interface — Swappable Dependencies
+Any external dependency lives behind a TypeScript interface.
+Controllers and services import the interface only, injected via
+NestJS dependency injection. No concrete class is imported directly
+in business logic. Concrete implementations live in their domain
+module or in a shared provider if used across multiple modules.
+AiServiceClient is the reference example.
+
+### Strategy — HTTP Transport (apps/web)
+All HTTP calls from apps/web go through the HttpClient interface.
+Concrete transports live in apps/web/src/api/transports/. Nothing
+outside apps/web/src/api/ imports fetch or any HTTP library directly.

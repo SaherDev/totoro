@@ -15,6 +15,36 @@ Format:
 
 ---
 
+## ADR-034: Chain of Responsibility for request validation (deferred)
+
+**Date:** 2026-03-14\
+**Status:** deferred\
+**Context:** NestJS controllers currently use a global ValidationPipe (ADR-017) for request body validation. As domain-specific validation rules grow — for example, validating consult location bounds, checking user quota before forwarding to totoro-ai, or enforcing place input constraints — a single pipe or service method will accumulate unrelated rules that are hard to test independently.\
+**Decision:** Deferred. Apply the Chain of Responsibility pattern when any single validation path exceeds 3 independent rules. Each validator implements a validate(payload) -> ValidationResult interface and is chained at module startup. Until the threshold is reached, a single validation method per service is acceptable.\
+**Consequences:** No implementation now. When the threshold is reached, refactor into a chain of validator classes. Each rule becomes independently testable. Adding a new rule means adding a new class, not editing existing ones.
+
+---
+
+## ADR-033: Interface abstraction for all swappable dependencies in the product repo
+
+**Date:** 2026-03-14\
+**Status:** accepted\
+**Context:** The product repo depends on external systems: Clerk for auth, Prisma for database access, Axios for HTTP calls to totoro-ai, and any future integrations. ADR-030 establishes that interfaces are implemented via classes. This ADR extends that to require an interface abstraction for any dependency that meets one or more criteria: (1) has more than one possible implementation now or in the future, (2) is an external system that could be swapped for cost, performance, or availability reasons, (3) needs to be mockable in tests without hitting a real service. This mirrors ADR-039 in totoro-ai and makes the rule consistent across both repos.\
+**Decision:** Any dependency meeting the criteria above must be abstracted behind a TypeScript interface before a concrete class is written. Concrete implementations live in their domain module or in a shared provider if used across multiple modules. Controllers and services depend on the interface only, injected via NestJS Depends(). No concrete class is imported directly in business logic. Swapping any dependency requires a config change and a new implementation class, never a change to business logic. AiServiceClient (ADR-016) is the first example of this pattern applied correctly — it abstracts all totoro-ai HTTP forwarding behind a typed interface.\
+**Consequences:** Every new external dependency introduced must be evaluated against the three criteria before implementation begins. If it qualifies, an interface is defined first, then the concrete class. This rule is a Constitution Check item — any plan that introduces a concrete external dependency directly into a controller or service must be flagged and revised before implementation starts.
+
+---
+
+## ADR-032: Facade pattern enforced on NestJS controllers
+
+**Date:** 2026-03-14\
+**Status:** accepted\
+**Context:** NestJS controllers are entry points into the domain layer. Without a constraint, controllers accumulate business logic, direct Prisma calls, and inline HTTP forwarding to totoro-ai when building quickly. This couples the HTTP layer to infrastructure and makes both harder to test.\
+**Decision:** Controllers are facades. Each controller method makes exactly one service call and returns the result. No Prisma queries, no direct AiServiceClient calls, no Redis, no business logic appear inside any controller file. All orchestration lives in the service layer. The one exception is request validation via pipes and guards, which are decorators and do not count as logic inside the method body.\
+**Consequences:** Controller files stay under 50 lines. Infrastructure concerns are testable independently of HTTP routing. Violations of this rule must be flagged during Constitution Check in the Plan phase before implementation begins.
+
+---
+
 ## ADR-031: Agent Skills Integration in Development Workflow
 
 **Date:** 2026-03-12\
