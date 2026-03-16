@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { NavBar, NavBarLogo, NavBarActions } from '@/components/NavBar';
 import { ProfileMenu } from '@/components/profile-menu';
 import { PlaceCard } from '@/components/PlaceCard';
-import { TotoroSavedPlaces } from '@/components/illustrations/totoro-illustrations';
+import { TotoroEmpty } from '@/components/illustrations/totoro-illustrations';
 
 // Mock data for saved places and recommendation history
 const MOCK_SAVED_PLACES = [
@@ -122,7 +122,7 @@ export default function PlacesPage() {
                 transition={{ duration: 0.4 }}
               >
                 <div className="w-32 h-32 md:w-40 md:h-40 mb-6">
-                  <TotoroSavedPlaces />
+                  <TotoroEmpty />
                 </div>
                 <h2 className="font-display text-2xl text-foreground text-center mb-2">
                   {activeTab === 'saved' ? t('places.noSaved') : t('places.noHistory')}
