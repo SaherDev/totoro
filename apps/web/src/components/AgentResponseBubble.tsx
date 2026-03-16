@@ -152,7 +152,7 @@ export function AgentResponseBubble({
               transition={{ duration: 0.3 }}
               className="flex items-center gap-3"
             >
-              <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-gradient-to-br from-[hsl(140,35%,85%)] to-[hsl(140,35%,75%)] p-1.5">
+              <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-muted p-1.5">
                 <TotoroStepRead />
               </div>
               <div className="flex flex-col gap-0.5">
@@ -173,7 +173,7 @@ export function AgentResponseBubble({
               transition={{ duration: 0.3 }}
               className="flex items-center gap-3"
             >
-              <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(220,40%,93%)] p-1.5">
+              <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-muted p-1.5">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeStep}
@@ -219,7 +219,7 @@ export function AgentResponseBubble({
             transition={{ duration: 0.3 }}
             className="flex items-center gap-3"
           >
-            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(0,30%,92%)] p-1.5">
+            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-muted p-1.5">
               <TotoroError />
             </div>
             <div className="flex flex-col gap-0.5">
@@ -239,7 +239,7 @@ export function AgentResponseBubble({
             transition={{ duration: 0.5 }}
             className="flex items-center gap-3"
           >
-            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(140,35%,90%)] p-1.5">
+            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-muted p-1.5">
               <TotoroResultCard />
             </div>
             <div>
@@ -256,7 +256,7 @@ export function AgentResponseBubble({
             transition={{ duration: 0.5 }}
             className="flex items-center gap-3"
           >
-            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(140,35%,90%)] p-1.5 anim-bounce">
+            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-muted p-1.5 anim-bounce">
               <TotoroAddPlaceSuccess />
             </div>
             <div>
@@ -277,7 +277,7 @@ export function AgentResponseBubble({
             className="flex flex-col gap-3 w-full"
           >
             <div className="flex items-center gap-3">
-              <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(140,35%,90%)] p-1.5">
+              <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-muted p-1.5">
                 <TotoroResultCard />
               </div>
               <div>
@@ -308,7 +308,7 @@ export function AgentResponseBubble({
             transition={{ duration: 0.3 }}
             className="flex items-center gap-3"
           >
-            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(0,30%,92%)] p-1.5">
+            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-muted p-1.5">
               <TotoroEmpty />
             </div>
             <div className="flex flex-col gap-0.5">
@@ -329,7 +329,7 @@ export function AgentResponseBubble({
             className="flex flex-col gap-4 w-full"
           >
             <div className="flex items-center gap-3">
-              <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(140,35%,90%)] p-1.5 anim-sway-gentle">
+              <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-muted p-1.5 anim-sway-gentle">
                 <TotoroResultCard />
               </div>
               <div>
