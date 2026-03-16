@@ -23,11 +23,9 @@
     "tapToTalk": "הקש לדיבור",
     "voicePrompt": "תאר את המקום שאתה מחפש בקול שלך",
     "suggestions": {
-      "cheapDinner": "ארוחת ערב זולה קרוב",
-      "bestCoffee": "הקפה הטוב ביותר כדי לעבוד",
-      "dateNight": "ערב רומנטי",
-      "brunch": "ברנץ עם חברים",
-      "savePlace": "שמור קישור למקום זה"
+      "consult": "ארוחת ערב זולה קרוב",
+      "save": "שמור קישור למקום זה",
+      "recall": "Recall a saved place"
     }
   },
   "place": {
@@ -121,5 +119,16 @@
     "noSavedDesc": "התחל לשמור מקומות שאתה אוהב כדי לבנות את האוסף האישי שלך",
     "noHistory": "אין המלצות עדיין",
     "noHistoryDesc": "היסטוריית ההמלצות שלך תופיע כאן כשתחקור"
+  },
+  "recall": {
+    "chip": "Recall a saved place",
+    "searching": "Searching your saved places",
+    "takesAbout": "Looking through your collection",
+    "foundTitle": "Found in your saves",
+    "foundSubtitle": "Places that match your memory",
+    "noResults": "Nothing matched",
+    "noResultsDesc": "Try describing it differently — a cuisine, city, or how you saved it",
+    "error": "Couldn't search your places",
+    "matchReason": "Why this matched"
   }
 }
