@@ -71,8 +71,29 @@ const MOCK_RESULTS = {
   ],
 };
 
+const MOCK_RECALL_RESULTS = [
+  {
+    place_id: '1',
+    place_name: 'Fuji Ramen',
+    address: '123 Sukhumvit Soi 33, Bangkok',
+    cuisine: 'ramen',
+    price_range: 'low',
+    source_url: 'https://www.tiktok.com/@foodie/video/123',
+    match_reason: 'Saved from TikTok, tagged ramen',
+  },
+  {
+    place_id: '2',
+    place_name: 'Bankara Ramen',
+    address: '456 Sukhumvit Soi 39, Bangkok',
+    cuisine: 'ramen',
+    price_range: '$$',
+    source_url: null,
+    match_reason: 'Ramen restaurant, saved 2 months ago',
+  },
+];
+
 type Phase = "thinking" | "result" | "error";
-export type AgentFlow = "recommend" | "add-place";
+export type AgentFlow = "recommend" | "add-place" | "recall";
 
 interface AgentResponseBubbleProps {
   hasError?: boolean;
@@ -222,6 +243,38 @@ export function AgentResponseBubble({
               <p className="font-body text-xs text-muted-foreground">
                 {t("addPlace.savedSubtitle")}
               </p>
+            </div>
+          </motion.div>
+        ) : flow === "recall" ? (
+          <motion.div
+            key="recall-result"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col gap-3 w-full"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(140,35%,90%)] p-1.5">
+                <TotoroResultCard />
+              </div>
+              <div>
+                <p className="font-display text-lg text-foreground">
+                  {t("recall.foundTitle")}
+                </p>
+                <p className="font-body text-xs text-muted-foreground">
+                  {t("recall.foundSubtitle")}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {MOCK_RECALL_RESULTS.map((place) => (
+                <div key={place.place_id} className="rounded-lg border border-border bg-background p-3">
+                  <p className="font-display text-sm text-foreground">{place.place_name}</p>
+                  <p className="font-body text-xs text-muted-foreground mb-1">{place.address}</p>
+                  <p className="font-body text-xs text-muted-foreground">{t("recall.matchReason")}: {place.match_reason}</p>
+                </div>
+              ))}
             </div>
           </motion.div>
         ) : (
