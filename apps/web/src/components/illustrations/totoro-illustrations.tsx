@@ -40,8 +40,8 @@ export function TotoroAddPlaceSuccess() {
   return <SvgImg src="/illustrations/totoro-add-place-success.svg" alt="Totoro add place success" animations="anim-bounce" />;
 }
 
-export function TotoroSavedPlaces() {
-  return <SvgImg src="/illustrations/totoro-saved-places.svg" alt="Totoro saved places" animations="anim-bob" />;
+export function TotoroEmpty() {
+  return <SvgImg src="/illustrations/totoro-empty.svg" alt="Totoro empty state" animations="anim-bob" />;
 }
 
 export function TotoroPlaceDetail() {
