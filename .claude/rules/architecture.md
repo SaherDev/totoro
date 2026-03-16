@@ -63,7 +63,7 @@ Both services read from any table as needed. One shared PostgreSQL instance. Two
 - All calls to `totoro-ai` originate from `services/api` (NestJS services).
 - `apps/web` never calls `totoro-ai` directly. The frontend talks to the NestJS API, which forwards to the AI service.
 - The AI service base URL is loaded from YAML config (`config/*.yml` → `ai_service.base_url`), not from environment variables.
-- Two endpoints only: `POST /v1/extract-place` and `POST /v1/consult`. See @docs/api-contract.md for schemas.
+- Three endpoints: `POST /v1/extract-place`, `POST /v1/consult`, `POST /v1/recall`. See @docs/api-contract.md for schemas.
 
 ## Configuration Strategy
 
