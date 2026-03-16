@@ -18,11 +18,9 @@ export function HomeEmptyState({
   const t = useTranslations();
 
   const suggestions = [
-    t('home.suggestions.cheapDinner'),
-    t('home.suggestions.bestCoffee'),
-    t('home.suggestions.dateNight'),
-    t('home.suggestions.brunch'),
-    t('home.suggestions.savePlace'),
+    t('home.suggestions.consult'),
+    t('home.suggestions.save'),
+    t('home.suggestions.recall'),
   ];
 
   return (
