@@ -25,7 +25,7 @@
     "suggestions": {
       "consult": "ארוחת ערב זולה קרוב",
       "save": "שמור קישור למקום זה",
-      "recall": "Recall a saved place"
+      "recall": "מצא מקום שמור"
     }
   },
   "place": {
@@ -121,14 +121,14 @@
     "noHistoryDesc": "היסטוריית ההמלצות שלך תופיע כאן כשתחקור"
   },
   "recall": {
-    "chip": "Recall a saved place",
-    "searching": "Searching your saved places",
-    "takesAbout": "Looking through your collection",
-    "foundTitle": "Found in your saves",
-    "foundSubtitle": "Places that match your memory",
-    "noResults": "Nothing matched",
-    "noResultsDesc": "Try describing it differently — a cuisine, city, or how you saved it",
-    "error": "Couldn't search your places",
-    "matchReason": "Why this matched"
+    "chip": "מצא מקום שמור",
+    "searching": "מחפש במקומות השמורים שלך",
+    "takesAbout": "עובר על האוסף שלך",
+    "foundTitle": "נמצא בשמירות שלך",
+    "foundSubtitle": "מקומות שתואמים לזיכרון שלך",
+    "noResults": "לא נמצאו תוצאות",
+    "noResultsDesc": "נסה לתאר אחרת — מטבח, עיר, או איך שמרת אותו",
+    "error": "לא הצלחנו לחפש במקומות שלך",
+    "matchReason": "למה זה תאם"
   }
 }
