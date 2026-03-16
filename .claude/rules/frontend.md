@@ -20,5 +20,5 @@
 - `next-intl` for UI string translations. No other i18n library.
 - URL-based routing: `/en/` and `/he/` prefixes. English is the default locale.
 - All UI strings go through translation functions. Never hardcode user-facing text in components.
-- Translation files: `messages/en.json` and `messages/he.json`.
+- Translation files: `apps/web/messages/en.json` and `apps/web/messages/he.json`.
 - RTL direction is set automatically based on locale via the `dir` attribute on the `<html>` element.

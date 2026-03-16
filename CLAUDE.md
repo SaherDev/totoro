@@ -13,7 +13,7 @@ apps/web/          → Next.js frontend (Tailwind v3, shadcn/ui, Clerk auth)
 services/api/      → NestJS backend (Prisma, PostgreSQL + pgvector)
 libs/shared/       → Shared TypeScript types, DTOs, constants
 libs/ui/           → Design system (shadcn/ui components, cva variants, cn() utility)
-messages/          → i18n translation files (en.json, he.json)
+apps/web/messages/ → i18n translation files (en.json, he.json)
 config/            → YAML configuration files (dev.yml, prod.yml, test.yml)
 scripts/           → Shell scripts (utilities)
 prisma/            → Prisma schema and migrations
