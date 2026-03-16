@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { PlaceCard, AlternativeCard } from "@/components/PlaceCard";
+import { PlaceCard, PlaceListCard } from "@/components/PlaceCard";
 import {
   TotoroAddPlace,
   TotoroAddPlaceProcessing,
@@ -42,6 +42,9 @@ const ADD_PLACE_STEP_ICONS = [
   TotoroAddPlace,
   TotoroAddPlaceProcessing,
 ];
+
+const RECALL_STEP_KEYS = ["recall.searching"];
+const RECALL_STEP_ICONS = [TotoroStepRead];
 
 const MOCK_RESULTS = {
   primary: {
@@ -110,8 +113,8 @@ export function AgentResponseBubble({
   const t = useTranslations();
   const [phase, setPhase] = useState<Phase>(content ? "result" : "thinking");
   const [activeStep, setActiveStep] = useState(0);
-  const stepKeys = flow === "add-place" ? ADD_PLACE_STEP_KEYS : RECOMMEND_STEP_KEYS;
-  const stepIcons = flow === "add-place" ? ADD_PLACE_STEP_ICONS : RECOMMEND_STEP_ICONS;
+  const stepKeys = flow === "add-place" ? ADD_PLACE_STEP_KEYS : flow === "recall" ? RECALL_STEP_KEYS : RECOMMEND_STEP_KEYS;
+  const stepIcons = flow === "add-place" ? ADD_PLACE_STEP_ICONS : flow === "recall" ? RECALL_STEP_ICONS : RECOMMEND_STEP_ICONS;
 
   useEffect(() => {
     if (phase !== "thinking") return;
@@ -292,11 +295,15 @@ export function AgentResponseBubble({
 
             <div className="flex flex-col gap-2">
               {MOCK_RECALL_RESULTS.map((place) => (
-                <div key={place.place_id} className="rounded-lg border border-border bg-background p-3">
-                  <p className="font-display text-sm text-foreground">{place.place_name}</p>
-                  <p className="font-body text-xs text-muted-foreground mb-1">{place.address}</p>
-                  <p className="font-body text-xs text-muted-foreground">{t("recall.matchReason")}: {place.match_reason}</p>
-                </div>
+                <PlaceListCard
+                  key={place.place_id}
+                  name={place.place_name}
+                  address={place.address}
+                  reasoning={place.match_reason}
+                  source="saved"
+                  cuisine={place.cuisine ?? undefined}
+                  priceRange={place.price_range ?? undefined}
+                />
               ))}
             </div>
           </motion.div>
@@ -350,7 +357,7 @@ export function AgentResponseBubble({
               </p>
               <div className="flex flex-col gap-2">
                 {MOCK_RESULTS.alternatives.map((alt, i) => (
-                  <AlternativeCard key={i} {...alt} />
+                  <PlaceListCard key={i} {...alt} />
                 ))}
               </div>
             </div>
