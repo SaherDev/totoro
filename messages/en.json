@@ -26,11 +26,9 @@
     "tapToTalk": "Tap to talk",
     "voicePrompt": "Describe the place you're looking for with your voice",
     "suggestions": {
-      "cheapDinner": "Cheap dinner nearby",
-      "bestCoffee": "Best coffee to work from",
-      "dateNight": "Date night spot",
-      "brunch": "Brunch with friends",
-      "savePlace": "Save this place link"
+      "consult": "Cheap dinner nearby",
+      "save": "Save this place link",
+      "recall": "Recall a saved place"
     }
   },
   "profile": {
@@ -68,5 +66,13 @@
     "heresPick": "Here's my pick",
     "basedOnTaste": "Based on your taste",
     "alsoWorth": "Also worth considering"
+  },
+  "recall": {
+    "searching": "Searching your saved places",
+    "takesAbout": "Looking through your collection",
+    "foundTitle": "Found in your saves",
+    "foundSubtitle": "Places that match your memory",
+    "noResults": "Nothing matched",
+    "noResultsDesc": "Try describing it differently — a cuisine, city, or how you saved it"
   }
 }
