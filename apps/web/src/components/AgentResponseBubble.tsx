@@ -8,6 +8,7 @@ import {
   TotoroAddPlaceSuccess,
   TotoroResultCard,
   TotoroError,
+  TotoroEmpty,
   TotoroStepListen,
   TotoroStepRead,
   TotoroStepMove,
@@ -143,51 +144,73 @@ export function AgentResponseBubble({
     <div className="flex gap-3 items-start">
       <AnimatePresence mode="wait">
         {phase === "thinking" ? (
-          <motion.div
-            key="thinking"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.3 }}
-            className="flex items-center gap-3"
-          >
-            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(220,40%,93%)] p-1.5">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeStep}
-                  initial={{ opacity: 0, scale: 0.7 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.7 }}
-                  transition={{ duration: 0.2 }}
-                  className="w-full h-full"
-                >
-                  <StepIcon />
-                </motion.div>
-              </AnimatePresence>
-            </div>
+          flow === "recall" ? (
+            <motion.div
+              key="thinking-recall"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="flex items-center gap-3"
+            >
+              <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-gradient-to-br from-[hsl(140,35%,85%)] to-[hsl(140,35%,75%)] p-1.5">
+                <TotoroStepRead />
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <p className="font-display text-sm text-foreground font-medium">
+                  {t("recall.searching")}
+                </p>
+                <p className="font-body text-xs text-muted-foreground">
+                  {t("recall.takesAbout")}
+                </p>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="thinking"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.3 }}
+              className="flex items-center gap-3"
+            >
+              <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(220,40%,93%)] p-1.5">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeStep}
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.7 }}
+                    transition={{ duration: 0.2 }}
+                    className="w-full h-full"
+                  >
+                    <StepIcon />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
 
-            <div className="flex flex-col gap-0.5">
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={activeStep}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.2 }}
-                  className="font-display text-sm text-foreground font-medium"
-                >
-                  {activeStep < stepKeys.length
-                    ? t(currentStepKey)
-                    : flow === "add-place"
-                      ? t("addPlace.almostDone")
-                      : t("agent.almostDone")}
-                </motion.p>
-              </AnimatePresence>
-              <p className="font-body text-xs text-muted-foreground">
-                {flow === "add-place" ? t("addPlace.takesAbout") : t("agent.takesAbout")}
-              </p>
-            </div>
-          </motion.div>
+              <div className="flex flex-col gap-0.5">
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={activeStep}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.2 }}
+                    className="font-display text-sm text-foreground font-medium"
+                  >
+                    {activeStep < stepKeys.length
+                      ? t(currentStepKey)
+                      : flow === "add-place"
+                        ? t("addPlace.almostDone")
+                        : t("agent.almostDone")}
+                  </motion.p>
+                </AnimatePresence>
+                <p className="font-body text-xs text-muted-foreground">
+                  {flow === "add-place" ? t("addPlace.takesAbout") : t("agent.takesAbout")}
+                </p>
+              </div>
+            </motion.div>
+          )
         ) : phase === "error" ? (
           <motion.div
             key="error"
@@ -245,7 +268,7 @@ export function AgentResponseBubble({
               </p>
             </div>
           </motion.div>
-        ) : flow === "recall" ? (
+        ) : flow === "recall" && MOCK_RECALL_RESULTS.length > 0 ? (
           <motion.div
             key="recall-result"
             initial={{ opacity: 0, y: 12 }}
@@ -275,6 +298,26 @@ export function AgentResponseBubble({
                   <p className="font-body text-xs text-muted-foreground">{t("recall.matchReason")}: {place.match_reason}</p>
                 </div>
               ))}
+            </div>
+          </motion.div>
+        ) : flow === "recall" && MOCK_RECALL_RESULTS.length === 0 ? (
+          <motion.div
+            key="recall-empty"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex items-center gap-3"
+          >
+            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-[hsl(0,30%,92%)] p-1.5">
+              <TotoroEmpty />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <p className="font-display text-sm text-foreground font-medium">
+                {t("recall.noResults")}
+              </p>
+              <p className="font-body text-xs text-muted-foreground">
+                {t("recall.noResultsDesc")}
+              </p>
             </div>
           </motion.div>
         ) : (
