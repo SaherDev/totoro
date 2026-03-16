@@ -26,11 +26,9 @@
     "tapToTalk": "הקש לדברות",
     "voicePrompt": "תאר את המקום שאתה מחפש בקוליך",
     "suggestions": {
-      "cheapDinner": "ארוחת ערב זולה קרוב",
-      "bestCoffee": "הקפה הטוב לעבודה ממנו",
-      "dateNight": "מקום לערב זיווגי",
-      "brunch": "ברנץ עם חברים",
-      "savePlace": "שמור קישור מקום זה"
+      "consult": "Cheap dinner nearby",
+      "save": "Save this place link",
+      "recall": "Recall a saved place"
     }
   },
   "profile": {
@@ -68,5 +66,13 @@
     "heresPick": "הנה הבחירה שלי",
     "basedOnTaste": "בהתאם לטעם שלך",
     "alsoWorth": "כדאי גם לשקול"
+  },
+  "recall": {
+    "searching": "Searching your saved places",
+    "takesAbout": "Looking through your collection",
+    "foundTitle": "Found in your saves",
+    "foundSubtitle": "Places that match your memory",
+    "noResults": "Nothing matched",
+    "noResultsDesc": "Try describing it differently — a cuisine, city, or how you saved it"
   }
 }
