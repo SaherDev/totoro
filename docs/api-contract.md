@@ -130,6 +130,64 @@ This endpoint has two response modes. The default mode returns a synchronous JSO
 
 ---
 
+## POST /v1/recall
+
+Retrieve saved places matching a natural language memory fragment. Only searches the user's collection — no external discovery.
+
+**Request (Frontend → NestJS):**
+
+```json
+{
+  "query": "that ramen place I saved from TikTok"
+}
+```
+
+**Request (NestJS → totoro-ai):**
+
+```json
+{
+  "user_id": "string",
+  "query": "that ramen place I saved from TikTok"
+}
+```
+
+**Response:**
+
+```json
+{
+  "results": [
+    {
+      "place_id": "string",
+      "place_name": "Fuji Ramen",
+      "address": "123 Sukhumvit Soi 33, Bangkok",
+      "cuisine": "ramen",
+      "price_range": "low",
+      "source_url": "https://www.tiktok.com/@foodie/video/123",
+      "match_reason": "Saved from TikTok, tagged ramen"
+    }
+  ],
+  "total": 1
+}
+```
+
+**Notes:**
+
+- `user_id` is injected by NestJS from the Clerk auth token. The frontend request body does NOT include `user_id`.
+- Phase 1: NestJS stub returns 501 Not Implemented. Phase 3 will forward to totoro-ai.
+- Error handling follows the same table as `/v1/consult`.
+
+---
+
+## API Contract Summary
+
+| Endpoint               | Purpose                                     | NestJS Sends             | totoro-ai Returns                          |
+| ---------------------- | ------------------------------------------- | ------------------------ | ------------------------------------------ |
+| POST /v1/extract-place | Extract and validate a place from raw input | raw_input, user_id       | place_id, place metadata, confidence score |
+| POST /v1/consult       | Get a recommendation from natural language  | query, user_id, location | 1 primary + 2 alternatives with reasoning  |
+| POST /v1/recall        | Retrieve saved places matching memory       | query, user_id           | list of saved places matching query        |
+
+---
+
 ## Error Handling
 
 The AI service returns standard HTTP status codes:
