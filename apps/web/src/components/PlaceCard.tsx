@@ -74,7 +74,7 @@ export function PlaceCard({
   );
 }
 
-export function AlternativeCard({
+export function PlaceListCard({
   name,
   address,
   reasoning,

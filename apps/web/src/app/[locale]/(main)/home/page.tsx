@@ -16,7 +16,7 @@ type MessageItem = {
   id: string;
   type: 'user' | 'agent-response';
   content?: string;
-  flow?: 'recommend' | 'add-place';
+  flow?: 'recommend' | 'add-place' | 'recall';
   hasError?: boolean;
   isEcho?: boolean;
 };
@@ -42,16 +42,20 @@ export default function HomePage() {
       content: text,
     };
 
-    // Check if this is an add-place intent
+    // Detect intent — recall check must come before add-place to avoid false positives
+    // (e.g. "Recall a saved place" matches saveIntent + placeHint)
+    const isRecall = /\b(recall|find|search|look up|lookup)\b/i.test(text) && /\b(saved|collection|places)\b/i.test(text);
     const hasUrl = /https?:\/\/\S+/i.test(text);
     const saveIntent = /\b(add|adding|save|saving|saved)\b/i.test(text);
     const placeHint = /\b(place|spot|restaurant|cafe|coffee|link)\b/i.test(text);
-    const isAddPlace = hasUrl || (saveIntent && placeHint) || /^save\s+/i.test(text);
+    const isAddPlace = !isRecall && (hasUrl || (saveIntent && placeHint) || /^save\s+/i.test(text));
+
+    const flow = isRecall ? 'recall' : isAddPlace ? 'add-place' : 'recommend';
 
     const agentMsg: MessageItem = {
       id: `agent-${Date.now() + 1}`,
       type: 'agent-response',
-      flow: isAddPlace ? 'add-place' : 'recommend',
+      flow,
       content: fromButton ? undefined : text,
       isEcho: !fromButton,
     };
