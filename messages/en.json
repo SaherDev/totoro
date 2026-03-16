@@ -68,11 +68,14 @@
     "alsoWorth": "Also worth considering"
   },
   "recall": {
+    "chip": "Recall a saved place",
     "searching": "Searching your saved places",
     "takesAbout": "Looking through your collection",
     "foundTitle": "Found in your saves",
     "foundSubtitle": "Places that match your memory",
     "noResults": "Nothing matched",
-    "noResultsDesc": "Try describing it differently — a cuisine, city, or how you saved it"
+    "noResultsDesc": "Try describing it differently — a cuisine, city, or how you saved it",
+    "error": "Couldn't search your places",
+    "matchReason": "Why this matched"
   }
 }
