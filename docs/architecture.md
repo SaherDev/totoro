@@ -89,12 +89,24 @@ One HTTP call to totoro-ai. The agent runs autonomously. NestJS stores recommend
 
 Streaming note: The current flow uses a synchronous JSON response. When the frontend needs to show agent thinking in real time (instead of after the fact), the consult endpoint will add an SSE (Server-Sent Events) mode. In SSE mode, FastAPI streams reasoning steps as they complete, and NestJS proxies the SSE stream to the frontend. Until then, the reasoning_steps array in the synchronous response is sufficient.
 
+## Data Flow: Recall (Retrieve Saved Places)
+
+1. User types a memory fragment (e.g., "that ramen place I saved from TikTok") in apps/web.
+2. apps/web sends the query to services/api via REST.
+3. services/api verifies auth, then forwards to totoro-ai via POST /v1/recall with user_id and query.
+4. totoro-ai performs vector search on the user's saved places, filters by similarity to the query, and returns matching results.
+5. services/api returns the results to apps/web.
+6. apps/web renders the list of saved places with match reasons.
+
+One HTTP call to totoro-ai. Recall only searches saved places — no external discovery, no ranking, no taste model.
+
 ## API Contract (NestJS to totoro-ai)
 
 | Endpoint               | Purpose                                     | NestJS Sends             | totoro-ai Returns                          |
 | ---------------------- | ------------------------------------------- | ------------------------ | ------------------------------------------ |
 | POST /v1/extract-place | Extract and validate a place from raw input | raw_input, user_id       | place_id, place metadata, confidence score |
 | POST /v1/consult       | Get a recommendation from natural language  | query, user_id, location | 1 primary + 2 alternatives with reasoning  |
+| POST /v1/recall        | Retrieve saved places matching memory       | query, user_id           | list of saved places matching query        |
 
 ## Database Table Ownership
 
