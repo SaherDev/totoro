@@ -25,7 +25,7 @@ import { RequiresAi } from '../common/decorators/requires-ai.decorator';
  * - Requires valid Clerk token (via middleware)
  * - Requires AI to be enabled (via @RequiresAi() guard)
  */
-@Controller()
+@Controller('consult')
 export class ConsultController {
   constructor(private readonly consultService: ConsultService) {}
 

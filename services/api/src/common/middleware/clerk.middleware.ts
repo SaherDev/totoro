@@ -41,7 +41,7 @@ export class ClerkMiddleware implements NestMiddleware {
     const publicPaths = this.configService.get<string[]>('auth.public_paths', ['/health', '/webhooks/clerk']);
     // Use originalUrl which includes the full path with query string
     const requestUrl = (req.originalUrl || req.url || '').split('?')[0]; // Remove query string
-    if (publicPaths.some(path => requestUrl.includes(path))) {
+    if (publicPaths.some(path => requestUrl === path || requestUrl.startsWith(path + '/'))) {
       return next();
     }
 
@@ -53,6 +53,18 @@ export class ClerkMiddleware implements NestMiddleware {
     }
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+
+    // Dev bypass: allow a static token for local testing (never enabled in production)
+    const isProd = this.configService.get<string>('app.environment') === 'production';
+    const bypassEnabled = this.configService.get<boolean>('auth.dev_bypass.enabled', false);
+    const bypassToken = this.configService.get<string>('auth.dev_bypass.token');
+    const bypassUserId = this.configService.get<string>('auth.dev_bypass.user_id');
+    if (!isProd && bypassEnabled && bypassToken && token === bypassToken && bypassUserId) {
+      const aiEnabledDefault = this.configService.get<boolean>('ai.enabled_default', true);
+      req.user = { id: bypassUserId, ai_enabled: aiEnabledDefault };
+      this.logger.warn(`Dev bypass auth used for user ${bypassUserId} — never enable in production`);
+      return next();
+    }
 
     try {
       // Verify token using Clerk backend SDK

@@ -49,16 +49,4 @@ export class AppController {
     };
   }
 
-  /**
-   * Consult endpoint (requires valid Clerk token + AI enabled)
-   */
-  @Post('consult')
-  @RequiresAi()
-  consult(@Request() req) {
-    return {
-      message: 'Consult endpoint (AI-gated)',
-      user: req.user,
-      endpoint: 'POST /consult',
-    };
-  }
 }

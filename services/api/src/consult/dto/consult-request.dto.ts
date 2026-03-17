@@ -5,8 +5,8 @@ import {
   IsOptional,
   IsBoolean,
   ValidateNested,
-  Type,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ConsultRequest } from '@totoro/shared';
 import { LocationDto } from './location.dto';
 
