@@ -65,11 +65,13 @@ Current binding decisions:
 
 ## VI. AI Service Contract
 
-Two endpoints only, both in `AiServiceClient`:
+Three endpoints, all via `AiServiceClient`:
 
 - `POST /v1/extract-place` — 10s timeout
-- `POST /v1/consult` — 20s timeout
+- `POST /v1/consult` — 20s timeout (supports `stream: true` for SSE proxy mode)
+- `POST /v1/recall` — 20s timeout
 
+Base URL: `ai_service.base_url` in YAML config (add to `.local.yaml` for local dev: `http://localhost:8000`).
 Full schema in `docs/api-contract.md`. Response DTOs must tolerate extra fields (forward-compatible, `@IsOptional()` on all AI response fields).
 
 ## VII. Frontend Standards
@@ -96,8 +98,24 @@ Full schema in `docs/api-contract.md`. Response DTOs must tolerate extra fields 
 - Never push directly to `main`
 - New endpoints require a `.bru` file in `totoro-config/bruno/`
 
+## X. Required Skills Per Domain
+
+Before planning or implementing in any domain, invoke the matching skill via the Skill tool. This applies at every speckit step (plan, tasks, implement).
+
+| Domain | Skill to invoke | When |
+| --- | --- | --- |
+| `services/api` (NestJS) | `nestjs-expert` | Any backend module, controller, service, guard, DI |
+| `apps/web` (Next.js) | `nextjs16-skills` | Server/client components, routing, data fetching |
+| `apps/web` (React) | `vercel-react-best-practices` | Hooks, state, performance, React patterns |
+| Auth (Clerk) | `clerk-nextjs-skills` | Protected routes, session, Clerk SDK usage |
+| UI/UX | `web-design-guidelines` | Component design, accessibility, design systems |
+| Architecture | `vercel-composition-patterns` | Multi-layer design, composition, refactoring |
+| Deployment | `deploy-to-vercel` | Vercel workflows, env setup, optimization |
+
+For cross-domain tasks (e.g., NestJS + auth), invoke all relevant skills before starting.
+
 ## Governance
 
 This constitution supersedes ad-hoc decisions. New architectural choices require an ADR entry in `docs/decisions.md` before implementation. The constitution is updated when new ADRs are added.
 
-**Version**: 1.0 | **Ratified**: 2026-03-08
+**Version**: 1.1 | **Ratified**: 2026-03-17

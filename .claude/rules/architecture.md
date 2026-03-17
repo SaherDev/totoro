@@ -21,26 +21,26 @@ FastAPI owns the entire AI pipeline. It writes AI-generated data (places, embedd
 
 ## Nx Boundaries
 
-| Source | Can import from | Cannot import from |
-|--------|----------------|--------------------|
-| `apps/web` | `libs/shared`, `libs/ui` | `services/api` |
-| `services/api` | `libs/shared` | `apps/web`, `libs/ui` |
-| `libs/ui` | `libs/shared` | `apps/web`, `services/api` |
-| `libs/shared` | (nothing) | `apps/web`, `services/api`, `libs/ui` |
+| Source         | Can import from          | Cannot import from                    |
+| -------------- | ------------------------ | ------------------------------------- |
+| `apps/web`     | `libs/shared`, `libs/ui` | `services/api`                        |
+| `services/api` | `libs/shared`            | `apps/web`, `libs/ui`                 |
+| `libs/ui`      | `libs/shared`            | `apps/web`, `services/api`            |
+| `libs/shared`  | (nothing)                | `apps/web`, `services/api`, `libs/ui` |
 
 These boundaries are enforced by Nx module boundary rules. If you get a lint error about a cross-boundary import, do not suppress it — move the shared code into the appropriate lib. Note: `libs/ui` is frontend-only — `services/api` must never import from it.
 
 ## Two-Repo Separation
 
-| Concern | This repo (`totoro`) | AI repo (`totoro-ai`) |
-|---------|---------------------|-----------------------|
-| Language | TypeScript | Python |
-| Runtime | Node 20 | Python 3.11+ |
-| Role | Thin gateway + schema owner | Autonomous AI brain |
+| Concern          | This repo (`totoro`)                                     | AI repo (`totoro-ai`)                                                                                               |
+| ---------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Language         | TypeScript                                               | Python                                                                                                              |
+| Runtime          | Node 20                                                  | Python 3.11+                                                                                                        |
+| Role             | Thin gateway + schema owner                              | Autonomous AI brain                                                                                                 |
 | Responsibilities | Auth, user CRUD, recommendation history, HTTP forwarding | Intent parsing, embeddings, vector search, ranking, LLM calls, Google Places, writing places/embeddings/taste_model |
-| Database access | Read-write for product tables (Prisma) | Read-write for AI tables (direct connection) |
-| Redis access | None | Read-write (LLM cache, session state, agent state) |
-| Communication | Sends HTTP requests | Receives HTTP requests |
+| Database access  | Read-write for product tables (Prisma)                   | Read-write for AI tables (direct connection)                                                                        |
+| Redis access     | None                                                     | Read-write (LLM cache, session state, agent state)                                                                  |
+| Communication    | Sends HTTP requests                                      | Receives HTTP requests                                                                                              |
 
 **Hard rule:** This repo never runs ML models, parses free-text place input, calls embedding APIs, runs vector queries, or calls Google Places API. If you find yourself importing an NLP library or writing text extraction logic, stop — that belongs in `totoro-ai`.
 
@@ -65,30 +65,19 @@ Both services read from any table as needed. One shared PostgreSQL instance. Two
 - The AI service base URL is loaded from YAML config (`config/*.yml` → `ai_service.base_url`), not from environment variables.
 - Three endpoints: `POST /v1/extract-place`, `POST /v1/consult`, `POST /v1/recall`. See @docs/api-contract.md for schemas.
 
-## Configuration Strategy
-
-| What | Where | Example |
-|------|-------|---------|
-| Non-secret config | `config/*.yml` | `ai_service.base_url`, feature flags |
-| Secrets (NestJS/Next.js) | `.env.local` in root | `DATABASE_URL`, `CLERK_SECRET_KEY` |
-| Secrets (FastAPI) | `config/.local.yaml` in root | `OPENAI_API_KEY`, LLM API keys |
-| Database schema | `prisma/schema.prisma` | Models, relations, vector columns |
-
-Never put secrets in YAML files. Never put non-secret config in environment variables if it can go in YAML. Never commit `.env` files or secret files — developers create these locally with their own values.
-
 ## API Versioning
 
 All NestJS routes use the `/api/v1/` global prefix. Set via `app.setGlobalPrefix('api/v1')` in `main.ts`.
 
 ## Deployment
 
-| Service | Platform | Tier |
-|---------|----------|------|
-| `apps/web` (Next.js) | Vercel | Free Hobby |
-| `services/api` (NestJS) | Railway | Hobby $5/mo |
-| `totoro-ai` (FastAPI) | Railway | Hobby $5/mo |
-| PostgreSQL + pgvector | Railway | Hobby $5/mo |
-| Redis | Railway | Serverless (FastAPI-only) |
+| Service                 | Platform | Tier                      |
+| ----------------------- | -------- | ------------------------- |
+| `apps/web` (Next.js)    | Vercel   | Free Hobby                |
+| `services/api` (NestJS) | Railway  | Hobby $5/mo               |
+| `totoro-ai` (FastAPI)   | Railway  | Hobby $5/mo               |
+| PostgreSQL + pgvector   | Railway  | Hobby $5/mo               |
+| Redis                   | Railway  | Serverless (FastAPI-only) |
 
 Docker Compose is for local development only. Never deploy Docker containers to production.
 
