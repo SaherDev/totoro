@@ -51,13 +51,14 @@ export default function HomePage() {
   const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // useChat for recommend flow streaming
+  // useChat for recommend flow streaming — streamProtocol: 'text' matches the plain text
+  // response from the BFF route handler at /api/consult
   const {
     messages: consultMessages,
     append,
     isLoading: isConsulting,
     error: consultError,
-  } = useChat({ api: '/api/consult' });
+  } = useChat({ api: '/api/consult', streamProtocol: 'text' });
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -78,17 +79,7 @@ export default function HomePage() {
     if (flow === 'recommend') {
       // For recommend flow, use useChat streaming
       setMessages((prev) => [...prev, userMsg]);
-      try {
-        // Use Promise to handle async append
-        const result = append({ role: 'user', content: text });
-        if (result instanceof Promise) {
-          result.catch((err) => {
-            console.error('[HomePage] append error:', err);
-          });
-        }
-      } catch (error) {
-        console.error('[HomePage] append failed:', { error, append });
-      }
+      append({ role: 'user', content: text });
     } else {
       // For recall and add-place flows, use local state
       const agentMsg: MessageItem = {
