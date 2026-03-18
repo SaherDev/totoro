@@ -112,6 +112,7 @@ export default function HomePage() {
           content: text,
           flow: msg.role === 'assistant' ? ('recommend' as const) : undefined,
           hasError: msg.role === 'assistant' ? !!consultError : undefined,
+          isEcho: undefined,
         };
       }),
     ],
