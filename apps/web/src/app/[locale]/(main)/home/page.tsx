@@ -57,7 +57,7 @@ export default function HomePage() {
     append,
     isLoading: isConsulting,
     error: consultError,
-  } = useChat({ api: '/api/consult', streamProtocol: 'text' });
+  } = useChat({ api: '/api/consult' });
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
