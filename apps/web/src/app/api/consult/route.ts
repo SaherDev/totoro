@@ -6,7 +6,11 @@ const textDecoder = new TextDecoder()
 const textEncoder = new TextEncoder()
 
 interface ConsultRequestBody {
-  messages?: Array<{ role: string; content: string }>;
+  messages?: Array<{
+    role: string;
+    content?: string;
+    parts?: Array<{ type: string; text?: string }>;
+  }>;
 }
 
 export async function POST(request: Request) {
@@ -28,15 +32,26 @@ export async function POST(request: Request) {
     return new Response('Invalid request body', { status: 400 })
   }
 
-  const query = body.messages?.at(-1)?.content ?? ''
+  console.log('[API] consult body:', JSON.stringify(body, null, 2))
+
+  const lastMsg = body.messages?.at(-1)
+  // ai@6 stores text in parts[].text; fall back to content for older clients
+  const query =
+    lastMsg?.content ??
+    lastMsg?.parts?.filter((p) => p.type === 'text').map((p) => p.text ?? '').join('') ??
+    ''
+
+  console.log('[API] extracted query:', query)
+
   if (!query) {
     return new Response('No query provided', { status: 400 })
   }
 
   try {
-    // Call NestJS endpoint for streaming
+    // Call NestJS endpoint for streaming.
+    // NEXT_PUBLIC_API_URL already includes /api/v1, so path is just /consult.
     const client = getApiClient()
-    const upstream = await client.postStream('/api/v1/consult', {
+    const upstream = await client.postStream('/consult', {
       query,
       stream: true,
     })
@@ -101,7 +116,8 @@ export async function POST(request: Request) {
       },
     })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error'
+    console.error('[API] Upstream call failed:', error)
+    const message = error instanceof Error ? error.message : String(error)
     return new Response(`Upstream error: ${message}`, { status: 500 })
   }
 }
