@@ -1,8 +1,8 @@
 import { FetchClient } from './transports/fetch.transport'
 
 /**
- * Server-side: use getApiClient() from ./server.ts
- * Client-side: use useApiClient() from ./hooks.ts
+ * Creates an authenticated API client using the provided token getter.
+ * Pass getAuth(request).getToken in route handlers.
  */
 export function createApiClient(getToken: () => Promise<string>) {
   // NEXT_PUBLIC_API_URL is set in .env.local and required for app functionality

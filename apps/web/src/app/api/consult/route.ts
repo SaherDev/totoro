@@ -15,18 +15,12 @@ interface ConsultRequestBody {
 }
 
 export async function POST(request: NextRequest) {
-  // Authenticate user — use getAuth(request) to read Clerk headers directly,
-  // avoiding next/headers which is async-only in Next.js 16
+  // getAuth reads Clerk headers set by middleware — no next/headers call needed
   const { userId, getToken } = getAuth(request)
   if (!userId) {
-    console.warn('[API] Consult request without authentication', {
-      url: request.url,
-      method: request.method,
-    })
     return new Response('Unauthorized', { status: 401 })
   }
 
-  // Parse request body and extract query
   let body: ConsultRequestBody
   try {
     body = await request.json()
@@ -34,16 +28,12 @@ export async function POST(request: NextRequest) {
     return new Response('Invalid request body', { status: 400 })
   }
 
-  console.log('[API] consult body:', JSON.stringify(body, null, 2))
-
   const lastMsg = body.messages?.at(-1)
   // ai@6 stores text in parts[].text; fall back to content for older clients
   const query =
     lastMsg?.content ??
     lastMsg?.parts?.filter((p) => p.type === 'text').map((p) => p.text ?? '').join('') ??
     ''
-
-  console.log('[API] extracted query:', query)
 
   if (!query) {
     return new Response('No query provided', { status: 400 })
@@ -96,13 +86,11 @@ export async function POST(request: NextRequest) {
                     return
                   }
                 } catch {
-                  // Skip invalid JSON events
-                  console.debug('[API] Skipped invalid SSE event', { data })
+                  // Skip malformed JSON events
                 }
               }
             }
           } catch (transformError) {
-            console.error('[API] Stream transformation error', { transformError })
             controller.error(transformError)
           }
         },
@@ -116,7 +104,6 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('[API] Upstream call failed:', error)
     const message = error instanceof Error ? error.message : String(error)
     return new Response(`Upstream error: ${message}`, { status: 500 })
   }
