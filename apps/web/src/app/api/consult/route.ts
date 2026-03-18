@@ -1,6 +1,14 @@
 import { auth } from '@clerk/nextjs/server'
 import { getApiClient } from '@/api/server'
 
+// Singleton codec instances to avoid recreation on every transform
+const textDecoder = new TextDecoder()
+const textEncoder = new TextEncoder()
+
+interface ConsultRequestBody {
+  messages?: Array<{ role: string; content: string }>;
+}
+
 export async function POST(request: Request) {
   // Authenticate user
   const { userId } = await auth()
@@ -13,7 +21,7 @@ export async function POST(request: Request) {
   }
 
   // Parse request body and extract query
-  let body
+  let body: ConsultRequestBody
   try {
     body = await request.json()
   } catch {
@@ -44,7 +52,7 @@ export async function POST(request: Request) {
       new TransformStream({
         async transform(chunk, controller) {
           try {
-            const text = new TextDecoder().decode(chunk)
+            const text = textDecoder.decode(chunk)
             const lines = text.split('\n')
 
             for (const line of lines) {
@@ -70,7 +78,7 @@ export async function POST(request: Request) {
 
                   // Extract content from token events only
                   if (event.type === 'token' && event.content) {
-                    controller.enqueue(new TextEncoder().encode(event.content))
+                    controller.enqueue(textEncoder.encode(event.content))
                   }
                 } catch {
                   // Skip invalid JSON events
