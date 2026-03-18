@@ -78,7 +78,17 @@ export default function HomePage() {
     if (flow === 'recommend') {
       // For recommend flow, use useChat streaming
       setMessages((prev) => [...prev, userMsg]);
-      append({ role: 'user', content: text });
+      try {
+        // Use Promise to handle async append
+        const result = append({ role: 'user', content: text });
+        if (result instanceof Promise) {
+          result.catch((err) => {
+            console.error('[HomePage] append error:', err);
+          });
+        }
+      } catch (error) {
+        console.error('[HomePage] append failed:', { error, append });
+      }
     } else {
       // For recall and add-place flows, use local state
       const agentMsg: MessageItem = {
