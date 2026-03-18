@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -66,8 +66,7 @@ export default function HomePage() {
     }
   }, [messages, consultMessages]);
 
-  // Memoize handleSend with useCallback to prevent unnecessary re-renders of child components
-  const handleSend = useCallback((text: string, fromButton = false) => {
+  const handleSend = (text: string, fromButton = false) => {
     const userMsg: MessageItem = {
       id: `user-${Date.now()}`,
       type: 'user',
@@ -91,7 +90,7 @@ export default function HomePage() {
       };
       setMessages((prev) => [...prev, userMsg, agentMsg]);
     }
-  }, [append]);
+  };
 
   // Memoize allMessages to prevent unnecessary recalculations and child re-renders
   const allMessages = useMemo(
