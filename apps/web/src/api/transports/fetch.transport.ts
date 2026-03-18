@@ -17,13 +17,27 @@ export class FetchClient implements HttpClient {
     })
   }
 
+  async postStream(path: string, body: unknown): Promise<Response> {
+    const token = await this.getToken()
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: await this.buildHeaders(token),
+    })
+
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status} ${res.statusText}`)
+    }
+
+    return res
+  }
+
   private async request<T>(path: string, options: RequestInit): Promise<T> {
     const token = await this.getToken()
     const res = await fetch(`${this.baseUrl}${path}`, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+        ...(await this.buildHeaders(token)),
         ...options.headers,
       },
     })
@@ -33,5 +47,12 @@ export class FetchClient implements HttpClient {
     }
 
     return res.json()
+  }
+
+  private async buildHeaders(token: string): Promise<HeadersInit> {
+    return {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    }
   }
 }

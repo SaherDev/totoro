@@ -136,6 +136,12 @@ export function AgentResponseBubble({
     }
   }, [activeStep, phase, hasError, stepKeys.length]);
 
+  useEffect(() => {
+    if (content && phase === "thinking") {
+      setPhase("result");
+    }
+  }, [content, phase]);
+
   const currentStepKey = stepKeys[Math.min(activeStep, stepKeys.length - 1)];
   const StepIcon = activeStep >= stepKeys.length
     ? flow === "add-place"

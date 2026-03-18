@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useChat } from '@ai-sdk/react';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NavBar, NavBarLogo, NavBarActions } from '@/components/NavBar';
@@ -28,12 +29,20 @@ export default function HomePage() {
   const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // useChat for recommend flow streaming
+  const {
+    messages: consultMessages,
+    append,
+    isLoading: isConsulting,
+    error: consultError,
+  } = useChat({ api: '/api/consult', streamProtocol: 'text' });
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, consultMessages]);
 
   const handleSend = (text: string, fromButton = false) => {
     const userMsg: MessageItem = {
@@ -52,19 +61,37 @@ export default function HomePage() {
 
     const flow = isRecall ? 'recall' : isAddPlace ? 'add-place' : 'recommend';
 
-    const agentMsg: MessageItem = {
-      id: `agent-${Date.now() + 1}`,
-      type: 'agent-response',
-      flow,
-      content: fromButton ? undefined : text,
-      isEcho: !fromButton,
-    };
-
-    setMessages((prev) => [...prev, userMsg, agentMsg]);
+    if (flow === 'recommend') {
+      // For recommend flow, use useChat streaming
+      setMessages((prev) => [...prev, userMsg]);
+      append({ role: 'user', content: text });
+    } else {
+      // For recall and add-place flows, use local state
+      const agentMsg: MessageItem = {
+        id: `agent-${Date.now() + 1}`,
+        type: 'agent-response',
+        flow,
+        content: fromButton ? undefined : text,
+        isEcho: !fromButton,
+      };
+      setMessages((prev) => [...prev, userMsg, agentMsg]);
+    }
   };
 
 
-  const isEmpty = messages.length === 0;
+  // Build display messages by merging local state with useChat messages
+  const allMessages: MessageItem[] = [
+    ...messages,
+    ...consultMessages.map((msg) => ({
+      id: msg.id,
+      type: msg.role === 'user' ? ('user' as const) : ('agent-response' as const),
+      content: msg.content || undefined,
+      flow: msg.role === 'assistant' ? ('recommend' as const) : undefined,
+      hasError: msg.role === 'assistant' ? !!consultError : undefined,
+    })),
+  ];
+
+  const isEmpty = allMessages.length === 0;
 
   return (
     <div className="flex h-screen flex-col bg-background">
@@ -128,7 +155,7 @@ export default function HomePage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
-                {messages.map((msg) =>
+                {allMessages.map((msg) =>
                   msg.type === 'user' ? (
                     <ChatMessage key={msg.id} role="user" content={msg.content || ''} />
                   ) : (
@@ -136,7 +163,7 @@ export default function HomePage() {
                       key={msg.id}
                       hasError={msg.hasError}
                       flow={msg.flow}
-                      content={msg.isEcho ? msg.content : undefined}
+                      content={msg.flow === 'recommend' ? msg.content : (msg.isEcho ? msg.content : undefined)}
                     />
                   )
                 )}
@@ -152,6 +179,7 @@ export default function HomePage() {
           <TotoroCard elevation="floating" className="overflow-hidden">
             <div className="p-2">
               <ChatInput
+                disabled={isConsulting}
                 onSend={handleSend}
                 onVoiceModeChange={setIsVoiceMode}
                 onListeningChange={setIsListening}
