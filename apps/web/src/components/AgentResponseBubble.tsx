@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { PlaceCard, PlaceListCard } from "@/components/PlaceCard";
@@ -264,15 +265,22 @@ export function AgentResponseBubble({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="flex items-center gap-3"
+            className="flex items-start gap-3 w-full"
           >
-            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-muted p-1.5">
+            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-muted p-1.5 mt-1">
               <TotoroResultCard />
             </div>
-            <div>
-              <p className="font-display text-sm text-foreground">
-                {content}
-              </p>
+            <div className="bg-card border border-border text-card-foreground rounded-2xl rounded-es-md px-4 py-3 shadow-sm max-w-[85%]">
+              <div className="font-body text-sm leading-relaxed
+                [&_h1]:font-display [&_h1]:text-base [&_h1]:font-semibold [&_h1]:mb-2
+                [&_h2]:font-display [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_h2:first-child]:mt-0
+                [&_h3]:font-display [&_h3]:text-sm [&_h3]:font-medium [&_h3]:mt-2 [&_h3]:mb-1
+                [&_p]:mb-2 [&_p:last-child]:mb-0
+                [&_ul]:mb-2 [&_ul]:ps-4 [&_ul:last-child]:mb-0 [&_ol]:mb-2 [&_ol]:ps-4
+                [&_li]:mb-0.5
+                [&_strong]:font-semibold [&_strong]:text-foreground">
+                <ReactMarkdown>{content}</ReactMarkdown>
+              </div>
             </div>
           </motion.div>
         ) : flow === "add-place" ? (

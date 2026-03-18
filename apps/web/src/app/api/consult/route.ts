@@ -1,5 +1,6 @@
-import { auth } from '@clerk/nextjs/server'
-import { getApiClient } from '@/api/server'
+import { getAuth } from '@clerk/nextjs/server'
+import { createApiClient } from '@/api/client'
+import type { NextRequest } from 'next/server'
 
 // Singleton codec instances to avoid recreation on every transform
 const textDecoder = new TextDecoder()
@@ -13,9 +14,10 @@ interface ConsultRequestBody {
   }>;
 }
 
-export async function POST(request: Request) {
-  // Authenticate user
-  const { userId } = await auth()
+export async function POST(request: NextRequest) {
+  // Authenticate user — use getAuth(request) to read Clerk headers directly,
+  // avoiding next/headers which is async-only in Next.js 16
+  const { userId, getToken } = getAuth(request)
   if (!userId) {
     console.warn('[API] Consult request without authentication', {
       url: request.url,
@@ -48,9 +50,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Call NestJS endpoint for streaming.
+    // Build API client using the token from the current session.
     // NEXT_PUBLIC_API_URL already includes /api/v1, so path is just /consult.
-    const client = getApiClient()
+    const client = createApiClient(async () => {
+      const token = await getToken()
+      return token ?? ''
+    })
     const upstream = await client.postStream('/consult', {
       query,
       stream: true,
@@ -73,27 +78,22 @@ export async function POST(request: Request) {
             for (const line of lines) {
               if (!line.trim()) continue
 
-              // Handle [DONE] marker
-              if (line.includes('[DONE]')) {
-                controller.terminate()
-                return
-              }
-
               // Parse SSE data line
               if (line.startsWith('data: ')) {
                 const data = line.slice(6).trim()
 
-                // Skip if not JSON or empty
-                if (!data || data === '[DONE]') {
-                  continue
-                }
+                if (!data) continue
 
                 try {
                   const event = JSON.parse(data)
 
-                  // Extract content from token events only
-                  if (event.type === 'token' && event.content) {
-                    controller.enqueue(textEncoder.encode(event.content))
+                  if (event.token !== undefined) {
+                    // LLM token streaming: {"token": "..."}
+                    controller.enqueue(textEncoder.encode(event.token))
+                  } else if (event.done) {
+                    // Stream complete: {"done": true}
+                    controller.terminate()
+                    return
                   }
                 } catch {
                   // Skip invalid JSON events
