@@ -18,10 +18,9 @@ export class FetchClient implements HttpClient {
   }
 
   async postStream(path: string, body: unknown): Promise<Response> {
-    const res = await fetch(`${this.baseUrl}${path}`, {
+    const res = await this.fetch(path, {
       method: 'POST',
       body: JSON.stringify(body),
-      headers: await this.buildHeaders(),
     })
 
     if (!res.ok) {
@@ -32,19 +31,23 @@ export class FetchClient implements HttpClient {
   }
 
   private async request<T>(path: string, options: RequestInit): Promise<T> {
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      ...options,
-      headers: {
-        ...(await this.buildHeaders()),
-        ...options.headers,
-      },
-    })
+    const res = await this.fetch(path, options)
 
     if (!res.ok) {
       throw new Error(`API error: ${res.status} ${res.statusText}`)
     }
 
     return res.json()
+  }
+
+  private async fetch(path: string, options: RequestInit): Promise<Response> {
+    return fetch(`${this.baseUrl}${path}`, {
+      ...options,
+      headers: {
+        ...(await this.buildHeaders()),
+        ...options.headers,
+      },
+    })
   }
 
   private async buildHeaders(): Promise<HeadersInit> {
