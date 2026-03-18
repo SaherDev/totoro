@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { PlaceCard, PlaceListCard } from "@/components/PlaceCard";
@@ -45,6 +45,20 @@ const ADD_PLACE_STEP_ICONS = [
 
 const RECALL_STEP_KEYS = ["recall.searching"];
 const RECALL_STEP_ICONS = [TotoroStepRead];
+
+export type AgentFlow = "recommend" | "add-place" | "recall";
+
+// Extract flow-based step selection to reduce duplication
+function getStepConfig(flow: AgentFlow) {
+  switch (flow) {
+    case "add-place":
+      return { keys: ADD_PLACE_STEP_KEYS, icons: ADD_PLACE_STEP_ICONS };
+    case "recall":
+      return { keys: RECALL_STEP_KEYS, icons: RECALL_STEP_ICONS };
+    default:
+      return { keys: RECOMMEND_STEP_KEYS, icons: RECOMMEND_STEP_ICONS };
+  }
+}
 
 const MOCK_RESULTS = {
   primary: {
@@ -97,7 +111,6 @@ const MOCK_RECALL_RESULTS = [
 ];
 
 type Phase = "thinking" | "result" | "error";
-export type AgentFlow = "recommend" | "add-place" | "recall";
 
 interface AgentResponseBubbleProps {
   hasError?: boolean;
@@ -113,8 +126,9 @@ export function AgentResponseBubble({
   const t = useTranslations();
   const [phase, setPhase] = useState<Phase>(content ? "result" : "thinking");
   const [activeStep, setActiveStep] = useState(0);
-  const stepKeys = flow === "add-place" ? ADD_PLACE_STEP_KEYS : flow === "recall" ? RECALL_STEP_KEYS : RECOMMEND_STEP_KEYS;
-  const stepIcons = flow === "add-place" ? ADD_PLACE_STEP_ICONS : flow === "recall" ? RECALL_STEP_ICONS : RECOMMEND_STEP_ICONS;
+
+  // Memoize step configuration to avoid recalculation
+  const { keys: stepKeys, icons: stepIcons } = useMemo(() => getStepConfig(flow), [flow]);
 
   useEffect(() => {
     if (phase !== "thinking") return;
@@ -142,12 +156,16 @@ export function AgentResponseBubble({
     }
   }, [content, phase]);
 
-  const currentStepKey = stepKeys[Math.min(activeStep, stepKeys.length - 1)];
-  const StepIcon = activeStep >= stepKeys.length
-    ? flow === "add-place"
-      ? TotoroAddPlaceSuccess
-      : TotoroStepComplete
-    : stepIcons[activeStep] ?? TotoroStepListen;
+  // Memoize computed step values to avoid unnecessary recalculations
+  const { currentStepKey, StepIcon } = useMemo(() => {
+    const stepKey = stepKeys[Math.min(activeStep, stepKeys.length - 1)];
+    const icon = activeStep >= stepKeys.length
+      ? flow === "add-place"
+        ? TotoroAddPlaceSuccess
+        : TotoroStepComplete
+      : stepIcons[activeStep] ?? TotoroStepListen;
+    return { currentStepKey: stepKey, StepIcon: icon };
+  }, [activeStep, stepKeys, stepIcons, flow]);
 
   return (
     <div className="flex gap-3 items-start">
