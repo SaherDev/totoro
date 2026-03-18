@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "pnpm nx build api"
+buildCommand = "pnpm prisma generate && pnpm nx build api"
 
 [deploy]
 startCommand = "node services/api/dist/main.js"
