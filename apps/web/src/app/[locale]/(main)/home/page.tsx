@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,6 +21,28 @@ type MessageItem = {
   hasError?: boolean;
   isEcho?: boolean;
 };
+
+// Intent detection patterns (extracted to constants to avoid recreation on every render)
+const RECALL_INTENT_PATTERN = /\b(recall|find|search|look up|lookup)\b/i;
+const RECALL_OBJECT_PATTERN = /\b(saved|collection|places)\b/i;
+const URL_PATTERN = /https?:\/\/\S+/i;
+const SAVE_INTENT_PATTERN = /\b(add|adding|save|saving|saved)\b/i;
+const PLACE_HINT_PATTERN = /\b(place|spot|restaurant|cafe|coffee|link)\b/i;
+const SAVE_PREFIX_PATTERN = /^save\s+/i;
+
+function detectFlow(text: string): 'recommend' | 'add-place' | 'recall' {
+  // Recall check must come before add-place to avoid false positives
+  // (e.g. "Recall a saved place" matches saveIntent + placeHint)
+  const isRecall = RECALL_INTENT_PATTERN.test(text) && RECALL_OBJECT_PATTERN.test(text);
+  if (isRecall) return 'recall';
+
+  const hasUrl = URL_PATTERN.test(text);
+  const saveIntent = SAVE_INTENT_PATTERN.test(text);
+  const placeHint = PLACE_HINT_PATTERN.test(text);
+  const isAddPlace = hasUrl || (saveIntent && placeHint) || SAVE_PREFIX_PATTERN.test(text);
+
+  return isAddPlace ? 'add-place' : 'recommend';
+}
 
 export default function HomePage() {
   const t = useTranslations('home');
@@ -44,22 +66,15 @@ export default function HomePage() {
     }
   }, [messages, consultMessages]);
 
-  const handleSend = (text: string, fromButton = false) => {
+  // Memoize handleSend with useCallback to prevent unnecessary re-renders of child components
+  const handleSend = useCallback((text: string, fromButton = false) => {
     const userMsg: MessageItem = {
       id: `user-${Date.now()}`,
       type: 'user',
       content: text,
     };
 
-    // Detect intent — recall check must come before add-place to avoid false positives
-    // (e.g. "Recall a saved place" matches saveIntent + placeHint)
-    const isRecall = /\b(recall|find|search|look up|lookup)\b/i.test(text) && /\b(saved|collection|places)\b/i.test(text);
-    const hasUrl = /https?:\/\/\S+/i.test(text);
-    const saveIntent = /\b(add|adding|save|saving|saved)\b/i.test(text);
-    const placeHint = /\b(place|spot|restaurant|cafe|coffee|link)\b/i.test(text);
-    const isAddPlace = !isRecall && (hasUrl || (saveIntent && placeHint) || /^save\s+/i.test(text));
-
-    const flow = isRecall ? 'recall' : isAddPlace ? 'add-place' : 'recommend';
+    const flow = detectFlow(text);
 
     if (flow === 'recommend') {
       // For recommend flow, use useChat streaming
@@ -76,20 +91,22 @@ export default function HomePage() {
       };
       setMessages((prev) => [...prev, userMsg, agentMsg]);
     }
-  };
+  }, [append]);
 
-
-  // Build display messages by merging local state with useChat messages
-  const allMessages: MessageItem[] = [
-    ...messages,
-    ...consultMessages.map((msg) => ({
-      id: msg.id,
-      type: msg.role === 'user' ? ('user' as const) : ('agent-response' as const),
-      content: msg.content || undefined,
-      flow: msg.role === 'assistant' ? ('recommend' as const) : undefined,
-      hasError: msg.role === 'assistant' ? !!consultError : undefined,
-    })),
-  ];
+  // Memoize allMessages to prevent unnecessary recalculations and child re-renders
+  const allMessages = useMemo(
+    () => [
+      ...messages,
+      ...consultMessages.map((msg) => ({
+        id: msg.id,
+        type: msg.role === 'user' ? ('user' as const) : ('agent-response' as const),
+        content: msg.content || undefined,
+        flow: msg.role === 'assistant' ? ('recommend' as const) : undefined,
+        hasError: msg.role === 'assistant' ? !!consultError : undefined,
+      })),
+    ],
+    [messages, consultMessages, consultError]
+  );
 
   const isEmpty = allMessages.length === 0;
 

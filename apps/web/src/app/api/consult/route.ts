@@ -5,6 +5,10 @@ export async function POST(request: Request) {
   // Authenticate user
   const { userId } = await auth()
   if (!userId) {
+    console.warn('[API] Consult request without authentication', {
+      url: request.url,
+      method: request.method,
+    })
     return new Response('Unauthorized', { status: 401 })
   }
 
@@ -39,38 +43,44 @@ export async function POST(request: Request) {
     const readable = upstreamBody.pipeThrough(
       new TransformStream({
         async transform(chunk, controller) {
-          const text = new TextDecoder().decode(chunk)
-          const lines = text.split('\n')
+          try {
+            const text = new TextDecoder().decode(chunk)
+            const lines = text.split('\n')
 
-          for (const line of lines) {
-            if (!line.trim()) continue
+            for (const line of lines) {
+              if (!line.trim()) continue
 
-            // Handle [DONE] marker
-            if (line.includes('[DONE]')) {
-              controller.terminate()
-              return
-            }
-
-            // Parse SSE data line
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6).trim()
-
-              // Skip if not JSON or empty
-              if (!data || data === '[DONE]') {
-                continue
+              // Handle [DONE] marker
+              if (line.includes('[DONE]')) {
+                controller.terminate()
+                return
               }
 
-              try {
-                const event = JSON.parse(data)
+              // Parse SSE data line
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6).trim()
 
-                // Extract content from token events only
-                if (event.type === 'token' && event.content) {
-                  controller.enqueue(new TextEncoder().encode(event.content))
+                // Skip if not JSON or empty
+                if (!data || data === '[DONE]') {
+                  continue
                 }
-              } catch {
-                // Skip invalid JSON events
+
+                try {
+                  const event = JSON.parse(data)
+
+                  // Extract content from token events only
+                  if (event.type === 'token' && event.content) {
+                    controller.enqueue(new TextEncoder().encode(event.content))
+                  }
+                } catch {
+                  // Skip invalid JSON events
+                  console.debug('[API] Skipped invalid SSE event', { data })
+                }
               }
             }
+          } catch (transformError) {
+            console.error('[API] Stream transformation error', { transformError })
+            controller.error(transformError)
           }
         },
       })
