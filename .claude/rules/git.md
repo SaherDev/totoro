@@ -76,3 +76,6 @@ Run this once per machine. Without it, commit messages containing `#` will be tr
 3. When complete, merge branch into `dev` (squash or merge commit, your call per branch).
 4. Delete the source branch after merge.
 5. When a milestone is ready, merge `dev` into `main` (regular merge, not squash).
+
+> **`main` is production.** Merges into `main` are done manually by the repo owner only —
+> via a PR or squash merge. Claude Code never merges or pushes directly to `main`.
