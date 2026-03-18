@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { useChat } from '@ai-sdk/react';
+import { TextStreamChatTransport } from 'ai';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NavBar, NavBarLogo, NavBarActions } from '@/components/NavBar';
@@ -21,6 +23,28 @@ type MessageItem = {
   isEcho?: boolean;
 };
 
+// Intent detection patterns (extracted to constants to avoid recreation on every render)
+const RECALL_INTENT_PATTERN = /\b(recall|find|search|look up|lookup)\b/i;
+const RECALL_OBJECT_PATTERN = /\b(saved|collection|places)\b/i;
+const URL_PATTERN = /https?:\/\/\S+/i;
+const SAVE_INTENT_PATTERN = /\b(add|adding|save|saving|saved)\b/i;
+const PLACE_HINT_PATTERN = /\b(place|spot|restaurant|cafe|coffee|link)\b/i;
+const SAVE_PREFIX_PATTERN = /^save\s+/i;
+
+function detectFlow(text: string): 'recommend' | 'add-place' | 'recall' {
+  // Recall check must come before add-place to avoid false positives
+  // (e.g. "Recall a saved place" matches saveIntent + placeHint)
+  const isRecall = RECALL_INTENT_PATTERN.test(text) && RECALL_OBJECT_PATTERN.test(text);
+  if (isRecall) return 'recall';
+
+  const hasUrl = URL_PATTERN.test(text);
+  const saveIntent = SAVE_INTENT_PATTERN.test(text);
+  const placeHint = PLACE_HINT_PATTERN.test(text);
+  const isAddPlace = hasUrl || (saveIntent && placeHint) || SAVE_PREFIX_PATTERN.test(text);
+
+  return isAddPlace ? 'add-place' : 'recommend';
+}
+
 export default function HomePage() {
   const t = useTranslations('home');
   const [messages, setMessages] = useState<MessageItem[]>([]);
@@ -28,12 +52,23 @@ export default function HomePage() {
   const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // useChat for recommend flow streaming.
+  // TextStreamChatTransport handles the plain text stream returned by the BFF route at /api/consult.
+  const {
+    messages: consultMessages,
+    sendMessage,
+    status,
+    error: consultError,
+  } = useChat({ transport: new TextStreamChatTransport({ api: '/api/consult' }) });
+
+  const isConsulting = status === 'submitted' || status === 'streaming';
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, consultMessages]);
 
   const handleSend = (text: string, fromButton = false) => {
     const userMsg: MessageItem = {
@@ -42,29 +77,48 @@ export default function HomePage() {
       content: text,
     };
 
-    // Detect intent — recall check must come before add-place to avoid false positives
-    // (e.g. "Recall a saved place" matches saveIntent + placeHint)
-    const isRecall = /\b(recall|find|search|look up|lookup)\b/i.test(text) && /\b(saved|collection|places)\b/i.test(text);
-    const hasUrl = /https?:\/\/\S+/i.test(text);
-    const saveIntent = /\b(add|adding|save|saving|saved)\b/i.test(text);
-    const placeHint = /\b(place|spot|restaurant|cafe|coffee|link)\b/i.test(text);
-    const isAddPlace = !isRecall && (hasUrl || (saveIntent && placeHint) || /^save\s+/i.test(text));
+    const flow = detectFlow(text);
 
-    const flow = isRecall ? 'recall' : isAddPlace ? 'add-place' : 'recommend';
-
-    const agentMsg: MessageItem = {
-      id: `agent-${Date.now() + 1}`,
-      type: 'agent-response',
-      flow,
-      content: fromButton ? undefined : text,
-      isEcho: !fromButton,
-    };
-
-    setMessages((prev) => [...prev, userMsg, agentMsg]);
+    if (flow === 'recommend') {
+      // For recommend flow, use useChat streaming
+      setMessages((prev) => [...prev, userMsg]);
+      sendMessage({ text });
+    } else {
+      // For recall and add-place flows, use local state
+      const agentMsg: MessageItem = {
+        id: `agent-${Date.now() + 1}`,
+        type: 'agent-response',
+        flow,
+        content: fromButton ? undefined : text,
+        isEcho: !fromButton,
+      };
+      setMessages((prev) => [...prev, userMsg, agentMsg]);
+    }
   };
 
+  // Memoize allMessages to prevent unnecessary recalculations and child re-renders
+  const allMessages = useMemo(
+    () => [
+      ...messages,
+      ...consultMessages.map((msg) => {
+        // In ai@6, message text lives in parts (type === 'text'), not msg.content
+        const text = msg.parts
+          .filter((p) => p.type === 'text')
+          .map((p) => p.text)
+          .join('') || undefined;
+        return {
+          id: msg.id,
+          type: msg.role === 'user' ? ('user' as const) : ('agent-response' as const),
+          content: text,
+          flow: msg.role === 'assistant' ? ('recommend' as const) : undefined,
+          hasError: msg.role === 'assistant' ? !!consultError : undefined,
+        };
+      }),
+    ],
+    [messages, consultMessages, consultError]
+  );
 
-  const isEmpty = messages.length === 0;
+  const isEmpty = allMessages.length === 0;
 
   return (
     <div className="flex h-screen flex-col bg-background">
@@ -128,7 +182,7 @@ export default function HomePage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
-                {messages.map((msg) =>
+                {allMessages.map((msg) =>
                   msg.type === 'user' ? (
                     <ChatMessage key={msg.id} role="user" content={msg.content || ''} />
                   ) : (
@@ -136,7 +190,7 @@ export default function HomePage() {
                       key={msg.id}
                       hasError={msg.hasError}
                       flow={msg.flow}
-                      content={msg.isEcho ? msg.content : undefined}
+                      content={msg.flow === 'recommend' ? msg.content : (msg.isEcho ? msg.content : undefined)}
                     />
                   )
                 )}
@@ -152,6 +206,7 @@ export default function HomePage() {
           <TotoroCard elevation="floating" className="overflow-hidden">
             <div className="p-2">
               <ChatInput
+                disabled={isConsulting}
                 onSend={handleSend}
                 onVoiceModeChange={setIsVoiceMode}
                 onListeningChange={setIsListening}

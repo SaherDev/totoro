@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { PlaceCard, PlaceListCard } from "@/components/PlaceCard";
@@ -45,6 +46,20 @@ const ADD_PLACE_STEP_ICONS = [
 
 const RECALL_STEP_KEYS = ["recall.searching"];
 const RECALL_STEP_ICONS = [TotoroStepRead];
+
+export type AgentFlow = "recommend" | "add-place" | "recall";
+
+// Extract flow-based step selection to reduce duplication
+function getStepConfig(flow: AgentFlow) {
+  switch (flow) {
+    case "add-place":
+      return { keys: ADD_PLACE_STEP_KEYS, icons: ADD_PLACE_STEP_ICONS };
+    case "recall":
+      return { keys: RECALL_STEP_KEYS, icons: RECALL_STEP_ICONS };
+    default:
+      return { keys: RECOMMEND_STEP_KEYS, icons: RECOMMEND_STEP_ICONS };
+  }
+}
 
 const MOCK_RESULTS = {
   primary: {
@@ -97,7 +112,6 @@ const MOCK_RECALL_RESULTS = [
 ];
 
 type Phase = "thinking" | "result" | "error";
-export type AgentFlow = "recommend" | "add-place" | "recall";
 
 interface AgentResponseBubbleProps {
   hasError?: boolean;
@@ -113,8 +127,9 @@ export function AgentResponseBubble({
   const t = useTranslations();
   const [phase, setPhase] = useState<Phase>(content ? "result" : "thinking");
   const [activeStep, setActiveStep] = useState(0);
-  const stepKeys = flow === "add-place" ? ADD_PLACE_STEP_KEYS : flow === "recall" ? RECALL_STEP_KEYS : RECOMMEND_STEP_KEYS;
-  const stepIcons = flow === "add-place" ? ADD_PLACE_STEP_ICONS : flow === "recall" ? RECALL_STEP_ICONS : RECOMMEND_STEP_ICONS;
+
+  // Memoize step configuration to avoid recalculation
+  const { keys: stepKeys, icons: stepIcons } = useMemo(() => getStepConfig(flow), [flow]);
 
   useEffect(() => {
     if (phase !== "thinking") return;
@@ -136,12 +151,22 @@ export function AgentResponseBubble({
     }
   }, [activeStep, phase, hasError, stepKeys.length]);
 
-  const currentStepKey = stepKeys[Math.min(activeStep, stepKeys.length - 1)];
-  const StepIcon = activeStep >= stepKeys.length
-    ? flow === "add-place"
-      ? TotoroAddPlaceSuccess
-      : TotoroStepComplete
-    : stepIcons[activeStep] ?? TotoroStepListen;
+  useEffect(() => {
+    if (content && phase === "thinking") {
+      setPhase("result");
+    }
+  }, [content, phase]);
+
+  // Memoize computed step values to avoid unnecessary recalculations
+  const { currentStepKey, StepIcon } = useMemo(() => {
+    const stepKey = stepKeys[Math.min(activeStep, stepKeys.length - 1)];
+    const icon = activeStep >= stepKeys.length
+      ? flow === "add-place"
+        ? TotoroAddPlaceSuccess
+        : TotoroStepComplete
+      : stepIcons[activeStep] ?? TotoroStepListen;
+    return { currentStepKey: stepKey, StepIcon: icon };
+  }, [activeStep, stepKeys, stepIcons, flow]);
 
   return (
     <div className="flex gap-3 items-start">
@@ -240,15 +265,22 @@ export function AgentResponseBubble({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="flex items-center gap-3"
+            className="flex items-start gap-3 w-full"
           >
-            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-muted p-1.5">
+            <div className="w-[42px] h-[42px] md:w-[48px] md:h-[48px] flex-shrink-0 rounded-full bg-muted p-1.5 mt-1">
               <TotoroResultCard />
             </div>
-            <div>
-              <p className="font-display text-sm text-foreground">
-                {content}
-              </p>
+            <div className="bg-card border border-border text-card-foreground rounded-2xl rounded-es-md px-4 py-3 shadow-sm max-w-[85%]">
+              <div className="font-body text-sm leading-relaxed
+                [&_h1]:font-display [&_h1]:text-base [&_h1]:font-semibold [&_h1]:mb-2
+                [&_h2]:font-display [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_h2:first-child]:mt-0
+                [&_h3]:font-display [&_h3]:text-sm [&_h3]:font-medium [&_h3]:mt-2 [&_h3]:mb-1
+                [&_p]:mb-2 [&_p:last-child]:mb-0
+                [&_ul]:mb-2 [&_ul]:ps-4 [&_ul:last-child]:mb-0 [&_ol]:mb-2 [&_ol]:ps-4
+                [&_li]:mb-0.5
+                [&_strong]:font-semibold [&_strong]:text-foreground">
+                <ReactMarkdown>{content}</ReactMarkdown>
+              </div>
             </div>
           </motion.div>
         ) : flow === "add-place" ? (

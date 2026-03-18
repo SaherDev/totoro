@@ -17,21 +17,44 @@ export class FetchClient implements HttpClient {
     })
   }
 
-  private async request<T>(path: string, options: RequestInit): Promise<T> {
-    const token = await this.getToken()
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        ...options.headers,
-      },
+  async postStream(path: string, body: unknown): Promise<Response> {
+    const res = await this.fetch(path, {
+      method: 'POST',
+      body: JSON.stringify(body),
     })
 
     if (!res.ok) {
       throw new Error(`API error: ${res.status} ${res.statusText}`)
     }
 
+    return res
+  }
+
+  private async request<T>(path: string, options: RequestInit): Promise<T> {
+    const res = await this.fetch(path, options)
+
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status} ${res.statusText}`)
+    }
+
     return res.json()
+  }
+
+  private async fetch(path: string, options: RequestInit): Promise<Response> {
+    return fetch(`${this.baseUrl}${path}`, {
+      ...options,
+      headers: {
+        ...(await this.buildHeaders()),
+        ...options.headers,
+      },
+    })
+  }
+
+  private async buildHeaders(): Promise<HeadersInit> {
+    const token = await this.getToken()
+    return {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    }
   }
 }
