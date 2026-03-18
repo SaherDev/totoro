@@ -12,10 +12,15 @@ jest.mock('next-intl', () => ({
 jest.mock('@ai-sdk/react', () => ({
   useChat: jest.fn(() => ({
     messages: [],
-    append: jest.fn(),
-    isLoading: false,
+    sendMessage: jest.fn(),
+    status: 'ready',
     error: null,
   })),
+}));
+
+// Mock ai package
+jest.mock('ai', () => ({
+  TextStreamChatTransport: jest.fn().mockImplementation(() => ({})),
 }));
 
 describe('HomePage Integration', () => {

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useChat } from '@ai-sdk/react';
+import { TextStreamChatTransport } from 'ai';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NavBar, NavBarLogo, NavBarActions } from '@/components/NavBar';
@@ -51,14 +52,16 @@ export default function HomePage() {
   const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // useChat for recommend flow streaming — streamProtocol: 'text' matches the plain text
-  // response from the BFF route handler at /api/consult
+  // useChat for recommend flow streaming.
+  // TextStreamChatTransport handles the plain text stream returned by the BFF route at /api/consult.
   const {
     messages: consultMessages,
-    append,
-    isLoading: isConsulting,
+    sendMessage,
+    status,
     error: consultError,
-  } = useChat({ api: '/api/consult', streamProtocol: 'text' });
+  } = useChat({ transport: new TextStreamChatTransport({ api: '/api/consult' }) });
+
+  const isConsulting = status === 'submitted' || status === 'streaming';
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -79,7 +82,7 @@ export default function HomePage() {
     if (flow === 'recommend') {
       // For recommend flow, use useChat streaming
       setMessages((prev) => [...prev, userMsg]);
-      append({ role: 'user', content: text });
+      sendMessage({ text });
     } else {
       // For recall and add-place flows, use local state
       const agentMsg: MessageItem = {
@@ -97,13 +100,20 @@ export default function HomePage() {
   const allMessages = useMemo(
     () => [
       ...messages,
-      ...consultMessages.map((msg) => ({
-        id: msg.id,
-        type: msg.role === 'user' ? ('user' as const) : ('agent-response' as const),
-        content: msg.content || undefined,
-        flow: msg.role === 'assistant' ? ('recommend' as const) : undefined,
-        hasError: msg.role === 'assistant' ? !!consultError : undefined,
-      })),
+      ...consultMessages.map((msg) => {
+        // In ai@6, message text lives in parts (type === 'text'), not msg.content
+        const text = msg.parts
+          .filter((p) => p.type === 'text')
+          .map((p) => p.text)
+          .join('') || undefined;
+        return {
+          id: msg.id,
+          type: msg.role === 'user' ? ('user' as const) : ('agent-response' as const),
+          content: text,
+          flow: msg.role === 'assistant' ? ('recommend' as const) : undefined,
+          hasError: msg.role === 'assistant' ? !!consultError : undefined,
+        };
+      }),
     ],
     [messages, consultMessages, consultError]
   );
