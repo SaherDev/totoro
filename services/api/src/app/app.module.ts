@@ -24,16 +24,17 @@ function loadConfig(): Record<string, unknown> {
     return yaml.parse(fileContent);
   } catch {
     // No YAML file — build config from environment variables (Railway / production)
+    const apiPrefix = process.env.APP_API_PREFIX ?? 'api/v1';
     return {
       app: {
         environment: process.env.APP_ENVIRONMENT ?? 'production',
         port: parseInt(process.env.PORT ?? '3333', 10),
-        api_prefix: 'api/v1',
+        api_prefix: apiPrefix,
         cors_origins: (process.env.APP_CORS_ORIGINS ?? '').split(',').filter(Boolean),
       },
       database: { url: process.env.DATABASE_URL },
       auth: {
-        public_paths: ['/health', '/webhooks/clerk'],
+        public_paths: [`/${apiPrefix}/health`, `/${apiPrefix}/webhooks/clerk`],
         clerk: {
           secret_key: process.env.CLERK_SECRET_KEY,
           webhook_secret: process.env.CLERK_WEBHOOK_SECRET,
