@@ -17,7 +17,7 @@ All requests come from NestJS after auth verification. totoro-ai never receives 
 
 ## POST /v1/extract-place
 
-Extract and validate a place from raw user input. FastAPI parses the input, validates via Google Places API, generates an embedding, and writes both the place record and embedding to PostgreSQL directly. NestJS receives a confirmation, not raw data to persist.
+Extract and validate a place from raw user input (ADR-017, ADR-018). Accepts TikTok URLs (with optional descriptive text), plain text descriptions, or mixed formats (text + URL in any order). Validates via Google Places API and returns either a saved place record or a candidate requiring user confirmation.
 
 **Request:**
 
@@ -28,33 +28,90 @@ Extract and validate a place from raw user input. FastAPI parses the input, vali
 }
 ```
 
-**Response:**
+Alternative formats:
 
 ```json
 {
-  "place_id": "string",
+  "user_id": "string",
+  "raw_input": "amazing ramen shop https://www.tiktok.com/@foodie/video/123"
+}
+```
+
+```json
+{
+  "user_id": "string",
+  "raw_input": "amazing ramen shop"
+}
+```
+
+**Response (Saved — confidence ≥ 0.70):**
+
+```json
+{
+  "place_id": "550e8400-e29b-41d4-a716-446655440000",
   "place": {
     "place_name": "Fuji Ramen",
     "address": "123 Sukhumvit Soi 33, Bangkok",
     "cuisine": "ramen",
-    "price_range": "low",
-    "source_url": "https://www.tiktok.com/@foodie/video/123"
+    "price_range": "low"
   },
-  "confidence": 0.92
+  "confidence": 0.9,
+  "requires_confirmation": false,
+  "source_url": "https://www.tiktok.com/@foodie/video/123"
+}
+```
+
+**Response (Confirmation Required — 0.30 < confidence < 0.70):**
+
+```json
+{
+  "place_id": null,
+  "place": {
+    "place_name": "Fuji Ramen",
+    "address": "123 Sukhumvit Soi 33, Bangkok",
+    "cuisine": null,
+    "price_range": null
+  },
+  "confidence": 0.55,
+  "requires_confirmation": true,
+  "source_url": null
+}
+```
+
+**Error Responses:**
+
+| Status | Error Type                   | Trigger                                                        |
+| ------ | ---------------------------- | -------------------------------------------------------------- |
+| 400    | `bad_request`                | `raw_input` is empty                                           |
+| 422    | `unsupported_input`          | Non-TikTok URL in Phase 2                                      |
+| 422    | `extraction_failed_no_match` | Confidence ≤ 0.30 (no Places match)                            |
+| 500    | `extraction_error`           | TikTok oEmbed timeout, Places API failure, or DB write failure |
+
+**Error Response Body:**
+
+```json
+{
+  "error_type": "extraction_failed_no_match",
+  "detail": "Could not identify place from input. Confidence too low."
 }
 ```
 
 **Notes:**
 
-- `raw_input` accepts any format: URLs (TikTok, Instagram, blog), plain place names, or free descriptions like "that ramen shop near Sukhumvit."
-- If the input is a URL, FastAPI fetches and parses the page content.
-- If the input is a name or description, FastAPI validates against Google Places API.
-- FastAPI writes the place record and embedding to PostgreSQL. The response does not include the embedding vector.
-- `place_id` is the database ID of the newly created place record.
-- `confidence` indicates extraction certainty. Below 0.5, the product repo should ask the user to confirm.
-- `source_url` is `null` when the input is not a URL.
-- `cuisine` and `price_range` may be `null` if extraction cannot determine them.
-- The response schema will evolve. Treat unknown fields as forward-compatible. Do not fail on extra keys.
+- **Input formats**: Supports TikTok URLs, plain text, and hybrid formats (URL + descriptive text in any order). Parser extracts URL and merges surrounding text as supplementary context.
+- **Phase 2 support**: TikTok URLs, plain text, and hybrid inputs. Instagram/generic URLs are Phase 3.
+- **Extraction**:
+  - **TikTok URLs**: System fetches the caption via oEmbed (3-second timeout), then merges any supplementary text from raw_input before LLM extraction. Example: "amazing ramen https://tiktok.com/.../123" → LLM sees "amazing ramen + oEmbed caption".
+  - **Plain text**: Text is passed directly to the LLM.
+  - **Hybrid (URL + text)**: Text before and after the URL is combined and passed to the LLM alongside the URL or caption.
+- **Validation**: Extracted place name is validated against Google Places API. Match quality (EXACT, FUZZY, CATEGORY_ONLY, NONE) feeds into confidence scoring.
+- **Confidence threshold**: ≥ 0.70 saves automatically; 0.30-0.70 requires user confirmation; ≤ 0.30 returns error.
+- **Embeddings**: NOT generated in this endpoint (ADR-040). Embeddings are handled separately.
+- **Deduplication**: If a `(external_provider, external_id)` match exists, the existing Place record is returned without a new write (ADR-041).
+- **Timeout**: Total budget 10s; TikTok oEmbed timeout 3s; remaining budget covers LLM extraction and Places validation.
+- `source_url`: Original TikTok URL (populated for TikTok input); `null` for plain text.
+- `cuisine` and `price_range`: Nullable — may be `null` if LLM cannot determine them.
+- The response schema tolerates extra fields (forward-compatible).
 
 ---
 
@@ -210,7 +267,7 @@ These values must stay in sync between both repos. A mismatch breaks the system.
 
 **Embedding dimensions:**
 
-- Current: 1536 (OpenAI text-embedding-3-small)
+- Current: 1024 (Voyage 3.5-lite)
 - The pgvector column definition in Prisma (product repo) must match the embedding model output in FastAPI (AI repo)
 - If the embedding model changes, both the Prisma migration and FastAPI config must update together
 
