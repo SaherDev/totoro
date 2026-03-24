@@ -58,7 +58,7 @@ Details in @.claude/rules/standards.md, @.claude/rules/architecture.md, @.claude
 - **Architecture** — NestJS: authenticate, forward AI requests, store recommendation history, serve user CRUD — nothing else. NestJS never touches Redis, LLMs, embeddings, vector search, or Google Places. DB writes split: NestJS writes users/settings/recommendations (Prisma owns their migrations); FastAPI writes places/embeddings/taste_model (Alembic owns their migrations)
 - **Frontend** — Tailwind v3 + shadcn/ui, CSS variables with raw HSL, dark mode via `next-themes`, RTL logical properties only (`ms`/`me`/`ps`/`pe`), i18n via `next-intl` with URL routing `/en/` and `/he/`
 - **API routes** — all NestJS routes use `/api/v1/` prefix; AI service called via three endpoints (`POST /v1/extract-place`, `POST /v1/consult`, `POST /v1/recall`)
-- **Commits** — `type(scope): description #TASK_ID`, types: `feat|fix|chore|docs|refactor|test`, scopes: `api|web|shared` (details in @.claude/rules/git.md)
+- **Commits** — `type(scope): description`, types: `feat|fix|chore|docs|refactor|test`, scopes: `api|web|shared` (details in @.claude/rules/git.md)
 - **Code quality** — single responsibility, constructor injection only, strategy pattern over if/switch on type, repository pattern for all DB access, no duplication (extract to `libs/shared`), new behavior = new class not an edit. Violations must be fixed before presenting code.
 
 ## Workflow
@@ -82,7 +82,7 @@ See `.claude/workflows.md` for the complete 5-step token-efficient workflow (ADR
 ## Notes
 
 - **Secrets management** (ADR-025): Each service manages secrets locally in a gitignored file. NestJS (`services/api`) uses `.env.local`. Next.js (`apps/web`) uses `.env.local`. FastAPI (`totoro-ai`) uses `config/.local.yaml`. Never commit secret files. Developers create these files manually and fill in values. CI/CD injects secrets as environment variables at deploy time.
-- **Git comment char is `;`** not `#` — configured to support ClickUp task IDs in commits.
+- **Git comment char is `;`** not `#` — run `git config core.commentChar ";"` once per machine.
 - **Bruno API testing**: Collection at `totoro-config/bruno/`. New endpoints need a corresponding `.bru` request file.
 - **Prisma + pgvector**: PostgreSQL must have `vector` extension. Prisma uses `Unsupported("vector")` — handle vector ops via raw SQL.
 - **Embedding dimensions must stay in sync**: pgvector column in Prisma must match the model output in FastAPI. Both repos must update together.

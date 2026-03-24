@@ -29,7 +29,7 @@ main          ← stable only, merge when a feature/phase is complete and tested
 ## Commit Message Format
 
 ```
-type(scope): description #TASK_ID
+type(scope): description
 ```
 
 **Types:** `feat`, `fix`, `chore`, `docs`, `refactor`, `test`
@@ -41,14 +41,12 @@ type(scope): description #TASK_ID
 - `ui` — UI component library (libs/ui)
 - For changes affecting multiple packages, prioritize the primary one
 
-**Task ID:** ClickUp task ID (e.g., `#abc123`) — optional if no task exists
-
 Examples:
 ```
 feat(shared): add PlaceSource type
-fix(web): correct redirect after sign-in #TASK-456
+fix(web): correct redirect after sign-in
 chore(api): update auth middleware
-docs(ui): add Button component examples #TASK-789
+docs(ui): add Button component examples
 refactor(shared): simplify DTO exports
 ```
 
@@ -57,17 +55,6 @@ refactor(shared): simplify DTO exports
 - One logical change per commit. Do not bundle unrelated changes.
 - Write in imperative mood: "add feature" not "added feature".
 - Keep the subject line under 72 characters.
-- If the commit does not have a ClickUp task, omit the `#TASK_ID` — but this should be rare.
-
-## Comment Character
-
-Git uses `;` as the comment character (not `#`) to avoid conflicts with ClickUp task IDs.
-
-```bash
-git config --global core.commentChar ";"
-```
-
-Run this once per machine. Without it, commit messages containing `#` will be truncated.
 
 ## Merge Flow
 

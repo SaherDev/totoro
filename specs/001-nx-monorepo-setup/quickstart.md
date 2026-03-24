@@ -15,7 +15,7 @@
 git clone <repo-url>
 cd totoro
 
-# 2. Set git comment character (required — ClickUp task IDs use #)
+# 2. Set git comment character (required — allows # in commit messages)
 git config core.commentChar ";"
 
 # 3. Install all dependencies (one command, covers all apps and libs)
@@ -105,9 +105,9 @@ Secrets are stored in per-repo local files: `.env.local` for NestJS and Next.js 
 ## Commit Format
 
 ```
-type(scope): description #TASK_ID
+type(scope): description
 
 # Types: feat | fix | chore | docs | refactor | test
 # Scopes: api | web | shared
-# Example: feat(api): add Clerk auth middleware #abc123
+# Example: feat(api): add Clerk auth middleware
 ```
