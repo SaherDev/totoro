@@ -4,10 +4,11 @@
  */
 
 import 'reflect-metadata';
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app/app.module';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
   // Create app with rawBody enabled for webhook signature verification
@@ -25,6 +26,16 @@ async function bootstrap() {
   }
 
   app.enableCors({ origin: corsOrigins, credentials: true });
+
+  app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    })
+  );
+
   app.setGlobalPrefix(apiPrefix);
   await app.listen(port);
   Logger.log(`🚀 Application is running on: http://localhost:${port}/${apiPrefix}`);

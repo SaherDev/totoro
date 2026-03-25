@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AiServiceModule } from '../ai-service/ai-service.module';
+import { PrismaModule } from '../prisma/prisma.module';
 import { ConsultController } from './consult.controller';
 import { ConsultService } from './consult.service';
 
@@ -15,7 +16,7 @@ import { ConsultService } from './consult.service';
  * - AiServiceModule: Provides IAiServiceClient for forwarding to FastAPI
  */
 @Module({
-  imports: [AiServiceModule],
+  imports: [AiServiceModule, PrismaModule],
   controllers: [ConsultController],
   providers: [ConsultService],
   exports: [ConsultService],

@@ -15,6 +15,7 @@ import { AiEnabledGuard } from '../common/guards/ai-enabled.guard';
 import { PrismaModule } from '../prisma/prisma.module';
 import { RecallModule } from '../recall/recall.module';
 import { ConsultModule } from '../consult/consult.module';
+import { PlacesModule } from '../places/places.module';
 
 const configPath = path.join(process.cwd(), 'services/api/config/.local.yaml');
 
@@ -65,6 +66,7 @@ function loadConfig(): Record<string, unknown> {
     PrismaModule,
     RecallModule,
     ConsultModule,
+    PlacesModule,
   ],
   controllers: [AppController, ClerkWebhookController],
   providers: [AppService, AiEnabledGuard],

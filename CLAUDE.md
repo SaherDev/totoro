@@ -93,6 +93,8 @@ See `.claude/workflows.md` for the complete 5-step token-efficient workflow (ADR
 - N/A (frontend-only migration) (001-migrate-lovable-design)
 - TypeScript 5.x, Node 20 LTS + Next.js 16, `@ai-sdk/react` + `ai` (to install), `@clerk/nextjs` v5, `FetchClient` (existing) (001-wire-consult-streaming)
 - N/A — no DB changes (001-wire-consult-streaming)
+- TypeScript 5.x / Node 20 LTS + NestJS 11, `class-validator`, `class-transformer`, `@nestjs/axios` (Axios), `@nestjs/config` (002-extract-place-api)
+- N/A — no database writes in this feature (002-extract-place-api)
 
 - TypeScript 5.x / Node 20 LTS + Nx (ADR-001), pnpm (ADR-020), Next.js 16 (apps/web), NestJS 11 (services/api), Tailwind v3 + shadcn/ui (ADR-007) (001-nx-monorepo-setup)
 - N/A — this is a workspace configuration feature (001-nx-monorepo-setup)
