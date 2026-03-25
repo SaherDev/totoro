@@ -3,6 +3,7 @@ import * as stream from 'node:stream';
 import { ConsultService } from './consult.service';
 import { AI_SERVICE_CLIENT, IAiServiceClient, AiConsultResponse } from '../ai-service/ai-service-client.interface';
 import { ConsultRequestDto } from './dto/consult-request.dto';
+import { RecommendationsRepository } from '../recommendations/recommendations.repository';
 
 jest.mock('node:stream', () => ({
   ...jest.requireActual('node:stream'),
@@ -35,12 +36,20 @@ describe('ConsultService', () => {
       consultStream: jest.fn().mockResolvedValue(Buffer.from('')),
     };
 
+    const mockRecommendationsRepository = {
+      create: jest.fn().mockResolvedValue({ id: 'rec-123' }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ConsultService,
         {
           provide: AI_SERVICE_CLIENT,
           useValue: mockAiServiceClient,
+        },
+        {
+          provide: RecommendationsRepository,
+          useValue: mockRecommendationsRepository,
         },
       ],
     }).compile();

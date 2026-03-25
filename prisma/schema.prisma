@@ -56,6 +56,10 @@ model Recommendation {
        //   userLocation: { lat, lng }
        // }
 
+  shown           Boolean   @default(false)
+  accepted        Boolean?
+  selectedPlaceId String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

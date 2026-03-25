@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AiServiceModule } from '../ai-service/ai-service.module';
+import { RecommendationsModule } from '../recommendations/recommendations.module';
 import { ConsultController } from './consult.controller';
 import { ConsultService } from './consult.service';
 
@@ -13,9 +14,10 @@ import { ConsultService } from './consult.service';
  *
  * Dependencies:
  * - AiServiceModule: Provides IAiServiceClient for forwarding to FastAPI
+ * - RecommendationsModule: Provides RecommendationsRepository for persisting results
  */
 @Module({
-  imports: [AiServiceModule],
+  imports: [AiServiceModule, RecommendationsModule],
   controllers: [ConsultController],
   providers: [ConsultService],
   exports: [ConsultService],

@@ -7,6 +7,7 @@ import {
   AI_SERVICE_CLIENT,
   AiConsultPayload,
 } from '../ai-service/ai-service-client.interface';
+import { RecommendationsRepository } from '../recommendations/recommendations.repository';
 
 /**
  * Service for handling consult requests
@@ -26,7 +27,8 @@ export class ConsultService {
   private readonly logger = new Logger(ConsultService.name);
 
   constructor(
-    @Inject(AI_SERVICE_CLIENT) private aiClient: IAiServiceClient
+    @Inject(AI_SERVICE_CLIENT) private aiClient: IAiServiceClient,
+    private recommendationsRepository: RecommendationsRepository
   ) {}
 
   /**
@@ -75,6 +77,14 @@ export class ConsultService {
       );
 
       const result = await this.aiClient.consult(payload);
+
+      // Write recommendation record to database
+      await this.recommendationsRepository.create({
+        userId,
+        query: dto.query,
+        data: result,
+      });
+
       res.json(result);
     } catch (error) {
       this.handleError(error, res);

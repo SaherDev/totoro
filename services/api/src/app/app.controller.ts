@@ -35,18 +35,4 @@ export class AppController {
       user: req.user,
     };
   }
-
-  /**
-   * Extract place endpoint (requires valid Clerk token + AI enabled)
-   */
-  @Post('extract-place')
-  @RequiresAi()
-  extractPlace(@Request() req) {
-    return {
-      message: 'Extract place endpoint (AI-gated)',
-      user: req.user,
-      endpoint: 'POST /extract-place',
-    };
-  }
-
 }
