@@ -50,7 +50,7 @@ describe('ClerkMiddleware', () => {
       Reflect.defineMetadata('isPublic', true, handler);
 
       const req = {
-        originalUrl: '/api/v1/health',
+        originalUrl: '/health',
         headers: {},
         route: {
           stack: [
