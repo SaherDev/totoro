@@ -7,7 +7,7 @@ import {
   AI_SERVICE_CLIENT,
   AiConsultPayload,
 } from '../ai-service/ai-service-client.interface';
-import { PrismaService } from '../prisma/prisma.service';
+import { RecommendationsRepository } from '../recommendations/recommendations.repository';
 
 /**
  * Service for handling consult requests
@@ -28,7 +28,7 @@ export class ConsultService {
 
   constructor(
     @Inject(AI_SERVICE_CLIENT) private aiClient: IAiServiceClient,
-    private prisma: PrismaService
+    private recommendationsRepository: RecommendationsRepository
   ) {}
 
   /**
@@ -79,15 +79,10 @@ export class ConsultService {
       const result = await this.aiClient.consult(payload);
 
       // Write recommendation record to database
-      await this.prisma.recommendation.create({
-        data: {
-          userId,
-          query: dto.query,
-          data: result,
-          shown: false,
-          accepted: null,
-          selectedPlaceId: null,
-        },
+      await this.recommendationsRepository.create({
+        userId,
+        query: dto.query,
+        data: result,
       });
 
       res.json(result);

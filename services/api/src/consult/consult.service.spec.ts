@@ -3,7 +3,7 @@ import * as stream from 'node:stream';
 import { ConsultService } from './consult.service';
 import { AI_SERVICE_CLIENT, IAiServiceClient, AiConsultResponse } from '../ai-service/ai-service-client.interface';
 import { ConsultRequestDto } from './dto/consult-request.dto';
-import { PrismaService } from '../prisma/prisma.service';
+import { RecommendationsRepository } from '../recommendations/recommendations.repository';
 
 jest.mock('node:stream', () => ({
   ...jest.requireActual('node:stream'),
@@ -36,10 +36,8 @@ describe('ConsultService', () => {
       consultStream: jest.fn().mockResolvedValue(Buffer.from('')),
     };
 
-    const mockPrismaService = {
-      recommendation: {
-        create: jest.fn().mockResolvedValue({ id: 'rec-123' }),
-      },
+    const mockRecommendationsRepository = {
+      create: jest.fn().mockResolvedValue({ id: 'rec-123' }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -50,8 +48,8 @@ describe('ConsultService', () => {
           useValue: mockAiServiceClient,
         },
         {
-          provide: PrismaService,
-          useValue: mockPrismaService,
+          provide: RecommendationsRepository,
+          useValue: mockRecommendationsRepository,
         },
       ],
     }).compile();
