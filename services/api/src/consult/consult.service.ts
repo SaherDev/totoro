@@ -84,6 +84,9 @@ export class ConsultService {
           userId,
           query: dto.query,
           data: result,
+          shown: false,
+          accepted: null,
+          selectedPlaceId: null,
         },
       });
 
