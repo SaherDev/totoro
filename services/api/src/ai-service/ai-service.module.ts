@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
 import { AiServiceClient } from './ai-service.client';
 import { AI_SERVICE_CLIENT } from './ai-service-client.interface';
 
@@ -15,7 +16,7 @@ import { AI_SERVICE_CLIENT } from './ai-service-client.interface';
  * ADR-033: Interface-first design — module provides the interface, not the concrete class
  */
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule, HttpModule],
   providers: [
     {
       provide: AI_SERVICE_CLIENT,

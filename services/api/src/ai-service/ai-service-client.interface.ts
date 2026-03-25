@@ -44,6 +44,39 @@ export interface AiConsultResponse {
 }
 
 /**
+ * Payload sent from NestJS to the AI service for place extraction requests
+ * Matches api-contract.md exactly per FR-005
+ */
+export interface AiExtractPlacePayload {
+  user_id: string;
+  raw_input: string;
+}
+
+/**
+ * Extracted place metadata from the AI service
+ * Matches api-contract.md exactly per FR-006
+ */
+export interface AiExtractedPlace {
+  place_name: string | null;
+  address: string | null;
+  cuisine: string | null;
+  price_range: string | null;
+}
+
+/**
+ * Response from the AI service's extract-place endpoint
+ * Matches api-contract.md exactly per FR-006
+ */
+export interface AiExtractPlaceResponse {
+  place_id: string | null;
+  place: AiExtractedPlace;
+  confidence: number;
+  status: 'resolved' | 'unresolved';
+  requires_confirmation: boolean;
+  source_url: string | null;
+}
+
+/**
  * Interface for the AI service client
  * Abstracts HTTP communication with the AI service behind a clean contract
  * Implementation uses Node's built-in http/https module
@@ -65,6 +98,14 @@ export interface IAiServiceClient {
    * Used when client requests stream: true
    */
   consultStream(payload: AiConsultPayload): Promise<Readable>;
+
+  /**
+   * Extract and validate a place from raw user input
+   * Forwards the input to the AI service for parsing and validation
+   * Returns a confirmation with place metadata or an unresolved marker
+   * Per api-contract.md, uses 10-second timeout
+   */
+  extractPlace(payload: AiExtractPlacePayload): Promise<AiExtractPlaceResponse>;
 }
 
 /**
