@@ -2,27 +2,27 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
 const isPublicRoute = createRouteMatcher([
-  '/',
-  '/en',
-  '/he',
   '/en/login',
   '/he/login',
   '/en/sso-callback',
   '/he/sso-callback',
-  '/en/home',
-  '/he/home',
-  '/api/hello',
 ]);
 
 export default clerkMiddleware((auth, request) => {
   const { pathname } = request.nextUrl;
 
+  // Redirect bare root to default locale home
   if (pathname === '/') {
-    return NextResponse.redirect(new URL('/en', request.url));
+    return NextResponse.redirect(new URL('/en/home', request.url));
   }
 
   if (!isPublicRoute(request)) {
-    auth().protect();
+    const { userId } = auth();
+    if (!userId) {
+      // Detect locale from path prefix, fall back to 'en'
+      const locale = pathname.startsWith('/he') ? 'he' : 'en';
+      return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+    }
   }
 
   return undefined;

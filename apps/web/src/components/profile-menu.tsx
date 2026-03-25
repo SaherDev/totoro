@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useUser, useClerk } from '@clerk/nextjs';
+import { useLocale } from 'next-intl';
 import { cn } from '@totoro/ui';
 import {
   Settings,
@@ -20,6 +21,7 @@ export function ProfileMenu() {
   const router = useRouter();
   const { user } = useUser();
   const { signOut } = useClerk();
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -44,7 +46,7 @@ export function ProfileMenu() {
   ];
 
   const handleLogout = async () => {
-    await signOut({ redirectUrl: '/' });
+    await signOut({ redirectUrl: `/${locale}/login` });
   };
 
   const displayName = user?.firstName || user?.username || 'User';

@@ -1,3 +1,5 @@
+// TODO: This BFF route is disconnected from the frontend as part of the shell cleanup.
+// The home page no longer calls this endpoint. Re-wire when implementing the real consult flow.
 import { getAuth } from '@clerk/nextjs/server'
 import { createApiClient } from '@/api/client'
 import type { NextRequest } from 'next/server'

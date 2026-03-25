@@ -1,7 +1,10 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { SplashScreen } from '@/components/splash-screen';
+interface Props {
+  params: Promise<{ locale: string }>;
+}
 
-export default function LandingPage() {
-  return <SplashScreen />;
+export default async function LandingPage({ params }: Props) {
+  const { locale } = await params;
+  redirect(`/${locale}/home`);
 }

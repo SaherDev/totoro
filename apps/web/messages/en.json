@@ -1,9 +1,4 @@
 {
-  "splash": {
-    "title": "Totoro",
-    "subtitle": "Your AI-powered place recommendation engine",
-    "tapToContinue": "Tap anywhere to continue"
-  },
   "auth": {
     "continueGoogle": "Continue with Google",
     "continueApple": "Continue with Apple",
@@ -26,64 +21,6 @@
       "consult": "Cheap dinner nearby",
       "save": "Save this place link",
       "recall": "Recall a saved place"
-    }
-  },
-  "place": {
-    "topPick": "Top pick",
-    "fromSaves": "From your saves",
-    "discovered": "Discovered",
-    "letsGo": "Let's go",
-    "whyThisPlace": "Why this place"
-  },
-  "agent": {
-    "steps": {
-      "listen": "Listening to your preferences",
-      "read": "Reading your saved places",
-      "move": "Searching nearby",
-      "check": "Checking availability",
-      "evaluate": "Evaluating matches"
-    },
-    "almostDone": "Almost done...",
-    "takesAbout": "Takes about 20 seconds",
-    "somethingWrong": "Something went wrong",
-    "tryAgain": "Please try again"
-  },
-  "addPlace": {
-    "title": "Add a place",
-    "subtitle": "Share a place link to save it",
-    "placeholder": "Paste a place link...",
-    "cancel": "Cancel",
-    "save": "Save",
-    "processing": "Adding place...",
-    "extracting": "Extracting place details",
-    "success": "Place saved!",
-    "successDesc": "Added to your collection",
-    "errors": {
-      "urlRequired": "URL is required",
-      "invalidUrl": "Please enter a valid URL"
-    },
-    "steps": {
-      "receive": "Got your link",
-      "extract": "Extracting place details"
-    },
-    "almostDone": "Almost saved...",
-    "takesAbout": "Takes about 10 seconds",
-    "savedTitle": "Place saved!",
-    "savedSubtitle": "Added to your collection"
-  },
-  "result": {
-    "heresPick": "Here's my pick",
-    "basedOnTaste": "Based on your taste",
-    "alsoWorth": "Also worth considering"
-  },
-  "recommendation": {
-    "source": {
-      "saved": "From your saves",
-      "discovered": "Discovered"
-    },
-    "action": {
-      "goHere": "Go here",
-      "showAlternatives": "Show alternatives"
     }
   },
   "profile": {
@@ -119,16 +56,5 @@
     "noSavedDesc": "Start saving places you love to build your personal collection",
     "noHistory": "No recommendations yet",
     "noHistoryDesc": "Your recommendation history will appear here as you explore"
-  },
-  "recall": {
-    "chip": "Recall a saved place",
-    "searching": "Searching your saved places",
-    "takesAbout": "Looking through your collection",
-    "foundTitle": "Found in your saves",
-    "foundSubtitle": "Places that match your memory",
-    "noResults": "Nothing matched",
-    "noResultsDesc": "Try describing it differently — a cuisine, city, or how you saved it",
-    "error": "Couldn't search your places",
-    "matchReason": "Why this matched"
   }
 }
