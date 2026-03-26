@@ -28,7 +28,7 @@ export class ConsultService {
 
   constructor(
     @Inject(AI_SERVICE_CLIENT) private aiClient: IAiServiceClient,
-    private recommendationsRepository: RecommendationsRepository
+    private recommendationsRepository: RecommendationsRepository,
   ) {}
 
   /**

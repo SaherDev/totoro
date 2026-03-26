@@ -18,8 +18,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  settings        UserSettings?
-  recommendations Recommendation[]
+  settings UserSettings?
 
   @@map("users")
 }
@@ -43,8 +42,7 @@ model UserSettings {
 /// Recommendation history
 model Recommendation {
   id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String // Clerk user ID — no FK; Clerk is the canonical user store
 
   query String // User's natural language query
 
