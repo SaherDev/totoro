@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { RecallService } from './recall.service';
 import { RecallRequestDto } from './dto/recall-request.dto';
 import { RecallResponseDto } from './dto/recall-response.dto';
@@ -30,6 +30,7 @@ export class RecallController {
    * @returns List of saved places with match reasons
    */
   @Post()
+  @HttpCode(HttpStatus.OK)
   @RequiresAi()
   async recall(
     @CurrentUser() userId: string,
