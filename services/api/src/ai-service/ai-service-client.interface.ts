@@ -77,6 +77,38 @@ export interface AiExtractPlaceResponse {
 }
 
 /**
+ * Payload sent from NestJS to the AI service for recall requests
+ * Searches the user's saved places for matches to the memory fragment
+ */
+export interface AiRecallPayload {
+  user_id: string;
+  query: string;
+}
+
+/**
+ * A single saved place result from recall search
+ */
+export interface AiRecallPlace {
+  place_id: string;
+  place_name: string;
+  address: string;
+  cuisine?: string | null;
+  price_range?: string | null;
+  source_url?: string | null;
+  match_reason: string;
+  saved_at?: string | null;
+}
+
+/**
+ * Response from the AI service's recall endpoint
+ * Returns list of saved places matching the user's query
+ */
+export interface AiRecallResponse {
+  results: AiRecallPlace[];
+  total: number;
+}
+
+/**
  * Interface for the AI service client
  * Abstracts HTTP communication with the AI service behind a clean contract
  * Implementation uses Node's built-in http/https module
@@ -106,6 +138,12 @@ export interface IAiServiceClient {
    * Per api-contract.md, uses 10-second timeout
    */
   extractPlace(payload: AiExtractPlacePayload): Promise<AiExtractPlaceResponse>;
+
+  /**
+   * Search for saved places matching a memory fragment
+   * Per api-contract.md, uses 20-second timeout
+   */
+  recall(payload: AiRecallPayload): Promise<AiRecallResponse>;
 }
 
 /**

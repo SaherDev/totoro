@@ -9,6 +9,8 @@ import {
   AiConsultResponse,
   AiExtractPlacePayload,
   AiExtractPlaceResponse,
+  AiRecallPayload,
+  AiRecallResponse,
 } from './ai-service-client.interface';
 
 /**
@@ -90,6 +92,22 @@ export class AiServiceClient implements IAiServiceClient {
         `${this.baseUrl}/v1/extract-place`,
         payload,
         { timeout: 10000 }
+      )
+    );
+    return response.data;
+  }
+
+  /**
+   * Search for saved places matching a memory fragment
+   * Per Constitution §VI, uses 20s timeout
+   * Lets AxiosError propagate raw to callers
+   */
+  async recall(payload: AiRecallPayload): Promise<AiRecallResponse> {
+    const response = await firstValueFrom(
+      this.httpService.post<AiRecallResponse>(
+        `${this.baseUrl}/v1/recall`,
+        payload,
+        { timeout: 20000 }
       )
     );
     return response.data;

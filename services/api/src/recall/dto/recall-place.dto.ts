@@ -6,4 +6,5 @@ export class RecallPlaceDto {
   price_range?: string;
   source_url?: string;
   match_reason!: string;
+  saved_at?: string;
 }

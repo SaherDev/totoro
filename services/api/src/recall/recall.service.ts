@@ -1,14 +1,27 @@
-import { Injectable, NotImplementedException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import {
+  IAiServiceClient,
+  AI_SERVICE_CLIENT,
+  AiRecallPayload,
+} from '../ai-service/ai-service-client.interface';
 import { RecallRequestDto } from './dto/recall-request.dto';
 import { RecallResponseDto } from './dto/recall-response.dto';
 
 @Injectable()
 export class RecallService {
+  constructor(
+    @Inject(AI_SERVICE_CLIENT) private aiClient: IAiServiceClient
+  ) {}
+
   /**
    * Search saved places matching the user's memory fragment.
-   * Phase 1: stub returns 501. Phase 3: forwards to totoro-ai.
+   * Forwards request to totoro-ai with no transformation.
    */
-  async recall(userId: string, request: RecallRequestDto): Promise<RecallResponseDto> {
-    throw new NotImplementedException('Recall feature is not yet implemented');
+  async recall(userId: string, dto: RecallRequestDto): Promise<RecallResponseDto> {
+    const payload: AiRecallPayload = {
+      user_id: userId,
+      query: dto.query,
+    };
+    return this.aiClient.recall(payload);
   }
 }
