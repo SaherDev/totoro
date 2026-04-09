@@ -3,7 +3,8 @@ import {
   MiddlewareConsumer,
   NestModule,
 } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import * as path from 'path';
 import * as yaml from 'yaml';
 import * as fs from 'fs';
@@ -12,6 +13,8 @@ import { AppService } from './app.service';
 import { ClerkMiddleware } from '../common/middleware/clerk.middleware';
 import { ClerkWebhookController } from '../webhooks/clerk.webhook';
 import { AiEnabledGuard } from '../common/guards/ai-enabled.guard';
+import { UserEntity } from '../database/entities/user.entity';
+import { UserSettingsEntity } from '../database/entities/user-settings.entity';
 import { DatabaseModule } from '../database/database.module';
 import { ChatModule } from '../chat/chat.module';
 
@@ -60,6 +63,16 @@ function loadConfig(): Record<string, unknown> {
     ConfigModule.forRoot({
       isGlobal: true,
       load: [loadConfig],
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        url: config.get<string>('database.url'),
+        entities: [UserEntity, UserSettingsEntity],
+        synchronize: true,
+      }),
     }),
     DatabaseModule,
     ChatModule,

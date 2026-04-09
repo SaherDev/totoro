@@ -1,23 +1,11 @@
 import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserEntity } from './entities/user.entity';
 import { UserSettingsEntity } from './entities/user-settings.entity';
 
 @Global()
 @Module({
-  imports: [
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        url: config.get<string>('database.url'),
-        entities: [UserEntity, UserSettingsEntity],
-        synchronize: true,
-      }),
-    }),
-  ],
+  imports: [TypeOrmModule.forFeature([UserEntity, UserSettingsEntity])],
   exports: [TypeOrmModule],
 })
 export class DatabaseModule {}
