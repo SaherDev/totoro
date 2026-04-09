@@ -17,6 +17,7 @@ import { RecommendationsModule } from '../recommendations/recommendations.module
 import { RecallModule } from '../recall/recall.module';
 import { ConsultModule } from '../consult/consult.module';
 import { PlacesModule } from '../places/places.module';
+import { ChatModule } from '../chat/chat.module';
 
 const configPath = path.join(process.cwd(), 'services/api/config/.local.yaml');
 
@@ -69,6 +70,7 @@ function loadConfig(): Record<string, unknown> {
     RecallModule,
     ConsultModule,
     PlacesModule,
+    ChatModule,
   ],
   controllers: [AppController, ClerkWebhookController],
   providers: [AppService, AiEnabledGuard],
