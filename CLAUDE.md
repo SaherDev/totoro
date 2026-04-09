@@ -97,6 +97,8 @@ See `.claude/workflows.md` for the complete 5-step token-efficient workflow (ADR
 - N/A — no database writes in this feature (002-extract-place-api)
 - TypeScript 5.x / Node 20 LTS + NestJS 11, `@nestjs/axios` (HttpService), `class-validator`, `class-transformer` (009-recall-proxy)
 - None — recall is a pure proxy (no DB writes) (009-recall-proxy)
+- TypeScript 5.x / Node 20 LTS + NestJS 11, `@nestjs/typeorm`, `typeorm`, `pg`, `@paralleldrive/cuid2`, `@nestjs/axios` (stays) (001-gateway-chat-refactor)
+- PostgreSQL — TypeORM with `synchronize: true`, two entities (User, UserSettings) (001-gateway-chat-refactor)
 
 - TypeScript 5.x / Node 20 LTS + Nx (ADR-001), pnpm (ADR-020), Next.js 16 (apps/web), NestJS 11 (services/api), Tailwind v3 + shadcn/ui (ADR-007) (001-nx-monorepo-setup)
 - N/A — this is a workspace configuration feature (001-nx-monorepo-setup)

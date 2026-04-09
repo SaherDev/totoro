@@ -3,7 +3,8 @@ import {
   MiddlewareConsumer,
   NestModule,
 } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import * as path from 'path';
 import * as yaml from 'yaml';
 import * as fs from 'fs';
@@ -12,11 +13,10 @@ import { AppService } from './app.service';
 import { ClerkMiddleware } from '../common/middleware/clerk.middleware';
 import { ClerkWebhookController } from '../webhooks/clerk.webhook';
 import { AiEnabledGuard } from '../common/guards/ai-enabled.guard';
-import { PrismaModule } from '../prisma/prisma.module';
-import { RecommendationsModule } from '../recommendations/recommendations.module';
-import { RecallModule } from '../recall/recall.module';
-import { ConsultModule } from '../consult/consult.module';
-import { PlacesModule } from '../places/places.module';
+import { UserEntity } from '../database/entities/user.entity';
+import { UserSettingsEntity } from '../database/entities/user-settings.entity';
+import { DatabaseModule } from '../database/database.module';
+import { ChatModule } from '../chat/chat.module';
 
 const configPath = path.join(process.cwd(), 'services/api/config/.local.yaml');
 
@@ -64,11 +64,18 @@ function loadConfig(): Record<string, unknown> {
       isGlobal: true,
       load: [loadConfig],
     }),
-    PrismaModule,
-    RecommendationsModule,
-    RecallModule,
-    ConsultModule,
-    PlacesModule,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        url: config.get<string>('database.url'),
+        entities: [UserEntity, UserSettingsEntity],
+        synchronize: true,
+      }),
+    }),
+    DatabaseModule,
+    ChatModule,
   ],
   controllers: [AppController, ClerkWebhookController],
   providers: [AppService, AiEnabledGuard],
