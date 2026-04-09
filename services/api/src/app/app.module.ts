@@ -12,7 +12,7 @@ import { AppService } from './app.service';
 import { ClerkMiddleware } from '../common/middleware/clerk.middleware';
 import { ClerkWebhookController } from '../webhooks/clerk.webhook';
 import { AiEnabledGuard } from '../common/guards/ai-enabled.guard';
-import { PrismaModule } from '../prisma/prisma.module';
+import { DatabaseModule } from '../database/database.module';
 import { ChatModule } from '../chat/chat.module';
 
 const configPath = path.join(process.cwd(), 'services/api/config/.local.yaml');
@@ -61,7 +61,7 @@ function loadConfig(): Record<string, unknown> {
       isGlobal: true,
       load: [loadConfig],
     }),
-    PrismaModule,
+    DatabaseModule,
     ChatModule,
   ],
   controllers: [AppController, ClerkWebhookController],
