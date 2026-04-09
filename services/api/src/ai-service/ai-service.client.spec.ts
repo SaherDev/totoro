@@ -35,21 +35,11 @@ describe('AiServiceClient', () => {
     });
   });
 
-  describe('consult()', () => {
-    it('should have consult method that accepts AiConsultPayload', async () => {
-      expect(typeof client.consult).toBe('function');
-      const payload = { user_id: 'user123', query: 'good ramen' };
+  describe('chat()', () => {
+    it('should have chat method that accepts ChatRequestDto', async () => {
+      expect(typeof client.chat).toBe('function');
       // We just verify the method exists and accepts the payload type
-      // Full integration tests will be in the ConsultService tests
-    });
-  });
-
-  describe('consultStream()', () => {
-    it('should have consultStream method that accepts AiConsultPayload', async () => {
-      expect(typeof client.consultStream).toBe('function');
-      const payload = { user_id: 'user123', query: 'good ramen' };
-      // We just verify the method exists and accepts the payload type
-      // Full integration tests will be in the ConsultService tests
+      // Full integration tests will be in the ChatService tests
     });
   });
 });
