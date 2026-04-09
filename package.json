@@ -23,7 +23,6 @@
     "@nx/web": "22.5.3",
     "@nx/webpack": "22.5.3",
     "@nx/workspace": "^22.5.3",
-    "@prisma/client": "^5.22.0",
     "@swc-node/register": "~1.11.1",
     "@swc/cli": "~0.8.0",
     "@swc/core": "~1.15.5",
@@ -49,7 +48,6 @@
     "jest-util": "^30.0.2",
     "jsonc-eslint-parser": "^2.1.0",
     "nx": "22.5.3",
-    "prisma": "^5.22.0",
     "ts-jest": "^29.4.0",
     "ts-node": "10.9.1",
     "tslib": "^2.3.0",
@@ -62,13 +60,17 @@
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
+    "@nestjs/typeorm": "^10.0.0",
+    "@paralleldrive/cuid2": "^2.2.2",
     "axios": "^1.6.0",
     "class-validator": "^0.15.1",
     "next": "~16.0.1",
+    "pg": "^8.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.0"
+    "rxjs": "^7.8.0",
+    "typeorm": "^0.3.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

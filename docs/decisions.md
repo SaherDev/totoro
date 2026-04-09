@@ -15,6 +15,26 @@ Format:
 
 ---
 
+## ADR-036: Single POST /v1/chat endpoint replaces three-endpoint AI contract
+
+**Date:** 2026-04-09\
+**Status:** accepted\
+**Context:** NestJS previously forwarded requests to three separate AI endpoints: POST /v1/extract-place (10s timeout), POST /v1/consult (20s timeout), and POST /v1/recall (20s timeout). This required NestJS to know the user's intent before forwarding — routing logic that belongs in the AI service, not the gateway. Additionally, NestJS was storing recommendation history after each consult request, coupling the gateway to AI response shapes.\
+**Decision:** Replace all three AI endpoint methods on IAiServiceClient with a single chat(payload: ChatRequestDto): Promise<ChatResponseDto> method. The concrete implementation calls POST /v1/chat with a 30-second timeout. The AI service classifies intent internally and returns a typed ChatResponseDto with a discriminated type field (extract-place | consult | recall | assistant | clarification | error). NestJS always returns HTTP 200 for chat responses — error classification is the frontend's responsibility via the type field. HTTP error codes (401, 403, 503) are reserved for transport failures only. NestJS no longer writes recommendation history. The RecommendationsModule is deleted. This supersedes the three-endpoint contract in ADR-016. Constitution §I, §V, and §VI are updated: NestJS no longer writes recommendations; the AI contract is one endpoint, not three.\
+**Consequences:** The old extract-place, consult, and recall NestJS endpoints are removed. The frontend must call POST /api/v1/chat for all interactions. SSE streaming (consultStream) is removed in this change — it can be added as chatStream() in a future ADR when the frontend requires real-time reasoning steps. AiServiceClient is simplified to one method and one timeout.
+
+---
+
+## ADR-035: TypeORM replaces Prisma in services/api
+
+**Date:** 2026-04-09\
+**Status:** accepted\
+**Context:** services/api manages exactly two domain tables — users and user_settings. Prisma added friction: a separate generate step, a global PrismaService singleton, and migration ownership split across two tools (Prisma for product tables, Alembic for AI tables). For a two-table gateway service, this overhead is not justified.\
+**Decision:** Replace Prisma with TypeORM in services/api. Use TypeOrmModule.forRootAsync() with ConfigService injecting database.url from YAML config. Set synchronize: true — acceptable at this stage (small team, no production data at risk). Define UserEntity and UserSettingsEntity mapping to the existing users and user_settings tables. Use @PrimaryColumn() with @BeforeInsert() CUID generation to match existing CUID primary keys. Column names use explicit name decorators to match Prisma-created camelCase column names (createdAt, updatedAt, userId). TypeORM with synchronize: true only touches registered entities — FastAPI-owned tables (places, embeddings, taste_model) are not registered and will not be altered.\
+**Consequences:** Prisma, prisma CLI, and @prisma/client are removed from the monorepo. PrismaModule and PrismaService are deleted from services/api. prisma/schema.prisma remains for migration history only (no further migrations). If the team grows or production data accrues, replace synchronize: true with explicit TypeORM migrations via a future ADR.
+
+---
+
 ## ADR-034: Chain of Responsibility for request validation (deferred)
 
 **Date:** 2026-03-14\
