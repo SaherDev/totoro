@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserEntity } from './entities/user.entity';
 import { UserSettingsEntity } from './entities/user-settings.entity';
 
@@ -8,6 +8,7 @@ import { UserSettingsEntity } from './entities/user-settings.entity';
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
