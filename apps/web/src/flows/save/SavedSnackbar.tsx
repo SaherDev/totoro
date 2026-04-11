@@ -11,7 +11,7 @@ interface SavedSnackbarProps {
 }
 
 export function SavedSnackbar({ placeName, onUndo, onDismiss }: SavedSnackbarProps) {
-  const t = useTranslations('flow4');
+  const t = useTranslations('save');
 
   return (
     <motion.div

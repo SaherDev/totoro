@@ -107,14 +107,14 @@
     "noHistory": "אין המלצות עדיין",
     "noHistoryDesc": "היסטוריית ההמלצות שלך תופיע כאן כשתחקור"
   },
-  "flow3": {
+  "recall": {
     "header": "נמצא בשמורים שלך",
     "breadcrumb": "חיפוש בשמורים שלך…",
     "modeOverride": "רוצה המלצה במקום?",
     "provenance": "{source} • {savedAt} • {address}",
     "emptyFooter": "כמעט תאומות. רוצה שאני אחפש עוד כאלה?"
   },
-  "flow4": {
+  "save": {
     "heading": "שמור מקום זה",
     "confirm": "שמור מקום",
     "saveDuplicate": "הבנתי",
@@ -128,7 +128,7 @@
     "undo": "בטל",
     "tasteSignals": "אותות הטעם מתעדכנים."
   },
-  "flow7": {
+  "coldStartZero": {
     "headline": "שמור מקומות שאתה אוהב. אני אתרגם את השאר.",
     "subline": "הדרך הקלה ביותר לשמור היא מ-TikTok או Instagram",
     "step1": {
@@ -147,7 +147,7 @@
     "suggestion1": "ארוחת ערב זולה קרוב",
     "suggestion2": "הקפה הטוב ביותר באזור"
   },
-  "flow8": {
+  "coldStartOneFour": {
     "headline": "ככל שתשמור יותר, אני אשתפר יותר.",
     "subline": "Recall עובד עכשיו. Consult מראה מה טוב קרוב.",
     "savedListEmpty": "אין מקומות שמורים עדיין",

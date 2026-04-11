@@ -53,7 +53,7 @@ function PlaceOption({ place, isSelected, onSelect }: { place: SaveExtractPlace;
 }
 
 export function SaveSheet({ places, selectedIndex, status, onSelectPlace, onConfirm, onCancel, originalSavedAt }: SaveSheetProps) {
-  const t = useTranslations('flow4');
+  const t = useTranslations('save');
   const selectedPlace = places[selectedIndex];
   const isDuplicate = selectedPlace?.status === 'duplicate';
 
