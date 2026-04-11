@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MapPin } from 'lucide-react';
+import { motion } from 'framer-motion';
 import type { RecallResponseData, RecallItem } from '@totoro/shared';
 
 interface RecallResultBubbleProps {
@@ -10,27 +10,25 @@ interface RecallResultBubbleProps {
 }
 
 function RecallCard({ place, index }: { place: RecallItem; index: number }) {
-  const meta = [place.cuisine, place.price_range].filter(Boolean).join(' · ');
+  const meta = [place.cuisine, place.price_range, place.address].filter(Boolean).join(' · ');
   const savedDate = place.saved_at
     ? new Date(place.saved_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     : null;
 
   return (
-    <div
-      className="flex items-center gap-3 py-2.5 border-b border-border/50 last:border-0"
-      style={{ animationDelay: `${index * 60}ms` }}
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="flex items-center gap-3 rounded-2xl border border-border bg-background p-3"
     >
-      {/* Thumbnail / icon */}
-      <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-muted flex items-center justify-center">
-        <MapPin className="h-4 w-4 text-muted-foreground" />
-      </div>
+      {/* Thumbnail placeholder */}
+      <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-muted" />
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-foreground truncate">{place.place_name}</p>
-        <p className="text-xs text-muted-foreground truncate">
-          {meta && `${meta} · `}{place.address}
-        </p>
+        <p className="font-semibold text-foreground text-sm truncate">{place.place_name}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 truncate">{meta}</p>
         {place.match_reason && (
           <p className="text-xs text-muted-foreground/70 truncate mt-0.5 italic">{place.match_reason}</p>
         )}
@@ -40,7 +38,7 @@ function RecallCard({ place, index }: { place: RecallItem; index: number }) {
       {savedDate && (
         <span className="flex-shrink-0 text-xs text-muted-foreground/60">{savedDate}</span>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -54,22 +52,20 @@ export function RecallResultBubble({ message, data }: RecallResultBubbleProps) {
 
   return (
     <div
-      className="flex gap-2 transition-opacity duration-200"
+      className="flex flex-col gap-3 transition-opacity duration-200"
       style={{ opacity: visible ? 1 : 0 }}
     >
-      <div className="rounded-2xl rounded-bl-sm bg-muted px-4 py-3 w-full max-w-[85%]">
-        <p className="text-sm font-medium text-foreground mb-2">{message}</p>
-        <div className="flex flex-col">
-          {data.results.map((place, i) => (
-            <RecallCard key={place.place_id || i} place={place} index={i} />
-          ))}
-        </div>
-        {data.has_more && (
-          <p className="text-xs text-muted-foreground/60 mt-2 text-center">
-            +{data.total - data.results.length} more saved places
-          </p>
-        )}
+      <p className="text-sm font-medium text-foreground px-1">{message}</p>
+      <div className="space-y-2">
+        {data.results.map((place, i) => (
+          <RecallCard key={place.place_id || i} place={place} index={i} />
+        ))}
       </div>
+      {data.has_more && (
+        <p className="text-xs text-muted-foreground/60 text-center">
+          +{data.total - data.results.length} more saved places
+        </p>
+      )}
     </div>
   );
 }

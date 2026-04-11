@@ -9,7 +9,13 @@
     "and": "and",
     "privacyPolicy": "Privacy Policy",
     "cantLogin": "Can't sign in?",
-    "clickHere": "Click here"
+    "clickHere": "Click here",
+    "brandHeadline": "Totoro",
+    "brandTagline1": "Save places from TikTok, Instagram, anywhere.",
+    "brandTagline2": "Tell me what you want. I'll find your match.",
+    "brandChip1": "No filter panels",
+    "brandChip2": "One answer",
+    "brandChip3": "Learns your taste"
   },
   "home": {
     "suggestions": {

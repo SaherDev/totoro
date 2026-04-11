@@ -9,7 +9,13 @@
     "and": "ו",
     "privacyPolicy": "מדיניות הפרטיות",
     "cantLogin": "לא יכול להתחבר?",
-    "clickHere": "לחץ כאן"
+    "clickHere": "לחץ כאן",
+    "brandHeadline": "טוטורו",
+    "brandTagline1": "שמור מקומות מ-TikTok, Instagram, בכל מקום.",
+    "brandTagline2": "תגיד לי מה אתה רוצה. אני אמצא לך את ההתאמה.",
+    "brandChip1": "ללא פאנלי סינון",
+    "brandChip2": "תשובה אחת",
+    "brandChip3": "לומד את הטעם שלך"
   },
   "home": {
     "suggestions": {
