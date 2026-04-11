@@ -9,6 +9,8 @@ import { ProfileMenu } from '@/components/profile-menu';
 import { ChatInput } from '@/components/ChatInput';
 import { HomeIdle } from '@/components/home/HomeIdle';
 import { TasteProfileCelebration } from '@/components/home/TasteProfileCelebration';
+import { ColdStartZero } from '@/flows/cold-start-zero/ColdStartZero';
+import { ColdStartOneFour } from '@/flows/cold-start-1-4/ColdStartOneFour';
 import { UserBubble } from '@/components/home/UserBubble';
 import { AssistantBubble } from '@/components/home/AssistantBubble';
 import { ConsultError } from '@/components/home/ConsultError';
@@ -96,9 +98,9 @@ export default function HomePage() {
               case 'taste-profile':
                 return <TasteProfileCelebration chips={TASTE_CHIP_BANK} onStartExploring={store.confirmTasteProfile} />;
               case 'cold-0':
+                return <ColdStartZero onSuggestionClick={store.submit} />;
               case 'cold-1-4':
-                // Placeholder — built in sub-plans 7 & 8
-                return <HomeIdle onSuggestionClick={store.submit} />;
+                return <ColdStartOneFour store={store} />;
               default:
                 return null;
             }

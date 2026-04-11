@@ -38,14 +38,14 @@ export function ColdStartZero({ onSuggestionClick }: ColdStartZeroProps) {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className="rounded-2xl border border-border bg-muted/50 p-4"
+            className="rounded-2xl border border-border bg-muted p-4"
           >
             <div className="flex gap-3">
-              <div className="flex-shrink-0 h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-semibold text-primary">
+              <div className="flex-shrink-0 h-7 w-7 rounded-full bg-muted-foreground/30 flex items-center justify-center text-xs font-semibold text-muted-foreground">
                 {idx + 1}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-foreground text-sm">{step.title}</h3>
+                <h3 className="font-semibold text-foreground text-sm">{step.title}</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">{step.subtitle}</p>
               </div>
             </div>

@@ -44,7 +44,7 @@ export function ColdStartOneFour({ store }: ColdStartOneFourProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
               onClick={() => store.submit(place.name)}
-              className="w-full rounded-2xl border border-border bg-muted/50 px-4 py-3 text-start text-sm text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              className="w-full rounded-2xl border border-border bg-muted px-4 py-3 text-start text-sm text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             >
               <p className="font-medium">{place.name}</p>
               <p className="text-xs text-muted-foreground">{place.area}</p>
