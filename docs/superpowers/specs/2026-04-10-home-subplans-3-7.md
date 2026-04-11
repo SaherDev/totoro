@@ -121,6 +121,10 @@ Auto-dismisses after 2800 ms. `Undo` calls `store.undoLastSave()` (out of scope 
 
 ### `AssistantReplyCard.tsx` — Flow 11
 
+> **Implementation decision (landed in sub-plans 1–2):** clarification and assistant responses are both pushed into the chat thread as `AssistantBubble` entries (same bubble component as consult clarifications). There is no separate `ClarificationHint` above the input bar and no separate `AssistantReplyCard` phase. Both response types land in the thread at the position of their user message.
+>
+> The `AssistantReplyCard` component is still the right name for the standalone card variant if a non-thread display is needed later, but for now the thread bubble is the rendered output.
+
 ```ts
 interface Props {
   message: string;
@@ -646,7 +650,9 @@ export type ClientErrorCategory =
 
 `context_chips` is a schema extension needed from `totoro-ai`. Forward-compatible with the "tolerates extra fields" rule. Frontend uses it if present, otherwise derives chips from `reasoning_steps[0].summary` by splitting on `·`.
 
-**Clarification is its own response type.** Server code in `totoro-ai/src/totoro_ai/core/chat/service.py` returns `type: 'clarification'` as a distinct branch when `classify_intent` sets `clarification_needed`. The store captures the `message` into `store.clarificationMessage`, which is orthogonal to `phase` — rendered by `ClarificationHint` above the input bar regardless of the current phase. See decision 15.
+**Clarification is its own response type.** Server code in `totoro-ai/src/totoro_ai/core/chat/service.py` returns `type: 'clarification'` as a distinct branch when `classify_intent` sets `clarification_needed`. The store captures the `message` and pushes it into the chat thread as an `AssistantBubble` entry (type: `'clarification'`). Phase resets to resting after clarification lands. See decision 15.
+
+> **Implementation decision (landed in sub-plans 1–2):** clarification renders in the thread as a bubble, not above the input bar. `ClarificationHint` is not used.
 
 **Error shape matches FastAPI.** `totoro-ai` returns `data: {"detail": str(exc)}` on caught exceptions. The frontend treats `detail` as an opt-in debug string for console logging, not for display — user-facing text comes from the top-level `message`. Client-originated errors (network unreachable, timeout) never populate `data.detail`; they flow through `ClientErrorCategory` in the store instead.
 
@@ -754,81 +760,60 @@ This is a **pre-router only.** FastAPI is always the source of truth. If the cla
 
 The classifier is a pure function, trivial to unit-test, no dependencies. Lives in `lib` not `api` because it's not network-adjacent.
 
-### localStorage — `apps/web/src/lib/saved-places-storage.ts`
+### localStorage — `apps/web/src/storage/saved-places-storage.ts`
+
+> **Implementation decision (landed in sub-plans 1–2):** for now the key stores a plain integer count (`totoro.savedCount`), not a full array. The `ColdStartOneToFour` compact saves list (sub-plan 4) will need real place stubs — when Flow 4 (Save) lands, this storage is extended to also write a `totoro.savedPlaces` array alongside the count. Until then, `ColdStartOneToFour` shows a placeholder list seeded from the count.
 
 ```ts
-const KEY = "totoro.savedPlaces";
+const KEY = "totoro.savedCount";
 
-export interface SavedPlaceStub {
-  place_id: string;
-  place_name: string;
-  source: string; // "TikTok" | "Instagram" | "Name search" | …
-  location: string;
-  saved_at: string; // ISO 8601
-  thumbnail_url?: string;
-}
-
-export function readSavedPlaces(): SavedPlaceStub[] {
-  if (typeof window === "undefined") return [];
+export function getSavedPlaceCount(): number {
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as SavedPlaceStub[]) : [];
+    if (!raw) return 0;
+    const parsed = parseInt(raw, 10);
+    return isNaN(parsed) || parsed < 0 ? 0 : parsed;
   } catch {
-    return [];
+    return 0;
   }
 }
 
-export function appendSavedPlace(next: SavedPlaceStub): SavedPlaceStub[] {
-  if (typeof window === "undefined") return [];
+export function setSavedPlaceCount(count: number): void {
   try {
-    const current = readSavedPlaces();
-    // Dedupe by place_id
-    if (current.some(p => p.place_id === next.place_id)) return current;
-    const updated = [next, ...current];
-    localStorage.setItem(KEY, JSON.stringify(updated));
-    return updated;
-  } catch {
-    return [];
-  }
+    localStorage.setItem(KEY, String(count));
+  } catch {}
+}
+
+export function incrementSavedPlaceCount(): void {
+  setSavedPlaceCount(getSavedPlaceCount() + 1);
 }
 ```
 
-Used by the Cold 1–4 screen to render its compact saves list, and by `store.incrementSavedCount()` during Flow 4 to accumulate the list as new saves land. SSR-safe and defensive — private browsing or quota failures silently no-op. User in private browsing sees Cold-0 on every visit; acceptable per decision 4.
+Manual dev testing: `localStorage.setItem('totoro.savedCount', '3')` then reload.
 
-### localStorage — `apps/web/src/lib/taste-profile-storage.ts`
+### localStorage — `apps/web/src/storage/taste-profile-storage.ts`
+
+> **Implementation decision (landed in sub-plans 1–2):** simplified to a plain `'true'` string — no JSON object. The richer `{ confirmed, savedPlaceCount }` shape is not needed while the store derives `savedPlaceCount` from `totoro.savedCount` independently.
 
 ```ts
 const KEY = "totoro.tasteProfile";
 
-interface TasteProfileStorage {
-  confirmed: boolean;
-  savedPlaceCount: number;
-}
-
-const DEFAULT: TasteProfileStorage = { confirmed: false, savedPlaceCount: 5 };
-
-export function readTasteProfile(): TasteProfileStorage {
-  if (typeof window === "undefined") return DEFAULT;
+export function getTasteProfileConfirmed(): boolean {
   try {
-    const raw = localStorage.getItem(KEY);
-    return raw ? { ...DEFAULT, ...JSON.parse(raw) } : DEFAULT;
+    return localStorage.getItem(KEY) === 'true';
   } catch {
-    return DEFAULT;
+    return false;
   }
 }
 
-export function writeTasteProfile(next: Partial<TasteProfileStorage>): void {
-  if (typeof window === "undefined") return;
+export function setTasteProfileConfirmed(): void {
   try {
-    const current = readTasteProfile();
-    localStorage.setItem(KEY, JSON.stringify({ ...current, ...next }));
-  } catch {
-    // private browsing, quota exceeded — silently no-op
-  }
+    localStorage.setItem(KEY, 'true');
+  } catch {}
 }
 ```
 
-SSR-safe, defensive on every read/write.
+Manual dev testing: `localStorage.setItem('totoro.tasteProfile', 'true')` then reload.
 
 ### localStorage — `apps/web/src/lib/location-storage.ts`
 
@@ -872,7 +857,9 @@ Used by `store.hydrate()` to seed `store.location` on page load, and by `store.s
 
 `chatClient.chat()` throws. Store catches and branches on animation state:
 
-- **Animation still running:** set `pendingError`, let animation play to 4100 ms, then flip to `error`. Prevents visual glitch.
+> **Implementation decision (landed in sub-plans 1–2):** `ConsultThinking` no longer runs a 4100 ms dummy animation. It fires `onAnimationComplete` after 400 ms (enough for the dots loader to register) then unblocks immediately when the real fetch resolves. The `animationComplete` / `fetchComplete` race gate is still in place — the timing is just much shorter.
+
+- **Animation still running (< 400 ms):** set `pendingError`, wait for `onAnimationComplete`, then flip to error.
 - **Animation already done:** flip immediately.
 
 Error classifier maps raw errors to three user-facing categories:
