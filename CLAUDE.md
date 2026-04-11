@@ -38,9 +38,7 @@ pnpm nx run-many -t lint
 pnpm nx build web
 pnpm nx build api
 
-# Database
-pnpm prisma migrate dev        # Run migrations
-pnpm prisma generate           # Regenerate client
+
 
 # Deployment: Vercel (frontend), Railway (backend + AI + PostgreSQL + Redis)
 ```
@@ -89,6 +87,9 @@ See `.claude/workflows.md` for the complete 5-step token-efficient workflow (ADR
 - **Deployment**: Vercel (frontend), Railway (backend + AI service + PostgreSQL + Redis). Redis is FastAPI-only. Docker Compose for local dev only.
 
 ## Active Technologies
+- TypeScript 5.x / Node 20 LTS + Next.js 16 (App Router), React 19, Zustand, Zod, Tailwind v3, shadcn/ui, next-intl, next-themes, Clerk v5 (012-home-subplans-3-7)
+- localStorage only (`totoro.savedCount`, `totoro.savedPlaces`, `totoro.tasteProfile`, `totoro.location`) — no DB changes (012-home-subplans-3-7)
+
 - TypeScript 5.x / Node 20 LTS + Next.js 16, Tailwind v3, shadcn/ui, next-intl, next-themes, tailwindcss-animate (already installed), framer-motion (pending approval), next/font/google (001-migrate-lovable-design)
 - N/A (frontend-only migration) (001-migrate-lovable-design)
 - TypeScript 5.x, Node 20 LTS + Next.js 16, `@ai-sdk/react` + `ai` (to install), `@clerk/nextjs` v5, `FetchClient` (existing) (001-wire-consult-streaming)
@@ -99,10 +100,13 @@ See `.claude/workflows.md` for the complete 5-step token-efficient workflow (ADR
 - None — recall is a pure proxy (no DB writes) (009-recall-proxy)
 - TypeScript 5.x / Node 20 LTS + NestJS 11, `@nestjs/typeorm`, `typeorm`, `pg`, `@paralleldrive/cuid2`, `@nestjs/axios` (stays) (001-gateway-chat-refactor)
 - PostgreSQL — TypeORM with `synchronize: true`, two entities (User, UserSettings) (001-gateway-chat-refactor)
+- TypeScript 5.x / Node 20 LTS + Next.js 16, React 19, Zustand (new), Zod (new), framer-motion v11 (existing), Tailwind v3, shadcn/ui, Clerk, next-intl (001-home-infra-flow2-flow9)
+- localStorage only (no new DB/API writes) (001-home-infra-flow2-flow9)
 
 - TypeScript 5.x / Node 20 LTS + Nx (ADR-001), pnpm (ADR-020), Next.js 16 (apps/web), NestJS 11 (services/api), Tailwind v3 + shadcn/ui (ADR-007) (001-nx-monorepo-setup)
 - N/A — this is a workspace configuration feature (001-nx-monorepo-setup)
 
 ## Recent Changes
 
+- 012-home-subplans-3-7: Implemented below-threshold confirmation flow for place extraction — shows SaveSheet with "Confirm" badges for candidates with confidence < 70%, auto-saves high-confidence places
 - 001-nx-monorepo-setup: Added TypeScript 5.x / Node 20 LTS + Nx (ADR-001), pnpm (ADR-020), Next.js 16 (apps/web), NestJS 11 (services/api), Tailwind v3 + shadcn/ui (ADR-007)

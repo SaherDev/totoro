@@ -5,8 +5,7 @@ import { motion } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { TotoroAuth } from '@/components/illustrations/totoro-illustrations';
-import { Mail } from 'lucide-react';
+import { Illustration } from '@/components/illustrations/Illustration';
 import { useSignIn, useAuth } from '@clerk/nextjs';
 
 export default function LoginPage() {
@@ -36,25 +35,50 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-6 pb-8 pt-12">
-      <motion.div
-        className="flex w-full max-w-sm flex-col items-center md:max-w-md"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-      >
+    <div className="relative flex min-h-screen flex-col items-center bg-background px-6 pb-8">
+      {/* Hero — illustration + branding, vertically centered */}
+      <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm md:max-w-md text-center gap-0">
+        {/* Illustration — no circle */}
         <motion.div
-          className="w-[220px] h-[220px] md:w-[260px] md:h-[260px] mb-5 anim-breathe"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          className="w-[160px] h-[160px] md:w-[200px] md:h-[200px] anim-breathe"
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
         >
-          <TotoroAuth />
+          <Illustration id="auth" />
         </motion.div>
-      </motion.div>
+
+        {/* Branding block */}
+        <motion.div
+          className="w-full text-center px-2 pt-5 pb-2"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+        <h1 className="font-display text-5xl font-bold text-foreground tracking-tight mb-4">
+          {t('auth.brandHeadline')}
+        </h1>
+        <p className="text-base text-muted-foreground leading-relaxed">
+          {t('auth.brandTagline1')}
+        </p>
+        <p className="text-base text-muted-foreground leading-relaxed mb-5">
+          {t('auth.brandTagline2')}
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {(['auth.brandChip1', 'auth.brandChip2', 'auth.brandChip3'] as const).map((key) => (
+            <span
+              key={key}
+              className="rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground"
+            >
+              {t(key as Parameters<typeof t>[0])}
+            </span>
+          ))}
+        </div>
+        </motion.div>
+      </div>
 
       <motion.div
-        className="mt-auto pt-12 w-full max-w-sm md:max-w-md md:mt-10"
+        className="w-full max-w-sm md:max-w-md pb-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.6 }}
@@ -87,26 +111,7 @@ export default function LoginPage() {
             {t('auth.continueApple')}
           </button>
 
-          <div className="flex items-center gap-4 my-1">
-            <div className="flex-1 h-px bg-border" />
-            <span className="font-body text-xs text-muted-foreground">{t('auth.or')}</span>
-            <div className="flex-1 h-px bg-border" />
-          </div>
-
-          <button
-            suppressHydrationWarning
-            disabled
-            className="flex items-center justify-center gap-3 w-full h-14 rounded-2xl border border-border bg-background font-body text-base font-medium text-foreground transition-all hover:bg-muted active:scale-[0.98] disabled:opacity-50"
-          >
-            <Mail className="w-5 h-5" />
-            {t('auth.continueEmail')}
-          </button>
         </div>
-
-        <p className="font-body text-xs text-muted-foreground/50 text-center mt-5">
-          {t('auth.cantLogin')}{' '}
-          <span className="text-muted-foreground underline underline-offset-2 cursor-pointer">{t('auth.clickHere')}</span>
-        </p>
       </motion.div>
     </div>
   );

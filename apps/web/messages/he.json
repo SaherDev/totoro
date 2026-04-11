@@ -9,19 +9,75 @@
     "and": "ו",
     "privacyPolicy": "מדיניות הפרטיות",
     "cantLogin": "לא יכול להתחבר?",
-    "clickHere": "לחץ כאן"
+    "clickHere": "לחץ כאן",
+    "brandHeadline": "טוטורו",
+    "brandTagline1": "שמור מקומות מ-TikTok, Instagram, בכל מקום.",
+    "brandTagline2": "תגיד לי מה אתה רוצה. אני אמצא לך את ההתאמה.",
+    "brandChip1": "ללא פאנלי סינון",
+    "brandChip2": "תשובה אחת",
+    "brandChip3": "לומד את הטעם שלך"
   },
   "home": {
-    "whereTo": "מה עולה בדעתך?",
-    "moodPrompt": "ספר לי מה אתה בהוד רוח, או הדבק קישור למקום כדי לשמור אותו",
-    "listening": "מאזין...",
-    "tapToTalk": "הקש לדיבור",
-    "voicePrompt": "תאר את המקום שאתה מחפש בקול שלך",
     "suggestions": {
       "consult": "ארוחת ערב זולה קרוב",
-      "save": "שמור קישור למקום זה",
+      "save": "📍Sushi Sora Bangkok Sukhumvit amazing omakase, I only eat omakase",
       "recall": "מצא מקום שמור"
+    },
+    "idle": {
+      "headline": "לאן הלילה?"
     }
+  },
+  "consult": {
+    "placeholder": "על מה אתה בהוד רוח?",
+    "header": {
+      "thinkingAbout": "חושב על"
+    },
+    "steps": {
+      "intent_parsing": "מבין את הבקשה שלך",
+      "retrieval": "מחפש במקומות השמורים שלך",
+      "discovery": "מגלה אפשרויות קרובות",
+      "validation": "בודק מה פתוח",
+      "ranking": "מדרג לפי הטעם שלך",
+      "completion": "מצאתי את ההתאמה שלך"
+    },
+    "result": {
+      "header": "הנה הבחירה שלך",
+      "divider": "אולי תאהב גם",
+      "communityProof": "{count} אנשים ביקרו השבוע",
+      "source": {
+        "saved": "מהשמורים שלך",
+        "discovered": "התגלה חדש"
+      },
+      "actions": {
+        "directions": "הוראות הגעה",
+        "call": "התקשר",
+        "share": "שתף",
+        "menu": "תפריט"
+      }
+    },
+    "error": {
+      "offline": {
+        "headline": "אין חיבור לאינטרנט",
+        "body": "בדוק את החיבור שלך ונסה שוב."
+      },
+      "timeout": {
+        "headline": "זה לקח יותר מדי זמן",
+        "body": "הבקשה פג תוקפה. נסה שוב."
+      },
+      "server": {
+        "headline": "משהו השתבש",
+        "body": "השירות שלנו נתקל בבעיה. נסה שוב בעוד רגע."
+      },
+      "generic": {
+        "headline": "לא הצלחנו לקבל המלצה",
+        "body": "משהו בלתי צפוי קרה. נסה שוב."
+      }
+    }
+  },
+  "tasteProfile": {
+    "headline": "פרופיל הטעם שלך מוכן!",
+    "subline": "על פי המקומות שמירת, הנה מה שאני יודע עליך.",
+    "cta": "התחל לגלות"
   },
   "profile": {
     "designSystem": "מערכת עיצוב",
@@ -56,5 +112,69 @@
     "noSavedDesc": "התחל לשמור מקומות שאתה אוהב כדי לבנות את האוסף האישי שלך",
     "noHistory": "אין המלצות עדיין",
     "noHistoryDesc": "היסטוריית ההמלצות שלך תופיע כאן כשתחקור"
+  },
+  "recall": {
+    "placeholder": "זה מקום הרמן שחיסכנתי מ-TikTok",
+    "header": "נמצא בשמורים שלך",
+    "breadcrumb": "חיפוש בשמורים שלך…",
+    "modeOverride": "רוצה המלצה במקום?",
+    "provenance": "{source} • {savedAt} • {address}",
+    "emptyFooter": "כמעט תאומות. רוצה שאני אחפש עוד כאלה?",
+    "hasMore": "טען תוצאות נוסף"
+  },
+  "save": {
+    "heading": "שמור מקום זה",
+    "confirm": "שמור מקום",
+    "saveDuplicate": "הבנתי",
+    "cancel": "ביטול",
+    "saving": "הוספה לאוסף שלך…",
+    "saved": "{place} נשמר!",
+    "savedSubline": "נוסף לאוסף שלך",
+    "duplicate": "כבר שמרת את זה ב-{date}",
+    "error": "לא הצלחתי לשמור את המקום הזה. נסה שוב.",
+    "undoLink": "ניהול אותות טעם",
+    "undo": "בטל",
+    "tasteSignals": "אותות הטעם מתעדכנים."
+  },
+  "coldStartZero": {
+    "headline": "שמור מקומות שאתה אוהב.\nאני אדאג לשאר.",
+    "subline": "הדרך הקלה ביותר לשמור היא מ-TikTok או Instagram",
+    "step1": {
+      "title": "מצא מקום ב-TikTok או Instagram",
+      "subtitle": "כל פוסט, ריל, או וידאו שמזכיר מקום"
+    },
+    "step2": {
+      "title": "הקש שתף ← Totoro",
+      "subtitle": "אין צורך לפתוח את האפליקציה או להעתיק קישור"
+    },
+    "step3": {
+      "title": "אני מחלץ ושומר אוטומטית",
+      "subtitle": "שם המקום, מיקום, והקשר — הכל נשמר"
+    },
+    "pasteHint": "או הדבק קישור / הקלד שם למטה",
+    "suggestion1": "\"ארוחת ערב זולה קרובה, לא עמוסה\"",
+    "suggestion2": "\"משהו רומנטי הלילה\""
+  },
+  "coldStartOneFour": {
+    "headline": "ככל שתשמור יותר, אני אשתפר יותר.",
+    "subline": "Recall עובד עכשיו. Consult מראה מה טוב קרוב.",
+    "whatGoodNearby": "מה טוב קרוב",
+    "popularRightNow": "פופולרי כרגע",
+    "alreadySaved": "כבר יש לך מקומות שמורים?",
+    "starterPackLink": "חבילת ההתחלה של העיר"
+  },
+  "illustrations": {
+    "auth": "Totoro משחק שלום",
+    "idleWelcoming": "Totoro בעמדה משכנעת",
+    "raining": "Totoro בגשם",
+    "encouraging": "Totoro נראה מעודד",
+    "excited": "Totoro נראה התלהב",
+    "knowing": "Totoro עם חיוך שמכיר",
+    "welcomeBack": "Totoro מברך אותך חזרה",
+    "listen": "Totoro מאזין",
+    "empty": "Totoro מסתכל על מרחב ריק",
+    "addPlace": "Totoro מוסיף מקום",
+    "addPlaceProcessing": "Totoro מעבד נתוני מקום",
+    "addPlaceSuccess": "Totoro חוגג שמירה מוצלחת"
   }
 }

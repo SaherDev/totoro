@@ -9,19 +9,77 @@
     "and": "and",
     "privacyPolicy": "Privacy Policy",
     "cantLogin": "Can't sign in?",
-    "clickHere": "Click here"
+    "clickHere": "Click here",
+    "brandHeadline": "Totoro",
+    "brandTagline1": "Save places from TikTok, Instagram, anywhere.",
+    "brandTagline2": "Tell me what you want. I'll find your match.",
+    "brandChip1": "No filter panels",
+    "brandChip2": "One answer",
+    "brandChip3": "Learns your taste"
   },
   "home": {
-    "whereTo": "What's on your mind?",
-    "moodPrompt": "Tell me what you're in the mood for, or paste a place link to save it",
-    "listening": "Listening...",
-    "tapToTalk": "Tap to talk",
-    "voicePrompt": "Describe the place you're looking for with your voice",
     "suggestions": {
       "consult": "Cheap dinner nearby",
-      "save": "Save this place link",
+      "save": "📍Sushi Sora Bangkok Sukhumvit amazing omakase, I only eat omakase",
       "recall": "Recall a saved place"
+    },
+    "idle": {
+      "greeting": "Hey {name}",
+      "savedCount": "{count} places saved",
+      "headline": "What are you in the mood for?"
     }
+  },
+  "consult": {
+    "placeholder": "What are you in the mood for?",
+    "header": {
+      "thinkingAbout": "Thinking about"
+    },
+    "steps": {
+      "intent_parsing": "Understanding your request",
+      "retrieval": "Searching your saved places",
+      "discovery": "Discovering nearby options",
+      "validation": "Checking what's open",
+      "ranking": "Ranking by your taste",
+      "completion": "Found your match"
+    },
+    "result": {
+      "header": "Here's your pick",
+      "divider": "You might also like",
+      "communityProof": "{count} people visited this week",
+      "source": {
+        "saved": "From your saves",
+        "discovered": "Newly discovered"
+      },
+      "actions": {
+        "directions": "Directions",
+        "call": "Call",
+        "share": "Share",
+        "menu": "Menu"
+      }
+    },
+    "error": {
+      "offline": {
+        "headline": "You're offline",
+        "body": "Check your connection and try again."
+      },
+      "timeout": {
+        "headline": "That took too long",
+        "body": "The request timed out. Try again."
+      },
+      "server": {
+        "headline": "Something went wrong",
+        "body": "Our service is having trouble. Try again in a moment."
+      },
+      "generic": {
+        "headline": "Couldn't get a recommendation",
+        "body": "Something unexpected happened. Try again."
+      }
+    }
+  },
+  "tasteProfile": {
+    "headline": "Your taste profile is ready!",
+    "subline": "Based on the places you've saved, here's what I know about you.",
+    "cta": "Start exploring"
   },
   "profile": {
     "designSystem": "Design System",
@@ -56,5 +114,69 @@
     "noSavedDesc": "Start saving places you love to build your personal collection",
     "noHistory": "No recommendations yet",
     "noHistoryDesc": "Your recommendation history will appear here as you explore"
+  },
+  "recall": {
+    "placeholder": "That ramen place I saved from TikTok",
+    "header": "Found in your saves",
+    "breadcrumb": "searching your saves…",
+    "modeOverride": "Want a recommendation instead?",
+    "provenance": "{source} • {savedAt} • {address}",
+    "emptyFooter": "Nothing else matches. Want me to find more like this?",
+    "hasMore": "Load more results"
+  },
+  "save": {
+    "heading": "Save this place",
+    "confirm": "Save place",
+    "saveDuplicate": "Got it",
+    "cancel": "Cancel",
+    "saving": "Adding to your collection…",
+    "saved": "{place} saved!",
+    "savedSubline": "Added to your collection",
+    "duplicate": "You already saved this on {date}",
+    "error": "Couldn't save this place. Try again.",
+    "undoLink": "Manage taste signals",
+    "undo": "Undo",
+    "tasteSignals": "Taste signals updating."
+  },
+  "coldStartZero": {
+    "headline": "Save places you love.\nI'll figure out the rest.",
+    "subline": "The easiest way to save is from TikTok or Instagram",
+    "step1": {
+      "title": "Find a place on TikTok or Instagram",
+      "subtitle": "Any post, reel, or video mentioning a place"
+    },
+    "step2": {
+      "title": "Tap Share → Totoro",
+      "subtitle": "No need to open the app or copy any link"
+    },
+    "step3": {
+      "title": "I extract and save it automatically",
+      "subtitle": "Place name, location, and context — done"
+    },
+    "pasteHint": "or paste a link or type a name below",
+    "suggestion1": "\"Cheap dinner nearby, not crowded\"",
+    "suggestion2": "\"Something romantic for tonight\""
+  },
+  "coldStartOneFour": {
+    "headline": "The more you save, the better I get.",
+    "subline": "Recall works now. Consult shows what's good nearby.",
+    "whatGoodNearby": "What's good nearby",
+    "popularRightNow": "Popular right now",
+    "alreadySaved": "Already have places saved?",
+    "starterPackLink": "City starter pack"
+  },
+  "illustrations": {
+    "auth": "Totoro waving hello",
+    "idleWelcoming": "Totoro in a welcoming pose",
+    "raining": "Totoro in the rain",
+    "encouraging": "Totoro looking encouraging",
+    "excited": "Totoro looking excited",
+    "knowing": "Totoro with a knowing smile",
+    "welcomeBack": "Totoro welcoming you back",
+    "listen": "Totoro listening",
+    "empty": "Totoro looking at an empty space",
+    "addPlace": "Totoro adding a place",
+    "addPlaceProcessing": "Totoro processing place data",
+    "addPlaceSuccess": "Totoro celebrating a successful save"
   }
 }
