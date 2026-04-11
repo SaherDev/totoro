@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NavBar, NavBarLogo, NavBarActions } from '@/components/NavBar';
 import { ProfileMenu } from '@/components/profile-menu';
-import { TotoroEmpty } from '@/components/illustrations/totoro-illustrations';
+import { Illustration } from '@/components/illustrations/Illustration';
 
 export default function PlacesPage() {
   const t = useTranslations();
@@ -59,7 +59,7 @@ export default function PlacesPage() {
               transition={{ duration: 0.4 }}
             >
               <div className="w-32 h-32 md:w-40 md:h-40 mb-6">
-                <TotoroEmpty />
+                <Illustration id="empty" />
               </div>
               <h2 className="font-display text-2xl text-foreground text-center mb-2">
                 {activeTab === 'saved' ? t('places.noSaved') : t('places.noHistory')}

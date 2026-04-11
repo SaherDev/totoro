@@ -108,5 +108,71 @@
     "noSavedDesc": "Start saving places you love to build your personal collection",
     "noHistory": "No recommendations yet",
     "noHistoryDesc": "Your recommendation history will appear here as you explore"
+  },
+  "flow3": {
+    "header": "Found in your saves",
+    "breadcrumb": "searching your saves…",
+    "modeOverride": "Want a recommendation instead?",
+    "provenance": "{source} • {savedAt} • {address}",
+    "emptyFooter": "Nothing else matches. Want me to find more like this?"
+  },
+  "flow4": {
+    "sheetTitle": "Save to Totoro",
+    "saveButton": "Save to Totoro",
+    "saving": "Saving…",
+    "saved": "Saved!",
+    "savedSubline": "Added to your collection",
+    "duplicate": {
+      "headline": "Already in your places",
+      "savedDate": "Saved {date}",
+      "viewButton": "View saved place"
+    },
+    "error": {
+      "message": "Couldn't save this place",
+      "tryAgain": "Try again"
+    },
+    "undo": "Undo",
+    "tasteSignals": "Taste signals updating."
+  },
+  "flow7": {
+    "headline": "Save places you love. I'll figure out the rest.",
+    "subline": "The easiest way to save is from TikTok or Instagram",
+    "step1": {
+      "title": "Find a place on TikTok",
+      "subtitle": "Watch a food creator share their discovery"
+    },
+    "step2": {
+      "title": "Share the video",
+      "subtitle": "Use the share button → copy link"
+    },
+    "step3": {
+      "title": "Paste it here",
+      "subtitle": "I'll extract the name and save it"
+    },
+    "pasteHint": "Paste a link or type a name…",
+    "suggestion1": "Cheap dinner nearby",
+    "suggestion2": "Best coffee in the area"
+  },
+  "flow8": {
+    "headline": "The more you save, the better I get.",
+    "subline": "Recall works now. Consult shows what's good nearby.",
+    "savedListEmpty": "No saved places yet",
+    "popularLabel": "Popular right now",
+    "popularFootnote": "Everyone's been to this one. As you save more, I'll find hidden gems instead.",
+    "starterPackLink": "City starter pack"
+  },
+  "illustrations": {
+    "auth": "Totoro waving hello",
+    "idleWelcoming": "Totoro in a welcoming pose",
+    "raining": "Totoro in the rain",
+    "encouraging": "Totoro looking encouraging",
+    "excited": "Totoro looking excited",
+    "knowing": "Totoro with a knowing smile",
+    "welcomeBack": "Totoro welcoming you back",
+    "listen": "Totoro listening",
+    "empty": "Totoro looking at an empty space",
+    "addPlace": "Totoro adding a place",
+    "addPlaceProcessing": "Totoro processing place data",
+    "addPlaceSuccess": "Totoro celebrating a successful save"
   }
 }

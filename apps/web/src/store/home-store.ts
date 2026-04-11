@@ -1,9 +1,17 @@
 'use client';
 
 import { create } from 'zustand';
-import type { ClientIntent, ConsultResponseData, ReasoningStep, RecallItem, SavedPlaceStub } from '@totoro/shared';
+import type {
+  ClientIntent,
+  ConsultResponseData,
+  ReasoningStep,
+  RecallItem,
+  SavedPlaceStub,
+  ExtractPlaceData,
+  SaveSheetPlace,
+} from '@totoro/shared';
 import type { FlowId, HomePhase } from '../flows/flow-definition';
-import { getSavedPlaceCount } from '../storage/saved-places-storage';
+import { getSavedPlaceCount, appendSavedPlace, incrementSavedPlaceCount } from '../storage/saved-places-storage';
 import { getTasteProfileConfirmed, setTasteProfileConfirmed } from '../storage/taste-profile-storage';
 import { getLocation, setLocation as persistLocation } from '../storage/location-storage';
 import { classifyIntent } from '../lib/classify-intent';
@@ -13,7 +21,8 @@ import { FLOW_BY_CLIENT_INTENT, FLOW_BY_RESPONSE_TYPE } from '../flows/registry'
 // ── Thread entry types ─────────────────────────────────────────────────────────
 export type ThreadEntry =
   | { id: string; role: 'user'; content: string }
-  | { id: string; role: 'assistant'; type: 'clarification'; message: string }
+  | { id: string; role: 'assistant'; type: 'clarification'; message: string; dismissed?: boolean }
+  | { id: string; role: 'assistant'; type: 'assistant'; message: string; dismissed?: boolean }
   | { id: string; role: 'assistant'; type: 'consult'; message: string; data: ConsultResponseData }
   | { id: string; role: 'assistant'; type: 'error'; category: 'offline' | 'timeout' | 'generic' | 'server' };
 
@@ -51,12 +60,16 @@ interface HomeState {
   // Chat thread — accumulates all user + assistant exchanges
   thread: ThreadEntry[];
 
-  // Flow-specific slots (stubbed until sub-plans 3–7)
+  // Flow-specific slots
   recallResults: RecallItem[] | null;
   recallHasMore: boolean;
-  saveSheetPlace: SavedPlaceStub | null;
+  recallQuery: string | null;
+  recallBreadcrumb: boolean;
+  saveSheetPlace: SaveSheetPlace | null;
+  saveSheetMessage: string | null;
   saveSheetStatus: 'pending' | 'saving' | 'duplicate' | 'error';
   saveSheetOriginalSavedAt: string | null;
+  preSavePhase: HomePhase | null;
   assistantMessage: string | null;
   clarificationMessage: string | null;
 
@@ -129,9 +142,13 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   thread: [],
   recallResults: null,
   recallHasMore: false,
+  recallQuery: null,
+  recallBreadcrumb: false,
   saveSheetPlace: null,
+  saveSheetMessage: null,
   saveSheetStatus: 'pending',
   saveSheetOriginalSavedAt: null,
+  preSavePhase: null,
   assistantMessage: null,
   clarificationMessage: null,
 
@@ -164,6 +181,9 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   // ── submit ─────────────────────────────────────────────────────────────────
   submit: async (message, opts) => {
     const { getToken, location, thread } = get();
+
+    // Dismiss any visible assistant/clarification bubble before new dispatch
+    get().dismissAssistantReply();
 
     // Cancel any in-flight request
     get().abortController?.abort();
@@ -354,27 +374,149 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     });
   },
 
-  // ── Stubbed — sub-plan 3 ───────────────────────────────────────────────────
-  submitRecall: async (_message) => {
-    throw new Error('Not implemented: submitRecall — see sub-plan 3');
+  // ── submitRecall ──────────────────────────────────────────────────────────
+  submitRecall: async (message) => {
+    const { getToken, location } = get();
+
+    set({
+      recallQuery: message,
+      phase: 'recall',
+      recallResults: null,
+      recallBreadcrumb: false,
+    });
+
+    // Start 600ms breadcrumb timer
+    let breadcrumbTimer: ReturnType<typeof setTimeout> | null = null;
+    const startBreadcrumbTimer = () => {
+      breadcrumbTimer = setTimeout(() => {
+        if (get().phase === 'recall') {
+          set({ recallBreadcrumb: true });
+        }
+      }, 600);
+    };
+    startBreadcrumbTimer();
+
+    try {
+      const client = getToken ? getChatClient(getToken) : getChatClient(async () => '');
+      const res = await client.chat({
+        message,
+        location,
+      });
+
+      // Cancel timer and update state with results
+      if (breadcrumbTimer) clearTimeout(breadcrumbTimer);
+
+      if (res.type === 'recall' && res.data) {
+        const data = res.data as { results: RecallItem[]; has_more: boolean };
+        set({
+          recallResults: data.results,
+          recallHasMore: data.has_more,
+          recallBreadcrumb: false,
+        });
+      }
+    } catch (_err) {
+      // Cancel timer on error
+      if (breadcrumbTimer) clearTimeout(breadcrumbTimer);
+      set({ recallBreadcrumb: false });
+    }
   },
 
-  // ── Stubbed — sub-plan 6 ───────────────────────────────────────────────────
-  openSaveSheet: (_message) => {
-    throw new Error('Not implemented: openSaveSheet — see sub-plan 6');
+  // ── openSaveSheet ─────────────────────────────────────────────────────────
+  openSaveSheet: (message) => {
+    const { phase } = get();
+    set({
+      preSavePhase: phase,
+      saveSheetMessage: message,
+      saveSheetStatus: 'pending',
+      phase: 'save-sheet',
+    });
   },
+
+  // ── confirmSave ────────────────────────────────────────────────────────────
   confirmSave: async () => {
-    throw new Error('Not implemented: confirmSave — see sub-plan 6');
-  },
-  dismissSaveSheet: () => {
-    throw new Error('Not implemented: dismissSaveSheet — see sub-plan 6');
-  },
-  incrementSavedCount: (_place) => {
-    throw new Error('Not implemented: incrementSavedCount — see sub-plan 6');
+    const { getToken, location, saveSheetMessage } = get();
+
+    set({ saveSheetStatus: 'saving' });
+
+    try {
+      const client = getToken ? getChatClient(getToken) : getChatClient(async () => '');
+      const res = await client.chat({
+        message: saveSheetMessage || '',
+        location,
+      });
+
+      if (res.type === 'extract-place' && res.data) {
+        const data = res.data as ExtractPlaceData;
+
+        if (data.status === 'resolved') {
+          // Resolved save — increment count and show snackbar
+          const place: SavedPlaceStub = {
+            place_id: data.place_id || '',
+            place_name: data.place.place_name || '',
+            address: data.place.address || '',
+            saved_at: new Date().toISOString(),
+            source_url: data.source_url,
+            thumbnail_url: data.place.thumbnail_url,
+          };
+          get().incrementSavedCount(place);
+          set({ phase: 'save-snackbar', saveSheetStatus: 'pending' });
+        } else if (data.status === 'duplicate') {
+          // Duplicate save — show duplicate state
+          set({
+            phase: 'save-duplicate',
+            saveSheetStatus: 'duplicate',
+            saveSheetOriginalSavedAt: data.original_saved_at || null,
+          });
+        } else {
+          // Unresolved — keep sheet in pending state
+          set({ saveSheetStatus: 'pending' });
+        }
+      }
+    } catch (_err) {
+      set({ saveSheetStatus: 'error' });
+    }
   },
 
-  // ── Stubbed — sub-plan 7 ───────────────────────────────────────────────────
+  // ── dismissSaveSheet ───────────────────────────────────────────────────────
+  dismissSaveSheet: () => {
+    const { preSavePhase, savedPlaceCount, tasteProfileConfirmed } = get();
+    const restorePhase = preSavePhase ?? pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
+    set({
+      phase: restorePhase,
+      preSavePhase: null,
+      saveSheetPlace: null,
+      saveSheetMessage: null,
+      saveSheetStatus: 'pending',
+    });
+  },
+
+  // ── incrementSavedCount ────────────────────────────────────────────────────
+  incrementSavedCount: (place) => {
+    incrementSavedPlaceCount();
+    appendSavedPlace(place);
+    const newCount = getSavedPlaceCount();
+    set({ savedPlaceCount: newCount });
+  },
+
+  // ── dismissAssistantReply ──────────────────────────────────────────────────
   dismissAssistantReply: () => {
-    throw new Error('Not implemented: dismissAssistantReply — see sub-plan 7');
+    const { thread } = get();
+    let found = false;
+
+    // Find last undismissed assistant/clarification entry and mark it dismissed
+    for (let i = thread.length - 1; i >= 0 && !found; i--) {
+      const entry = thread[i];
+      if (
+        entry.role === 'assistant' &&
+        (entry.type === 'assistant' || entry.type === 'clarification') &&
+        !entry.dismissed
+      ) {
+        const newThread = thread.map((e, idx) =>
+          idx === i ? { ...e, dismissed: true } : e
+        );
+        set({ thread: newThread });
+        found = true;
+      }
+    }
   },
 }));

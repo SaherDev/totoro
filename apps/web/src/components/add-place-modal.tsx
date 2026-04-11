@@ -5,10 +5,7 @@ import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Link as LinkIcon } from 'lucide-react';
 import { cn } from '@totoro/ui';
-import {
-  TotoroAddPlaceProcessing,
-  TotoroAddPlaceSuccess,
-} from '@/components/illustrations/totoro-illustrations';
+import { Illustration } from '@/components/illustrations/Illustration';
 
 type AddPlaceStep = 'input' | 'processing' | 'success';
 
@@ -181,7 +178,7 @@ export function AddPlaceModal({ isOpen, onClose, onSubmit }: AddPlaceModalProps)
                       className="p-8 flex flex-col items-center justify-center text-center"
                     >
                       <div className="w-20 h-20 mb-4">
-                        <TotoroAddPlaceProcessing />
+                        <Illustration id="add-place-processing" />
                       </div>
                       <h3 className="font-display text-lg text-foreground mb-1">
                         {t('addPlace.processing')}
@@ -205,7 +202,7 @@ export function AddPlaceModal({ isOpen, onClose, onSubmit }: AddPlaceModalProps)
                         animate={{ scale: [1, 1.1, 1] }}
                         transition={{ duration: 0.6, ease: 'easeInOut' }}
                       >
-                        <TotoroAddPlaceSuccess />
+                        <Illustration id="add-place-success" />
                       </motion.div>
                       <h3 className="font-display text-lg text-foreground mb-1">
                         {t('addPlace.success')}

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { TotoroExcited } from '@/components/illustrations/totoro-illustrations';
+import { Illustration } from '@/components/illustrations/Illustration';
 
 type ChipState = 'pending' | 'confirmed' | 'dismissed';
 
@@ -26,7 +26,7 @@ export function TasteProfileCelebration({ chips, onStartExploring }: TasteProfil
   return (
     <div className="flex flex-col items-center gap-6 py-8">
       <div className="h-32 w-32">
-        <TotoroExcited />
+        <Illustration id="excited" />
       </div>
 
       <div className="flex flex-col items-center gap-2 text-center">

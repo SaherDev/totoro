@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { TotoroIdleWelcoming } from '@/components/illustrations/totoro-illustrations';
+import { Illustration } from '@/components/illustrations/Illustration';
 
 type ErrorCategory = 'offline' | 'timeout' | 'server' | 'generic';
 
@@ -17,7 +17,7 @@ export function ConsultError({ error, onTryAgain }: ConsultErrorProps) {
   return (
     <div className="flex flex-col items-center gap-6 py-8">
       <div className="h-32 w-32">
-        <TotoroIdleWelcoming />
+        <Illustration id="idle-welcoming" />
       </div>
 
       <div className="flex flex-col items-center gap-2 text-center">

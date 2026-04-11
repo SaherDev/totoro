@@ -4,7 +4,7 @@
  */
 export interface ChatRequestDto {
   message: string;
-  location?: { lat: number; lng: number };
+  location?: { lat: number; lng: number } | null;
 }
 
 export type ChatResponseType =
@@ -46,11 +46,13 @@ export interface RecallItem {
   source_url: string | null;
   saved_at: string;
   match_reason: string;
+  thumbnail_url?: string;
 }
 
 export interface RecallResponseData {
   results: RecallItem[];
   total: number;
+  has_more: boolean;
 }
 
 export interface SavedPlaceStub {
@@ -58,6 +60,31 @@ export interface SavedPlaceStub {
   place_name: string;
   address: string;
   saved_at: string;
+  source_url: string | null;
+  thumbnail_url?: string;
+}
+
+export interface ExtractPlaceData {
+  place_id: string | null;
+  place: {
+    place_name: string | null;
+    address: string | null;
+    cuisine: string | null;
+    price_range: string | null;
+    thumbnail_url?: string;
+  };
+  confidence: number;
+  status: 'resolved' | 'unresolved' | 'duplicate';
+  requires_confirmation: boolean;
+  source_url: string | null;
+  original_saved_at?: string;
+}
+
+export interface SaveSheetPlace {
+  name: string;
+  source: string;
+  location: string;
+  thumbnail_url?: string;
 }
 
 /**
@@ -67,5 +94,5 @@ export interface SavedPlaceStub {
 export interface ChatResponseDto {
   type: ChatResponseType;
   message: string;
-  data: ConsultResponseData | RecallResponseData | Record<string, unknown> | null;
+  data: ConsultResponseData | RecallResponseData | ExtractPlaceData | Record<string, unknown> | null;
 }

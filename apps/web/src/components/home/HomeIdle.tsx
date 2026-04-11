@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { TotoroIdleWelcoming } from '@/components/illustrations/totoro-illustrations';
+import { Illustration } from '@/components/illustrations/Illustration';
 import { CONSULT_SUGGESTIONS } from '@/constants/home-suggestions';
 
 interface HomeIdleProps {
@@ -30,7 +30,7 @@ export function HomeIdle({ onSuggestionClick, firstName, savedCount }: HomeIdleP
       )}
 
       <div className="h-32 w-32">
-        <TotoroIdleWelcoming />
+        <Illustration id="idle-welcoming" />
       </div>
 
       <h2 className="text-center text-xl font-semibold text-foreground">

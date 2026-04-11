@@ -106,5 +106,71 @@
     "noSavedDesc": "התחל לשמור מקומות שאתה אוהב כדי לבנות את האוסף האישי שלך",
     "noHistory": "אין המלצות עדיין",
     "noHistoryDesc": "היסטוריית ההמלצות שלך תופיע כאן כשתחקור"
+  },
+  "flow3": {
+    "header": "נמצא בשמורים שלך",
+    "breadcrumb": "חיפוש בשמורים שלך…",
+    "modeOverride": "רוצה המלצה במקום?",
+    "provenance": "{source} • {savedAt} • {address}",
+    "emptyFooter": "כמעט תאומות. רוצה שאני אחפש עוד כאלה?"
+  },
+  "flow4": {
+    "sheetTitle": "שמור ל-Totoro",
+    "saveButton": "שמור ל-Totoro",
+    "saving": "שומר…",
+    "saved": "שמור!",
+    "savedSubline": "נוסף לאוסף שלך",
+    "duplicate": {
+      "headline": "כבר בשמורים שלך",
+      "savedDate": "שמור ב-{date}",
+      "viewButton": "הצג מקום שמור"
+    },
+    "error": {
+      "message": "לא הצלחתי לשמור את המקום הזה",
+      "tryAgain": "נסה שוב"
+    },
+    "undo": "בטל",
+    "tasteSignals": "אותות הטעם מתעדכנים."
+  },
+  "flow7": {
+    "headline": "שמור מקומות שאתה אוהב. אני אתרגם את השאר.",
+    "subline": "הדרך הקלה ביותר לשמור היא מ-TikTok או Instagram",
+    "step1": {
+      "title": "מצא מקום ב-TikTok",
+      "subtitle": "צפה בכך שמישהו חולק את הגילוי שלהם"
+    },
+    "step2": {
+      "title": "שתף את הווידאו",
+      "subtitle": "השתמש בכפתור שתף → העתק קישור"
+    },
+    "step3": {
+      "title": "הדבק כאן",
+      "subtitle": "אוציא את השם ואשמור אותו"
+    },
+    "pasteHint": "הדבק קישור או הקלד שם…",
+    "suggestion1": "ארוחת ערב זולה קרוב",
+    "suggestion2": "הקפה הטוב ביותר באזור"
+  },
+  "flow8": {
+    "headline": "ככל שתשמור יותר, אני אשתפר יותר.",
+    "subline": "Recall עובד עכשיו. Consult מראה מה טוב קרוב.",
+    "savedListEmpty": "אין מקומות שמורים עדיין",
+    "popularLabel": "פופולרי כרגע",
+    "popularFootnote": "כולם הלכו לשם. כשתשמור יותר, אמצא אותנות במקום.",
+    "starterPackLink": "חבילת ההתחלה של העיר"
+  },
+  "illustrations": {
+    "auth": "Totoro משחק שלום",
+    "idleWelcoming": "Totoro בעמדה משכנעת",
+    "raining": "Totoro בגשם",
+    "encouraging": "Totoro נראה מעודד",
+    "excited": "Totoro נראה התלהב",
+    "knowing": "Totoro עם חיוך שמכיר",
+    "welcomeBack": "Totoro מברך אותך חזרה",
+    "listen": "Totoro מאזין",
+    "empty": "Totoro מסתכל על מרחב ריק",
+    "addPlace": "Totoro מוסיף מקום",
+    "addPlaceProcessing": "Totoro מעבד נתוני מקום",
+    "addPlaceSuccess": "Totoro חוגג שמירה מוצלחת"
   }
 }

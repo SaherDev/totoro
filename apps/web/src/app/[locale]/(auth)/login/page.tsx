@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { TotoroAuth } from '@/components/illustrations/totoro-illustrations';
+import { Illustration } from '@/components/illustrations/Illustration';
 import { Mail } from 'lucide-react';
 import { useSignIn, useAuth } from '@clerk/nextjs';
 
@@ -49,7 +49,7 @@ export default function LoginPage() {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <TotoroAuth />
+          <Illustration id="auth" />
         </motion.div>
       </motion.div>
 

@@ -87,6 +87,8 @@ See `.claude/workflows.md` for the complete 5-step token-efficient workflow (ADR
 - **Deployment**: Vercel (frontend), Railway (backend + AI service + PostgreSQL + Redis). Redis is FastAPI-only. Docker Compose for local dev only.
 
 ## Active Technologies
+- TypeScript 5.x / Node 20 LTS + Next.js 16 (App Router), React 19, Zustand, Zod, Tailwind v3, shadcn/ui, next-intl, next-themes, Clerk v5 (012-home-subplans-3-7)
+- localStorage only (`totoro.savedCount`, `totoro.savedPlaces`, `totoro.tasteProfile`, `totoro.location`) — no DB changes (012-home-subplans-3-7)
 
 - TypeScript 5.x / Node 20 LTS + Next.js 16, Tailwind v3, shadcn/ui, next-intl, next-themes, tailwindcss-animate (already installed), framer-motion (pending approval), next/font/google (001-migrate-lovable-design)
 - N/A (frontend-only migration) (001-migrate-lovable-design)
