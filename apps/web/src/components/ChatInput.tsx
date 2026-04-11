@@ -3,7 +3,7 @@
 import { Camera, Paperclip, Plus, Send } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@totoro/ui";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@totoro/ui";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 import { cn } from "@totoro/ui";
 import { useTranslations } from "next-intl";
@@ -38,6 +38,15 @@ function ChatInput({ onSubmit, disabled, placeholder, className }: ChatInputProp
     }
   };
 
+  // Clear textarea whenever loading starts (e.g. from external submit buttons)
+  useEffect(() => {
+    if (disabled && inputRef.current) {
+      inputRef.current.value = "";
+      inputRef.current.style.height = "auto";
+      setHasContent(false);
+    }
+  }, [disabled]);
+
   const handleInput = () => {
     if (inputRef.current) {
       inputRef.current.style.height = "auto";
@@ -54,6 +63,7 @@ function ChatInput({ onSubmit, disabled, placeholder, className }: ChatInputProp
           ref={inputRef}
           onKeyDown={handleKeyDown}
           onInput={handleInput}
+          onChange={handleInput}
           placeholder={placeholder || t("placeholder")}
           disabled={disabled}
           rows={1}

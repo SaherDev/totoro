@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import type {
   ClientIntent,
   ConsultResponseData,
+  RecallResponseData,
   ReasoningStep,
   RecallItem,
   SavedPlaceStub,
@@ -25,6 +26,8 @@ export type ThreadEntry =
   | { id: string; role: 'assistant'; type: 'clarification'; message: string; dismissed?: boolean }
   | { id: string; role: 'assistant'; type: 'assistant'; message: string; dismissed?: boolean }
   | { id: string; role: 'assistant'; type: 'consult'; message: string; data: ConsultResponseData }
+  | { id: string; role: 'assistant'; type: 'save'; place: SaveExtractPlace; sourceUrl: string | null }
+  | { id: string; role: 'assistant'; type: 'recall'; message: string; data: RecallResponseData }
   | { id: string; role: 'assistant'; type: 'error'; category: 'offline' | 'timeout' | 'generic' | 'server'; flowId?: FlowId };
 
 interface HomeState {
@@ -98,10 +101,14 @@ interface HomeState {
   setSaveSheetSelectedIndex: (index: number) => void;
   confirmSave: () => Promise<void>;
   confirmPlaceSelection: () => void;
+  saveIndividualFromSheet: (place: SaveExtractPlace) => void;
+  closeSaveSheetWithResults: (savedPlaces: SaveExtractPlace[]) => void;
   dismissSaveSheet: () => void;
   dismissAssistantReply: () => void;
   incrementSavedCount: (place: SavedPlaceStub) => void;
   autoSavePlace: (place: SaveExtractPlace, sourceUrl: string | null) => void;
+  pushMessage: (message: string) => void;
+  pushRecallResults: (message: string, data: RecallResponseData) => void;
 }
 
 // Exported type for use in FlowDefinition — replaces the `any` forward declaration
@@ -532,7 +539,61 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       thumbnail_url: selectedPlace.thumbnail_url,
     };
     get().incrementSavedCount(place);
-    set({ phase: 'save-snackbar' });
+    const { savedPlaceCount, tasteProfileConfirmed, thread } = get();
+    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
+    const entry: ThreadEntry = {
+      id: nextId(),
+      role: 'assistant',
+      type: 'save',
+      place: selectedPlace,
+      sourceUrl: null,
+    };
+    set({
+      thread: [...thread, entry],
+      phase: restingPhase,
+      activeFlowId: null,
+      saveSheetPlaces: [],
+      saveSheetSelectedIndex: 0,
+      saveSheetMessage: null,
+      saveSheetStatus: 'pending',
+    });
+  },
+
+  // ── saveIndividualFromSheet ────────────────────────────────────────────────
+  // Saves one place inline — sheet stays open, no phase change.
+  saveIndividualFromSheet: (place) => {
+    const stub: SavedPlaceStub = {
+      place_id: place.place_id || `temp-${Date.now()}`,
+      place_name: place.place_name || 'Unknown place',
+      address: place.address || '',
+      saved_at: new Date().toISOString(),
+      source_url: null,
+      thumbnail_url: place.thumbnail_url,
+    };
+    get().incrementSavedCount(stub);
+  },
+
+  // ── closeSaveSheetWithResults ──────────────────────────────────────────────
+  // Called when the user dismisses the sheet. Pushes one thread entry per saved place.
+  closeSaveSheetWithResults: (savedPlaces) => {
+    const { savedPlaceCount, tasteProfileConfirmed, thread } = get();
+    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
+    const newEntries: ThreadEntry[] = savedPlaces.map((place) => ({
+      id: nextId(),
+      role: 'assistant' as const,
+      type: 'save' as const,
+      place,
+      sourceUrl: null,
+    }));
+    set({
+      thread: [...thread, ...newEntries],
+      phase: restingPhase,
+      activeFlowId: null,
+      saveSheetPlaces: [],
+      saveSheetSelectedIndex: 0,
+      saveSheetMessage: null,
+      saveSheetStatus: 'pending',
+    });
   },
 
   // ── dismissSaveSheet ───────────────────────────────────────────────────────
@@ -591,6 +652,44 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       thumbnail_url: place.thumbnail_url,
     };
     get().incrementSavedCount(savedPlace);
-    set({ phase: 'save-snackbar' });
+    const { savedPlaceCount, tasteProfileConfirmed, thread } = get();
+    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
+    const entry: ThreadEntry = { id: nextId(), role: 'assistant', type: 'save', place, sourceUrl };
+    set({
+      thread: [...thread, entry],
+      phase: restingPhase,
+      activeFlowId: null,
+      animationComplete: false,
+      fetchComplete: false,
+    });
+  },
+
+  // ── pushMessage ────────────────────────────────────────────────────────────
+  // Pushes a plain assistant message to the thread and resets to resting phase.
+  pushMessage: (message) => {
+    const { savedPlaceCount, tasteProfileConfirmed, thread } = get();
+    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
+    const entry: ThreadEntry = { id: nextId(), role: 'assistant', type: 'assistant', message };
+    set({
+      thread: [...thread, entry],
+      phase: restingPhase,
+      activeFlowId: null,
+      animationComplete: false,
+      fetchComplete: false,
+    });
+  },
+
+  // ── pushRecallResults ──────────────────────────────────────────────────────
+  pushRecallResults: (message, data) => {
+    const { savedPlaceCount, tasteProfileConfirmed, thread } = get();
+    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
+    const entry: ThreadEntry = { id: nextId(), role: 'assistant', type: 'recall', message, data };
+    set({
+      thread: [...thread, entry],
+      phase: restingPhase,
+      activeFlowId: null,
+      animationComplete: false,
+      fetchComplete: false,
+    });
   },
 }));

@@ -12,10 +12,18 @@ interface ColdStartOneFourProps {
 export function ColdStartOneFour({ store }: ColdStartOneFourProps) {
   const t = useTranslations('coldStartOneFour');
 
-  // Placeholder popular places — normally would come from API
+  // Popular places — clicking sends a realistic save message to the API
   const popularPlaces = [
-    { name: 'Popular Ramen Spot', area: 'Sukhumvit' },
-    { name: 'Local Coffee Shop', area: 'Silom' },
+    {
+      label: 'Sushi Sora Bangkok',
+      area: 'Sukhumvit · Omakase',
+      message: '📍Sushi Sora Bangkok Sukhumvit amazing omakase, I only eat omakase',
+    },
+    {
+      label: 'Roots Coffee Roaster',
+      area: 'Ekamai · Specialty coffee',
+      message: '📍Roots Coffee Roaster Ekamai Bangkok best single origin coffee',
+    },
   ];
 
   // Dummy discovery data for city starter pack
@@ -82,10 +90,10 @@ export function ColdStartOneFour({ store }: ColdStartOneFourProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              onClick={() => store.submit(place.name)}
+              onClick={() => store.submit(place.message)}
               className="w-full rounded-2xl border border-border bg-muted px-4 py-3 text-start text-sm text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             >
-              <p className="font-medium">{place.name}</p>
+              <p className="font-medium">{place.label}</p>
               <p className="text-xs text-muted-foreground">{place.area}</p>
             </motion.button>
           ))}

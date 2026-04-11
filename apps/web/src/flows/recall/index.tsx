@@ -2,49 +2,50 @@ import { z } from 'zod';
 import type { RecallResponseData } from '@totoro/shared';
 import type { FlowDefinition } from '../flow-definition';
 import type { HomeStoreApi } from '@/store/home-store';
-import { RecallResults } from './RecallResults';
+
+
 import { recallFixture } from './recall.fixtures';
 
+// Loose schema — normalization happens in onResponse
 const RecallResponseDataSchema = z.object({
-  results: z.array(
-    z.object({
-      place_id: z.string(),
-      place_name: z.string(),
-      address: z.string(),
-      cuisine: z.string().nullable(),
-      price_range: z.string().nullable(),
-      source_url: z.string().nullable(),
-      saved_at: z.string(),
-      match_reason: z.string(),
-      thumbnail_url: z.string().optional(),
-    })
-  ),
-  total: z.number(),
-  has_more: z.boolean(),
-});
+  results: z.array(z.record(z.string(), z.unknown())),
+}).passthrough();
 
-export const recallFlow: FlowDefinition<RecallResponseData> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- schema is loose; normalization happens in onResponse
+export const recallFlow: FlowDefinition<any> = {
   id: 'recall',
   matches: { clientIntent: 'recall', responseType: 'recall' },
-  phase: 'recall',
+  phase: 'thinking',
   inputPlaceholderKey: 'recall.placeholder',
   schema: RecallResponseDataSchema,
   fixture: recallFixture,
   onResponse: (res, store: HomeStoreApi) => {
     if (res.type === 'recall' && res.data) {
-      const data = res.data as RecallResponseData;
-      store.setRecallResults?.(data.results, data.has_more);
+      const raw = res.data as Record<string, unknown>;
+      const rawResults = (raw['results'] as Array<Record<string, unknown>>) ?? [];
+
+      const data: RecallResponseData = {
+        results: rawResults.map((r) => ({
+          place_id: (r['place_id'] as string) ?? '',
+          place_name: (r['place_name'] as string) ?? '',
+          address: (r['address'] as string) ?? '',
+          cuisine: (r['cuisine'] as string | null) ?? null,
+          price_range: (r['price_range'] as string | null) ?? null,
+          source_url: (r['source_url'] as string | null) ?? null,
+          saved_at: (r['saved_at'] as string) ?? '',
+          match_reason: (r['match_reason'] as string) ?? '',
+          thumbnail_url: r['thumbnail_url'] as string | undefined,
+        })),
+        total: (raw['total'] as number) ?? rawResults.length,
+        has_more: (raw['has_more'] as boolean) ?? false,
+      };
+
+      if (data.results.length > 0) {
+        store.pushRecallResults(res.message || 'Found in your saves', data);
+      } else {
+        store.pushMessage(res.message || "I couldn't find anything matching that in your saved places.");
+      }
     }
   },
-  Component: ({ store }) => (
-    <RecallResults
-      results={store.recallResults || []}
-      hasMore={store.recallHasMore}
-      breadcrumb={store.recallBreadcrumb}
-      onModeOverride={() => {
-        // Switch from recall to consult (recommendation mode)
-        // This will be implemented in Phase 8
-      }}
-    />
-  ),
+  Component: () => null,
 };

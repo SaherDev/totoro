@@ -13,6 +13,8 @@ import { ColdStartZero } from '@/flows/cold-start-zero/ColdStartZero';
 import { ColdStartOneFour } from '@/flows/cold-start-1-4/ColdStartOneFour';
 import { UserBubble } from '@/components/home/UserBubble';
 import { AssistantBubble } from '@/components/home/AssistantBubble';
+import { SaveResultBubble } from '@/components/home/SaveResultBubble';
+import { RecallResultBubble } from '@/components/home/RecallResultBubble';
 import { ConsultError } from '@/components/home/ConsultError';
 import { SaveError } from '@/components/home/SaveError';
 import { ConsultResult } from '@/flows/consult/ConsultResult';
@@ -27,16 +29,16 @@ function ThreadEntryView({ entry, store }: { entry: ThreadEntry; store: HomeStor
     return <UserBubble content={entry.content} />;
   }
   if (entry.type === 'clarification' || entry.type === 'assistant') {
-    return (
-      <AssistantBubble
-        message={entry.message}
-        type={entry.type}
-        onDismiss={!entry.dismissed ? () => store.dismissAssistantReply() : undefined}
-      />
-    );
+    return <AssistantBubble message={entry.message} type={entry.type} />;
   }
   if (entry.type === 'consult') {
     return <ConsultResult message={entry.message} result={entry.data} />;
+  }
+  if (entry.type === 'save') {
+    return <SaveResultBubble place={entry.place} sourceUrl={entry.sourceUrl} />;
+  }
+  if (entry.type === 'recall') {
+    return <RecallResultBubble message={entry.message} data={entry.data} />;
   }
   if (entry.type === 'error') {
     return null; // ConsultError needs onTryAgain — handled inline below
@@ -63,9 +65,11 @@ export default function HomePage() {
     }
   }, [store.thread.length, store.activeFlowId]);
 
-  const placeholderKey = store.activeFlowId
+  // Only show flow-specific placeholder during idle/resting states — clear it during any active phase
+  const RESTING_PHASES: Set<string> = new Set(['idle', 'cold-0', 'cold-1-4', 'taste-profile']);
+  const placeholderKey = (store.activeFlowId && RESTING_PHASES.has(store.phase))
     ? FLOW_REGISTRY[store.activeFlowId].inputPlaceholderKey
-    : 'consult.placeholder';
+    : 'chat.placeholder';
 
   const hasThread = store.thread.length > 0;
 
@@ -132,7 +136,21 @@ export default function HomePage() {
             />
           )}
 
-          {/* Active in-progress flow — thinking animation */}
+          {/* Universal thinking indicator — shown for any flow while waiting for API */}
+          {store.phase === 'thinking' && store.activeFlowId !== 'consult' && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground py-1">
+              <div className="flex gap-1">
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:0ms]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:150ms]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:300ms]" />
+              </div>
+              <span className="truncate max-w-[220px] text-muted-foreground/70">
+                {store.activeFlowId === 'save' ? 'Looking up your place…' : 'Working on it…'}
+              </span>
+            </div>
+          )}
+
+          {/* Active in-progress flow component */}
           {store.activeFlowId && (() => {
             const FlowComponent = FLOW_REGISTRY[store.activeFlowId].Component;
             return <FlowComponent store={store} />;
@@ -148,6 +166,7 @@ export default function HomePage() {
             <div className="p-2">
               <ChatInput
                 onSubmit={store.submit}
+                disabled={store.phase === 'thinking'}
                 placeholder={t(placeholderKey as Parameters<typeof t>[0])}
               />
             </div>

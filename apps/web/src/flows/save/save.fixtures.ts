@@ -3,54 +3,17 @@ import type { ChatRequestDto, ChatResponseDto, ExtractPlaceData } from '@totoro/
 export async function saveFixture(req: ChatRequestDto): Promise<ChatResponseDto> {
   const { message } = req;
 
-  // Keyed fixtures by exact match
-  if (message === 'tiktok.com/@foodie/ramen123') {
+  // High confidence — auto-save
+  if (message.toLowerCase().includes('sushi sora')) {
     const data: ExtractPlaceData = {
       places: [
         {
-          place_id: 'place-1',
-          place_name: 'Fuji Ramen Bangkok',
-          address: '123 Sukhumvit Soi 33, Bangkok',
-          cuisine: 'ramen',
-          price_range: 'low',
-          confidence: 0.92,
-          status: 'resolved',
-        },
-        {
-          place_id: 'place-1b',
-          place_name: 'Fuji Ramen Siam',
-          address: '456 Rama I Rd, Bangkok',
-          cuisine: 'ramen',
-          price_range: 'low',
-          confidence: 0.87,
-          status: 'resolved',
-        },
-      ],
-      requires_confirmation: false,
-      source_url: 'https://www.tiktok.com/@foodie/ramen123',
-    };
-    return { type: 'extract-place', message: '', data };
-  }
-
-  if (message === 'Paste Bangkok restaurant') {
-    const data: ExtractPlaceData = {
-      places: [
-        {
-          place_id: 'place-2',
-          place_name: 'Paste Restaurant',
-          address: '69 Sukhumvit Soi 49, Bangkok',
-          cuisine: 'thai',
-          price_range: 'medium',
-          confidence: 0.78,
-          status: 'resolved',
-        },
-        {
-          place_id: 'place-2b',
-          place_name: 'Paste Seasonal Cuisine',
-          address: '125 Sukhumvit Soi 25, Bangkok',
-          cuisine: 'thai',
-          price_range: 'medium',
-          confidence: 0.72,
+          place_id: 'place-sushi-sora-bkk',
+          place_name: 'Sushi Sora Bangkok',
+          address: 'Sukhumvit Soi 26, Khlong Toei, Bangkok 10110',
+          cuisine: 'omakase',
+          price_range: 'high',
+          confidence: 0.94,
           status: 'resolved',
         },
       ],
@@ -60,36 +23,65 @@ export async function saveFixture(req: ChatRequestDto): Promise<ChatResponseDto>
     return { type: 'extract-place', message: '', data };
   }
 
-  if (message === 'Fuji Ramen Bangkok') {
+  // TikTok URL — high confidence, auto-save
+  if (message.includes('tiktok.com')) {
     const data: ExtractPlaceData = {
       places: [
         {
-          place_id: 'place-1',
-          place_name: 'Fuji Ramen Bangkok',
-          address: '123 Sukhumvit Soi 33, Bangkok',
-          cuisine: 'ramen',
-          price_range: 'low',
-          confidence: 0.99,
-          status: 'duplicate',
-          original_saved_at: '2026-02-12T14:30:00Z',
+          place_id: 'place-sushi-sora-bkk',
+          place_name: 'Sushi Sora Bangkok',
+          address: 'Sukhumvit Soi 26, Khlong Toei, Bangkok 10110',
+          cuisine: 'omakase',
+          price_range: 'high',
+          confidence: 0.91,
+          status: 'resolved',
         },
       ],
       requires_confirmation: false,
+      source_url: message,
+    };
+    return { type: 'extract-place', message: '', data };
+  }
+
+  // Below threshold — show confirmation list
+  if (message.toLowerCase().includes('coffee') || message.toLowerCase().includes('cafe')) {
+    const data: ExtractPlaceData = {
+      places: [
+        {
+          place_id: 'place-cafe-1',
+          place_name: 'Roots Coffee Roaster',
+          address: '34/1 Sukhumvit Soi 26, Khlong Toei, Bangkok',
+          cuisine: 'cafe',
+          price_range: 'low',
+          confidence: 0.62,
+          status: 'resolved',
+        },
+        {
+          place_id: 'place-cafe-2',
+          place_name: 'Pacamara Boutique Coffee',
+          address: '39 Sukhumvit Soi 31, Watthana, Bangkok',
+          cuisine: 'cafe',
+          price_range: 'low',
+          confidence: 0.55,
+          status: 'resolved',
+        },
+      ],
+      requires_confirmation: true,
       source_url: null,
     };
     return { type: 'extract-place', message: '', data };
   }
 
-  // Unknown — low confidence, requires confirmation
+  // Default — low confidence, requires confirmation
   const data: ExtractPlaceData = {
     places: [
       {
         place_id: null,
-        place_name: null,
+        place_name: message,
         address: null,
         cuisine: null,
         price_range: null,
-        confidence: 0.35,
+        confidence: 0.45,
         status: 'unresolved',
       },
     ],

@@ -9,13 +9,21 @@ import { SaveFlow } from './SaveFlow';
 export const saveFlow: FlowDefinition<any> = {
   id: 'save',
   matches: { clientIntent: 'save', responseType: 'extract-place' },
-  phase: 'save-sheet',
+  phase: 'thinking',
   inputPlaceholderKey: 'home.suggestions.save',
   schema: ExtractPlaceDataSchema,
   fixture: saveFixture,
   onResponse: (res, store: HomeStoreApi) => {
     if (res.type === 'extract-place' && res.data) {
       const rawData = res.data as Record<string, unknown>;
+
+      // Provisional — API is still processing the URL in the background
+      if (rawData['provisional'] === true) {
+        store.pushMessage(
+          "We're working on saving your place. It's being processed in the background and will be added to your list shortly.",
+        );
+        return;
+      }
 
       // Normalize places — real API uses extraction_status, fixtures use status
       const rawPlaces = (rawData['places'] as Array<Record<string, unknown>>) ?? [];
@@ -35,19 +43,8 @@ export const saveFlow: FlowDefinition<any> = {
 
       const sourceUrl = (rawData['source_url'] as string | null) ?? null;
 
-      // Determine if ALL places are high-confidence (≥ 0.7) and resolved
-      const allHighConfidence = places.length > 0 &&
-        places.every((p) => (p.confidence ?? 0) >= 0.7 && p.status !== 'unresolved');
-
-      if (allHighConfidence) {
-        const firstResolved = places.find((p) => p.place_id);
-        if (firstResolved) {
-          store.autoSavePlace(firstResolved, sourceUrl);
-          return;
-        }
-      }
-
-      // Some or all places need confirmation — show selection sheet
+      // Always show the sheet — high-confidence places auto-mark as saved on open,
+      // low-confidence ones show Confirm. User sees everything that was extracted.
       if (places.length > 0) {
         store.openSaveSheet(store.query || '', places);
       }

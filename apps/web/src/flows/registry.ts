@@ -3,17 +3,20 @@ import type { FlowDefinition, FlowId } from './flow-definition';
 import type { ChatResponseType, ClientIntent } from '@totoro/shared';
 import { consultFlow } from './consult';
 import { saveFlow } from './save';
+import { recallFlow } from './recall';
 
 function stubFlow(id: FlowId, responseType: ChatResponseType, clientIntent?: ClientIntent): FlowDefinition {
   return {
     id,
     matches: { responseType, ...(clientIntent ? { clientIntent } : {}) },
-    phase: 'idle',
-    inputPlaceholderKey: 'home.idle.placeholder',
+    phase: 'thinking',
+    inputPlaceholderKey: 'chat.placeholder',
     schema: z.unknown(),
     fixture: async () => ({ type: responseType, message: '', data: null }),
-    // eslint-disable-next-line @typescript-eslint/no-empty-function -- stub replaced when flow is registered in its sub-plan
-    onResponse: () => {},
+    onResponse: (res, store) => {
+      // Generic fallback: push the message to the thread if the API returned one
+      if (res.message) store.pushMessage(res.message);
+    },
     Component: () => null,
   };
 }
@@ -23,7 +26,7 @@ function stubFlow(id: FlowId, responseType: ChatResponseType, clientIntent?: Cli
 // The `satisfies` constraint ensures every FlowId is present at compile time.
 export const FLOW_REGISTRY = {
   consult: consultFlow,
-  recall: stubFlow('recall', 'recall', 'recall'),
+  recall: recallFlow,
   save: saveFlow,
   assistant: stubFlow('assistant', 'assistant', 'assistant'),
   clarification: stubFlow('clarification', 'clarification'),
