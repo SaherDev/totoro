@@ -1,8 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronRight } from 'lucide-react';
 import type { SaveExtractPlace } from '@totoro/shared';
 
 interface SaveSheetProps {
@@ -15,116 +13,95 @@ interface SaveSheetProps {
   originalSavedAt?: string | null;
 }
 
-function PlaceOption({ place, isSelected, onSelect }: { place: SaveExtractPlace; isSelected: boolean; onSelect: () => void }) {
+function SavePlaceCard({
+  place,
+  index,
+  onSave,
+}: {
+  place: SaveExtractPlace;
+  index: number;
+  onSave: () => void;
+}) {
   const needsConfirmation = place.confidence !== undefined && place.confidence < 0.7;
   const confidencePercent = place.confidence ? Math.round(place.confidence * 100) : null;
 
   return (
-    <motion.button
-      key={place.place_id}
-      onClick={onSelect}
-      className={`w-full rounded-2xl border-2 px-4 py-3 text-start transition-all ${
-        isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-muted/50'
-      }`}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="flex items-center gap-3 rounded-2xl border border-border bg-background p-3"
     >
-      <div className="flex items-start gap-3">
-        {/* Thumbnail placeholder */}
-        <div className="h-16 w-16 flex-shrink-0 rounded-lg bg-muted" />
+      {/* Thumbnail */}
+      <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-muted" />
 
-        {/* Place info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <h3 className="font-semibold text-foreground truncate">{place.place_name || 'Unknown place'}</h3>
-            {needsConfirmation && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-100 font-medium whitespace-nowrap flex-shrink-0">
-                Confirm
-              </span>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground truncate">{place.address}</p>
-          <div className="flex items-center gap-2 mt-1">
-            {place.cuisine && <p className="text-xs text-muted-foreground">{place.cuisine}</p>}
-            {confidencePercent && (
-              <p className="text-xs text-muted-foreground">{confidencePercent}% match</p>
-            )}
-          </div>
-        </div>
-
-        {/* Selection indicator */}
-        <div className="flex-shrink-0">
-          {isSelected ? (
-            <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-              <Check className="h-4 w-4 text-primary-foreground" />
-            </div>
-          ) : (
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          )}
-        </div>
+      {/* Place info */}
+      <div className="flex-1 min-w-0">
+        <h3 className="font-semibold text-foreground text-sm truncate">
+          {place.place_name || 'Unknown place'}
+        </h3>
+        <p className="text-xs text-muted-foreground mt-0.5 truncate">
+          {place.cuisine && `${place.cuisine} • `}
+          {place.price_range && `${place.price_range} • `}
+          {place.address || (confidencePercent ? `${confidencePercent}% match` : 'Tap to confirm')}
+        </p>
       </div>
-    </motion.button>
+
+      {/* Save/Confirm button */}
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={onSave}
+        className={`flex-shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+          needsConfirmation
+            ? 'border border-amber-500/50 bg-amber-50 text-amber-900 hover:bg-amber-100 dark:bg-amber-950 dark:text-amber-100 dark:hover:bg-amber-900'
+            : 'border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10'
+        }`}
+      >
+        {needsConfirmation ? 'Confirm' : '+ Save'}
+      </motion.button>
+    </motion.div>
   );
 }
 
-export function SaveSheet({ places, selectedIndex, status, onSelectPlace, onConfirm, onCancel, originalSavedAt }: SaveSheetProps) {
-  const t = useTranslations('save');
-  const selectedPlace = places[selectedIndex];
-  const isDuplicate = selectedPlace?.status === 'duplicate';
-  const isUnresolved = selectedPlace?.status === 'unresolved';
+export function SaveSheet({ places, status, onSelectPlace, onConfirm, onCancel }: SaveSheetProps) {
+  const handleSave = (index: number) => {
+    onSelectPlace(index);
+    onConfirm();
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
-      className="rounded-2xl border border-border bg-background p-6 shadow-lg"
-    >
+    <div className="flex flex-col gap-4">
       {/* Header */}
-      <h3 className="font-display text-lg text-foreground mb-4">{t('heading')}</h3>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">Did you mean one of these?</h2>
+          <p className="text-xs text-muted-foreground mt-1">Tap to save. Confirm if unsure.</p>
+        </div>
+        <button
+          onClick={onCancel}
+          disabled={status === 'saving'}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+        >
+          Cancel
+        </button>
+      </div>
 
-      {/* Places list */}
-      <div className="space-y-2 mb-6 max-h-64 overflow-y-auto">
+      {/* Results list */}
+      <div className="space-y-2">
         <AnimatePresence>
           {places.map((place, idx) => (
-            <PlaceOption
-              key={place.place_id}
+            <SavePlaceCard
+              key={place.place_id ?? `place-${idx}`}
               place={place}
-              isSelected={idx === selectedIndex}
-              onSelect={() => onSelectPlace(idx)}
+              index={idx}
+              onSave={() => handleSave(idx)}
             />
           ))}
         </AnimatePresence>
       </div>
 
-      {/* Duplicate warning */}
-      {isDuplicate && originalSavedAt && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-4 rounded-lg bg-amber-50 dark:bg-amber-950 p-3 text-sm"
-        >
-          <p className="text-amber-900 dark:text-amber-100">
-            {t('duplicate', { date: new Date(originalSavedAt).toLocaleDateString() })}
-          </p>
-        </motion.div>
-      )}
-
-      {/* Unresolved/uncertain warning */}
-      {isUnresolved && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-4 rounded-lg bg-blue-50 dark:bg-blue-950 p-3 text-sm"
-        >
-          <p className="text-blue-900 dark:text-blue-100">
-            We're not sure about this place. Please confirm it's the right one, or try a different search.
-          </p>
-        </motion.div>
-      )}
-
-      {/* Status message */}
+      {/* Status messages */}
       <AnimatePresence>
         {status === 'saving' && (
           <motion.p
@@ -132,9 +109,9 @@ export function SaveSheet({ places, selectedIndex, status, onSelectPlace, onConf
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="text-sm text-muted-foreground mb-4 text-center"
+            className="text-sm text-muted-foreground text-center"
           >
-            {t('saving')}
+            Saving…
           </motion.p>
         )}
         {status === 'error' && (
@@ -143,35 +120,19 @@ export function SaveSheet({ places, selectedIndex, status, onSelectPlace, onConf
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="text-sm text-destructive mb-4 text-center"
+            className="text-sm text-destructive text-center"
           >
-            {t('error')}
+            Couldn't save. Try again.
           </motion.p>
         )}
       </AnimatePresence>
 
-      {/* Actions */}
-      <div className="flex gap-3">
-        <button
-          onClick={onCancel}
-          disabled={status === 'saving'}
-          className="flex-1 px-4 py-2.5 rounded-xl border border-border text-foreground font-body text-sm hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {t('cancel')}
-        </button>
-        <button
-          onClick={onConfirm}
-          disabled={status === 'saving'}
-          className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-body text-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isDuplicate ? t('saveDuplicate') : t('confirm')}
-        </button>
-      </div>
-
-      {/* Undo link for taste signals */}
-      <button className="mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center">
-        {t('undoLink')}
-      </button>
-    </motion.div>
+      {/* Empty state */}
+      {places.length === 0 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-6">
+          <p className="text-sm text-muted-foreground">No places found</p>
+        </motion.div>
+      )}
+    </div>
   );
 }
