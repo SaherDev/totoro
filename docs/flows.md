@@ -53,8 +53,8 @@ ThreadEntry =
 1. Input clears, thinking indicator appears ("Working on it…")
 2. `ConsultThinking` — animated reasoning steps appear one by one as the API streams (intent_parsing → retrieval → discovery → validation → ranking → completion)
 3. Once both API response and animation are done → `ConsultResult` is pushed to thread:
-   - Primary result card: place name, address, reasoning
-   - Up to 2 alternative cards
+   - Primary result card: place name, address, reasoning (`bg-card` white)
+   - Up to 2 alternative cards (`bg-card` white)
 4. Phase resets to resting
 
 **Thread entry pushed:** `type: 'consult'`
@@ -75,6 +75,7 @@ ThreadEntry =
    - If `provisional: true` → friendly message pushed to thread, sheet skipped
    - Otherwise → `SaveSheet` opens
 3. `SaveSheet`:
+   - Each card has a `PlaceAvatar` (marble avatar seeded by place name)
    - High-confidence places (≥70%) auto-marked Saved on open
    - Low-confidence places show an amber **Confirm** button
    - Each card saves inline on tap — button transitions to ✓ Saved badge, list stays open
@@ -97,7 +98,7 @@ ThreadEntry =
 **What the user sees:**
 1. Input clears, universal thinking indicator appears
 2. API responds:
-   - Results found → `RecallResultBubble` pushed to thread: list of place cards (name, address, cuisine, match reason, saved date)
+   - Results found → `RecallResultBubble` pushed to thread: list of place cards, each with a `PlaceAvatar` (marble, 48px), place name, cuisine/price/address, italic match reason, saved date
    - No results → plain assistant message pushed
 3. Phase resets to resting
 
@@ -123,19 +124,20 @@ ThreadEntry =
 
 ## Flow 5 — Discovery
 
-**What it does:** Show a browseable list of nearby places (no AI recommendation needed).
+**What it does:** Show a browseable list of nearby places inline. Saves are silent — no thread bubble, no phase change.
 
-**Trigger:** Programmatic — e.g., "See what's popular" button in ColdStartOneFour.
+**Trigger:** Programmatic — "City starter pack" button in ColdStartOneFour, or other in-app triggers.
 
 **Phase path:** Stays in current resting phase (no API call)
 
 **What the user sees:**
 - `DiscoveryResults` appears in the scrollable area:
   - Title (the query), "One tap to save. Real places." subtitle
-  - Cards: place name, cuisine, price range, address, **+ Save** button
-- Tapping Save → opens SaveSheet for that place (confidence auto-set to 0.95)
+  - Cards: `PlaceAvatar` (marble), place name, cuisine · price · address, **+ Save** button
+- Tapping Save → button animates to **✓ Saved** badge inline. No SaveSheet, no thread bubble.
+- `saveQuiet` is called: saves to localStorage, increments count, no thread entry.
 
-**Thread entries pushed:** Via SaveSheet on close (`type: 'save'`)
+**Thread entries pushed:** None — discovery saves are fully silent.
 
 ---
 
@@ -146,9 +148,17 @@ ThreadEntry =
 **Trigger:** `savedPlaceCount === 0` on hydration.
 
 **What the user sees** (`ColdStartZero`):
-- Mascot illustration (raining)
-- Headline + numbered onboarding steps
-- Two suggestion buttons to save a first place
+- Mascot illustration (raining), centered
+- Headline: "Save places you love. / I'll figure out the rest." (`text-3xl`, `whitespace-pre-line`)
+- Subtitle: "The easiest way to save is from TikTok or Instagram"
+- 3 instructional step cards with gold/amber numbered badges (`bg-card` white):
+  1. "Find a place on TikTok or Instagram" / "Any post, reel, or video mentioning a place"
+  2. "Tap Share → Totoro" / "No need to open the app or copy any link"
+  3. "I extract and save it automatically" / "Place name, location, and context — done"
+- Paste hint: "or paste a link or type a name below"
+- 2 quoted suggestion buttons (`bg-card` white):
+  - `"Cheap dinner nearby, not crowded"`
+  - `"Something romantic for tonight"`
 
 **On button click:** `store.submit(suggestionText)` → enters save flow.
 
@@ -163,9 +173,14 @@ ThreadEntry =
 **Trigger:** `1 ≤ savedPlaceCount ≤ 4` on hydration.
 
 **What the user sees** (`ColdStartOneFour`):
-- Mascot illustration (encouraging)
-- "Popular nearby" place buttons — each submits a full realistic save message
-- **"See what's popular in Bangkok"** button → triggers Discovery flow inline
+- **Totoro message bubble** — small encouraging illustration + chat bubble: "The more you save, the better I get." + subtitle
+- **Saved places list** — up to 3 most recent saves from localStorage, each with `PlaceAvatar` + place name + source domain · city
+- **"What's good nearby"** section:
+  - Dashed amber-border card (`border-dashed border-accent/60 bg-accent/5`)
+  - "Popular right now" label, place name, tags (cuisine · price · distance · Open now), italic save hint
+- **Split action pill** — one rounded pill with a vertical divider:
+  - Left: "Already have places saved?" → `store.submit('recall a saved place')`
+  - Right: "City starter pack" (bold) → `store.setDiscoveryResults(...)` → Discovery inline
 
 **Exits to:** `taste-profile` once `savedPlaceCount >= 5`.
 
@@ -215,6 +230,37 @@ ThreadEntry =
 
 ---
 
+## Place Avatars
+
+All place card thumbnails across the app use `PlaceAvatar` — a `boring-avatars` marble SVG generated deterministically from the place name. No real photos are loaded.
+
+**Palette:** `#c8956c · #e8c99a · #7d9e7e · #4a7c59 · #d4a853` (Ghibli warm tones)
+
+**Used in:** SaveSheet, RecallResultBubble, DiscoveryResults, RecallResults, ColdStartOneFour saved places list.
+
+---
+
+## Card Background Rule
+
+All card surfaces use `bg-card` (pure white). The page background is warm cream (`bg-background`). Cards must contrast against it.
+
+**`bg-card`:** SaveSheet cards, RecallResultBubble cards, DiscoveryResults cards, ConsultResult cards, AlternativeCards, SaveResultBubble, SavedSnackbar, modals, ColdStartZero step cards, suggestion buttons.
+
+**`bg-muted`:** Thumbnail placeholders (when no avatar), skeleton loaders, toggle pills — never card containers.
+
+---
+
+## Save Action Reference
+
+| Action | Thread bubble | Phase change | Use case |
+|---|---|---|---|
+| `autoSavePlace(place, sourceUrl)` | ✓ yes | ✓ → resting | High-confidence auto-save from SaveSheet |
+| `saveIndividualFromSheet(place)` | ✗ no | ✗ no | Per-card save inside open SaveSheet |
+| `closeSaveSheetWithResults(places)` | ✓ one per place | ✓ → resting | Sheet Done button |
+| `saveQuiet(place)` | ✗ no | ✗ no | Discovery / starter pack inline save |
+
+---
+
 ## Flow Registry
 
 ```
@@ -225,10 +271,10 @@ FLOW_BY_CLIENT_INTENT:
   assistant    → assistantStub
 
 FLOW_BY_RESPONSE_TYPE:
-  consult      → consultFlow
+  consult       → consultFlow
   extract-place → saveFlow
-  recall       → recallFlow
-  assistant    → assistantStub
+  recall        → recallFlow
+  assistant     → assistantStub
   clarification → clarificationStub
   error         → (handled inline)
 ```
@@ -244,9 +290,12 @@ FLOW_BY_RESPONSE_TYPE:
 | `apps/web/src/flows/registry.ts` | Flow registry maps (by intent and by response type) |
 | `apps/web/src/flows/flow-definition.ts` | `FlowDefinition` interface, `FlowId`, `HomePhase` types |
 | `apps/web/src/flows/consult/` | ConsultThinking animation, ConsultResult card, schema, fixtures |
-| `apps/web/src/flows/save/` | SaveSheet, SaveFlow, onResponse normalization, fixtures |
+| `apps/web/src/flows/save/` | SaveSheet (with PlaceAvatar), SaveFlow, onResponse normalization, fixtures |
 | `apps/web/src/flows/recall/` | RecallFlow (null render), onResponse normalization, fixtures |
-| `apps/web/src/flows/discovery/` | DiscoveryResults card list |
-| `apps/web/src/flows/cold-start-zero/` | ColdStartZero empty state |
-| `apps/web/src/flows/cold-start-1-4/` | ColdStartOneFour empty state + discovery trigger |
+| `apps/web/src/flows/discovery/` | DiscoveryResults — inline save via `saveQuiet`, PlaceAvatar |
+| `apps/web/src/flows/cold-start-zero/` | ColdStartZero — 3-step onboarding, gold badges, quoted suggestions |
+| `apps/web/src/flows/cold-start-1-4/` | ColdStartOneFour — chat bubble, saved list, nearby card, split pill |
+| `apps/web/src/components/PlaceAvatar.tsx` | `boring-avatars` marble avatar, Ghibli palette, seeded by name |
 | `apps/web/src/components/home/` | HomeIdle, TasteProfileCelebration, UserBubble, AssistantBubble, SaveResultBubble, RecallResultBubble, ConsultError, SaveError |
+| `apps/web/src/app/layout.tsx` | Root layout — viewport meta, DM Serif Display + DM Sans fonts |
+| `apps/web/src/app/globals.css` | CSS tokens, animations, Ghibli warm palette |
