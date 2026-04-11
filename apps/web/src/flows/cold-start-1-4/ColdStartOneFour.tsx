@@ -53,7 +53,10 @@ export function ColdStartOneFour({ store }: ColdStartOneFourProps) {
         </div>
 
         {/* Starter pack link */}
-        <button className="w-full rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3 text-center text-sm font-medium text-primary hover:bg-primary/10 transition-colors">
+        <button
+          onClick={() => store.submit(t('starterPackLink'))}
+          className="w-full rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3 text-center text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+        >
           {t('starterPackLink')}
         </button>
       </div>
