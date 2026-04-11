@@ -41,8 +41,6 @@ export const saveFlow: FlowDefinition<any> = {
           ?? (p['extraction_status'] === 'below_threshold' ? 'unresolved' : undefined),
       }));
 
-      const sourceUrl = (rawData['source_url'] as string | null) ?? null;
-
       // Always show the sheet — high-confidence places auto-mark as saved on open,
       // low-confidence ones show Confirm. User sees everything that was extracted.
       if (places.length > 0) {
