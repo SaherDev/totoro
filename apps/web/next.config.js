@@ -3,7 +3,7 @@
 const { composePlugins, withNx } = require('@nx/next');
 const path = require('path');
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333/api/v1';
+const API_BASE_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333/api/v1';
 
 /**
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
