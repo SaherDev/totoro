@@ -20,7 +20,7 @@ import { useTranslations } from "next-intl";
 import { PastePreview } from "./PastePreview";
 
 interface ChatInputProps {
-  onSend: (message: string) => void;
+  onSubmit: (message: string) => void;
   disabled?: boolean;
   placeholder?: string;
   className?: string;
@@ -29,7 +29,7 @@ interface ChatInputProps {
 }
 
 function ChatInput({
-  onSend,
+  onSubmit,
   disabled,
   placeholder,
   className,
@@ -37,7 +37,7 @@ function ChatInput({
   onListeningChange,
 }: ChatInputProps) {
   const t = useTranslations("chat");
-  const [value, setValue] = useState("");
+  const [hasContent, setHasContent] = useState(false);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
@@ -45,13 +45,14 @@ function ChatInput({
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = () => {
-    const trimmed = value.trim();
+    const trimmed = inputRef.current?.value.trim() ?? "";
     if (!trimmed || disabled) return;
-    onSend(trimmed);
-    setValue("");
+    onSubmit(trimmed);
     if (inputRef.current) {
+      inputRef.current.value = "";
       inputRef.current.style.height = "auto";
     }
+    setHasContent(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -66,6 +67,7 @@ function ChatInput({
       inputRef.current.style.height = "auto";
       inputRef.current.style.height =
         Math.min(inputRef.current.scrollHeight, 240) + "px";
+      setHasContent(inputRef.current.value.trim().length > 0);
     }
   };
 
@@ -166,8 +168,6 @@ function ChatInput({
 
         <textarea
           ref={inputRef}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onInput={handleInput}
           onPaste={handlePaste}
@@ -298,10 +298,10 @@ function ChatInput({
               <TooltipTrigger asChild>
                 <button
                   onClick={handleSubmit}
-                  disabled={disabled || !value.trim()}
+                  disabled={disabled || !hasContent}
                   className={cn(
                     "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition-all duration-200",
-                    value.trim()
+                    hasContent
                       ? "bg-primary text-primary-foreground shadow-totoro-sm hover:shadow-totoro-md active:scale-95"
                       : "bg-muted text-muted-foreground",
                   )}

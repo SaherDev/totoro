@@ -593,7 +593,7 @@ export const consultFlow: FlowDefinition<ConsultResponseData> = {
     responseType: "consult",
   },
   phase: "thinking", // entry phase — ConsultDispatcher handles thinking→result internally
-  inputPlaceholderKey: "home.consultPlaceholder",
+  inputPlaceholderKey: "consult.placeholder",
   schema: ConsultResponseDataSchema,
   fixture: consultFixture,
   onResponse: (res, store) => {
@@ -709,12 +709,12 @@ interface Props {
 }
 
 const FLOW_2_STEPS = [
-  { key: "understanding", i18nKey: "flow2.steps.understanding" },
-  { key: "savedPlaces", i18nKey: "flow2.steps.savedPlaces" },
-  { key: "discovering", i18nKey: "flow2.steps.discovering" },
-  { key: "openNow", i18nKey: "flow2.steps.openNow" },
-  { key: "comparing", i18nKey: "flow2.steps.comparing" },
-  { key: "found", i18nKey: "flow2.steps.found" },
+  { key: "understanding", i18nKey: "consult.steps.understanding" },
+  { key: "savedPlaces", i18nKey: "consult.steps.savedPlaces" },
+  { key: "discovering", i18nKey: "consult.steps.discovering" },
+  { key: "openNow", i18nKey: "consult.steps.openNow" },
+  { key: "comparing", i18nKey: "consult.steps.comparing" },
+  { key: "found", i18nKey: "consult.steps.found" },
 ];
 ```
 

@@ -1,0 +1,2 @@
+export const TASTE_MATCH_ARC_PLACEHOLDER = 78;
+export const COMMUNITY_PROOF_COUNT = 142;

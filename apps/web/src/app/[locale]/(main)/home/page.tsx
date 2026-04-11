@@ -1,38 +1,63 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useMemo } from 'react';
+import { useAuth } from '@clerk/nextjs';
+import { useTranslations } from 'next-intl';
 import { NavBar, NavBarLogo, NavBarActions } from '@/components/NavBar';
 import { ProfileMenu } from '@/components/profile-menu';
 import { ChatInput } from '@/components/ChatInput';
-import { ChatMessage } from '@/components/ChatMessage';
-import { HomeEmptyState } from '@/components/home-empty-state';
+import { HomeIdle } from '@/components/home/HomeIdle';
+import { HomeGreeting } from '@/components/home/HomeGreeting';
+import { TasteProfileCelebration } from '@/components/home/TasteProfileCelebration';
+import { ClarificationHint } from '@/components/layout/ClarificationHint';
+import { TASTE_CHIP_BANK } from '@/constants/home-suggestions';
 import { TotoroCard } from '@totoro/ui';
-
-type MessageItem = {
-  id: string;
-  type: 'user';
-  content: string;
-};
+import { useHomeStore } from '@/store/home-store';
+import { FLOW_REGISTRY } from '@/flows/registry';
 
 export default function HomePage() {
-  const [messages, setMessages] = useState<MessageItem[]>([]);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const { userId, getToken } = useAuth();
+  const t = useTranslations();
+
+  const store = useHomeStore();
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    store.hydrate();
+    store.init({ userId: userId ?? null, getToken: async () => (await getToken()) ?? '' });
+  }, []); // intentional: run once on mount — hydrate reads localStorage, init seeds auth
+
+  const placeholderKey = store.activeFlowId
+    ? FLOW_REGISTRY[store.activeFlowId].inputPlaceholderKey
+    : 'consult.placeholder';
+
+  const content = useMemo(() => {
+    // Flow state — delegate to the active flow's component
+    if (store.activeFlowId) {
+      const FlowComponent = FLOW_REGISTRY[store.activeFlowId].Component;
+      return <FlowComponent store={store} />;
     }
-  }, [messages]);
 
-  const handleSend = (text: string) => {
-    setMessages((prev) => [
-      ...prev,
-      { id: `user-${Date.now()}`, type: 'user', content: text },
-    ]);
-  };
+    // Resting phases
+    switch (store.phase) {
+      case 'idle':
+        return <HomeIdle onSuggestionClick={store.submit} />;
+      case 'cold-0':
+      case 'cold-1-4':
+        // Placeholder — components built in sub-plans 7 & 8
+        return <div />;
+      case 'taste-profile':
+        return <TasteProfileCelebration chips={TASTE_CHIP_BANK} onStartExploring={store.confirmTasteProfile} />;
+      case 'error':
+        // Placeholder — ConsultError wired when consult flow is active
+        return <div />;
+      case 'hydrating':
+      default:
+        return null;
+    }
+  }, [store.phase, store.activeFlowId, store.submit]);
 
-  const isEmpty = messages.length === 0;
+  // Render nothing until hydration resolves — prevents flash of wrong phase
+  if (!store.hydrated) return null;
 
   return (
     <div className="flex h-screen flex-col bg-background">
@@ -44,39 +69,24 @@ export default function HomePage() {
         </NavBarActions>
       </NavBar>
 
-      {/* Message Area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+      {/* Scrollable message area */}
+      <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-2xl px-4 py-6">
-          <AnimatePresence mode="wait">
-            {isEmpty ? (
-              <HomeEmptyState
-                key="empty"
-                onSuggestion={handleSend}
-                isVoiceMode={false}
-                isListening={false}
-              />
-            ) : (
-              <motion.div
-                key="messages"
-                className="flex flex-col gap-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                {messages.map((msg) => (
-                  <ChatMessage key={msg.id} role="user" content={msg.content} />
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <HomeGreeting phase={store.phase} />
+          {content}
         </div>
       </div>
 
-      {/* Chat Input */}
+      {/* Always-mounted input bar */}
       <div className="px-4 pb-4 md:pb-6">
         <div className="mx-auto w-full max-w-2xl">
+          <ClarificationHint message={store.clarificationMessage} />
           <TotoroCard elevation="floating" className="overflow-hidden">
             <div className="p-2">
-              <ChatInput onSend={handleSend} />
+              <ChatInput
+                onSubmit={store.submit}
+                placeholder={t(placeholderKey as Parameters<typeof t>[0])}
+              />
             </div>
           </TotoroCard>
         </div>

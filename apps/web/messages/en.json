@@ -12,16 +12,66 @@
     "clickHere": "Click here"
   },
   "home": {
-    "whereTo": "What's on your mind?",
-    "moodPrompt": "Tell me what you're in the mood for, or paste a place link to save it",
-    "listening": "Listening...",
-    "tapToTalk": "Tap to talk",
-    "voicePrompt": "Describe the place you're looking for with your voice",
     "suggestions": {
       "consult": "Cheap dinner nearby",
       "save": "Save this place link",
       "recall": "Recall a saved place"
+    },
+    "idle": {
+      "headline": "Where to tonight?"
     }
+  },
+  "consult": {
+    "placeholder": "What are you in the mood for?",
+    "header": {
+      "thinkingAbout": "Thinking about"
+    },
+    "steps": {
+      "intent_parsing": "Understanding your request",
+      "retrieval": "Searching your saved places",
+      "discovery": "Discovering nearby options",
+      "validation": "Checking what's open",
+      "ranking": "Ranking by your taste",
+      "completion": "Found your match"
+    },
+    "result": {
+      "header": "Here's your pick",
+      "divider": "You might also like",
+      "communityProof": "{count} people visited this week",
+      "source": {
+        "saved": "From your saves",
+        "discovered": "Newly discovered"
+      },
+      "actions": {
+        "directions": "Directions",
+        "call": "Call",
+        "share": "Share",
+        "menu": "Menu"
+      }
+    },
+    "error": {
+      "offline": {
+        "headline": "You're offline",
+        "body": "Check your connection and try again."
+      },
+      "timeout": {
+        "headline": "That took too long",
+        "body": "The request timed out. Try again."
+      },
+      "server": {
+        "headline": "Something went wrong",
+        "body": "Our service is having trouble. Try again in a moment."
+      },
+      "generic": {
+        "headline": "Couldn't get a recommendation",
+        "body": "Something unexpected happened. Try again."
+      }
+    }
+  },
+  "tasteProfile": {
+    "headline": "Your taste profile is ready!",
+    "subline": "Based on the places you've saved, here's what I know about you.",
+    "cta": "Start exploring"
   },
   "profile": {
     "designSystem": "Design System",

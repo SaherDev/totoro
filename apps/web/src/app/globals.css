@@ -65,6 +65,19 @@
     /* --- Font Variables (set by next/font) --- */
     --font-display: Georgia, serif;
     --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+    /* --- Color token aliases (referenced by tailwind.preset.ts) --- */
+    --color-surface: var(--background);
+    --color-surface-raised: var(--card);
+    --color-text-primary: var(--foreground);
+    --color-text-secondary: var(--muted-foreground);
+    --color-text-tertiary: var(--muted-foreground);
+    --color-accent-gold: 33 85% 41%;        /* Rich gold — borders, strokes, CTAs */
+    --color-accent-gold-soft: 33 72% 91%;   /* Warm cream — reasoning block bg */
+    --color-forest: 93 57% 24%;             /* Deep forest green — chip text */
+    --color-forest-soft: 93 41% 85%;        /* Light green — chip background */
+    --color-cream: var(--cream);
+    --color-warm-white: var(--warm-white);
   }
 
   /* Dark mode variants */
@@ -115,6 +128,14 @@
     --cream: 40 30% 90%;
     --warm-white: 40 60% 92%;
     --sidebar-background: 25 10% 17%;
+
+    /* --- Color token aliases (dark mode) --- */
+    --color-accent-gold: 38 78% 58%;
+    --color-accent-gold-soft: 33 30% 20%;
+    --color-forest: 93 41% 60%;
+    --color-forest-soft: 93 30% 22%;
+    --color-cream: var(--cream);
+    --color-warm-white: var(--warm-white);
   }
 }
 
