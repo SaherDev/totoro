@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { FlowDefinition, FlowId } from './flow-definition';
 import type { ChatResponseType, ClientIntent } from '@totoro/shared';
 import { consultFlow } from './consult';
+import { saveFlow } from './save';
 
 function stubFlow(id: FlowId, responseType: ChatResponseType, clientIntent?: ClientIntent): FlowDefinition {
   return {
@@ -23,7 +24,7 @@ function stubFlow(id: FlowId, responseType: ChatResponseType, clientIntent?: Cli
 export const FLOW_REGISTRY = {
   consult: consultFlow,
   recall: stubFlow('recall', 'recall', 'recall'),
-  save: stubFlow('save', 'extract-place', 'save'),
+  save: saveFlow,
   assistant: stubFlow('assistant', 'assistant', 'assistant'),
   clarification: stubFlow('clarification', 'clarification'),
 } as const satisfies Record<FlowId, FlowDefinition>;
