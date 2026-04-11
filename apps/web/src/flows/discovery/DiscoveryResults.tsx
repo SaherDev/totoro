@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+import { Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { HomeStoreApi } from '@/store/home-store';
 
@@ -17,13 +19,31 @@ interface DiscoveryResultsProps {
   store: HomeStoreApi;
 }
 
-function DiscoveryCard({ place, index, onSave }: { place: DiscoveryPlace; index: number; onSave: () => void }) {
+function DiscoveryCard({ place, index, store }: { place: DiscoveryPlace; index: number; store: HomeStoreApi }) {
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = () => {
+    if (saved) return;
+    setSaved(true);
+    store.autoSavePlace(
+      {
+        place_id: place.place_id,
+        place_name: place.place_name,
+        cuisine: place.cuisine ?? null,
+        price_range: place.price_range ?? null,
+        address: place.address,
+        confidence: 0.95,
+      },
+      null
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="flex items-center gap-3 rounded-2xl border border-border bg-background p-3"
+      className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
     >
       {/* Thumbnail placeholder */}
       <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-muted" />
@@ -38,15 +58,30 @@ function DiscoveryCard({ place, index, onSave }: { place: DiscoveryPlace; index:
         </p>
       </div>
 
-      {/* Save button */}
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={onSave}
-        className="flex-shrink-0 rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
-      >
-        + Save
-      </motion.button>
+      {/* Save button — toggles inline */}
+      <AnimatePresence mode="wait">
+        {saved ? (
+          <motion.div
+            key="saved"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex-shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800"
+          >
+            <Check className="h-3 w-3" strokeWidth={2.5} />
+            Saved
+          </motion.div>
+        ) : (
+          <motion.button
+            key="save"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleSave}
+            className="flex-shrink-0 rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+          >
+            + Save
+          </motion.button>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -68,16 +103,7 @@ export function DiscoveryResults({ places, query, store }: DiscoveryResultsProps
               key={place.place_id}
               place={place}
               index={idx}
-              onSave={() => store.openSaveSheet(place.place_name, [
-                {
-                  place_id: place.place_id,
-                  place_name: place.place_name,
-                  cuisine: place.cuisine ?? null,
-                  price_range: place.price_range ?? null,
-                  address: place.address,
-                  confidence: 0.95,
-                }
-              ])}
+              store={store}
             />
           ))}
         </AnimatePresence>

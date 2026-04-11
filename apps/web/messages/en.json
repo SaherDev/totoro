@@ -139,23 +139,23 @@
     "tasteSignals": "Taste signals updating."
   },
   "coldStartZero": {
-    "headline": "Save places you love. I'll figure out the rest.",
+    "headline": "Save places you love.\nI'll figure out the rest.",
     "subline": "The easiest way to save is from TikTok or Instagram",
     "step1": {
-      "title": "Find a place on TikTok",
-      "subtitle": "Watch a food creator share their discovery"
+      "title": "Find a place on TikTok or Instagram",
+      "subtitle": "Any post, reel, or video mentioning a place"
     },
     "step2": {
-      "title": "Share the video",
-      "subtitle": "Use the share button → copy link"
+      "title": "Tap Share → Totoro",
+      "subtitle": "No need to open the app or copy any link"
     },
     "step3": {
-      "title": "Paste it here",
-      "subtitle": "I'll extract the name and save it"
+      "title": "I extract and save it automatically",
+      "subtitle": "Place name, location, and context — done"
     },
-    "pasteHint": "Paste a link or type a name…",
-    "suggestion1": "Cheap dinner nearby",
-    "suggestion2": "Best coffee in the area"
+    "pasteHint": "or paste a link or type a name below",
+    "suggestion1": "\"Cheap dinner nearby, not crowded\"",
+    "suggestion2": "\"Something romantic for tonight\""
   },
   "coldStartOneFour": {
     "headline": "The more you save, the better I get.",

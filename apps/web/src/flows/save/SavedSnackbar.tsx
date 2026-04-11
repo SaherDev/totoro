@@ -29,7 +29,7 @@ export function SavedSnackbar({ placeName, onUndo, onDismiss }: SavedSnackbarPro
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.3 }}
-      className="rounded-2xl border border-border bg-background p-4 shadow-lg"
+      className="rounded-2xl border border-border bg-card p-4 shadow-lg"
     >
       <div className="flex items-center gap-3">
         {/* Success icon */}

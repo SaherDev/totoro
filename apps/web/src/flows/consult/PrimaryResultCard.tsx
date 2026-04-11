@@ -14,7 +14,7 @@ export function PrimaryResultCard({ result, children }: PrimaryResultCardProps) 
   const t = useTranslations('consult.result');
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm [animation:card-enter_300ms_cubic-bezier(0.34,1.56,0.64,1)_forwards]">
+    <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm [animation:card-enter_300ms_cubic-bezier(0.34,1.56,0.64,1)_forwards]">
       {/* Hero photo (16:9, 110px tall) */}
       <div className="relative h-[110px] w-full overflow-hidden bg-muted">
         {result.photos?.hero ? (

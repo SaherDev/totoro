@@ -83,7 +83,7 @@ export function AddPlaceModal({ isOpen, onClose, onSubmit }: AddPlaceModalProps)
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="pointer-events-auto mx-4 w-full max-w-md rounded-2xl bg-background shadow-lg border border-border">
+            <div className="pointer-events-auto mx-4 w-full max-w-md rounded-2xl bg-card shadow-lg border border-border">
               <div className="relative overflow-hidden">
                 <AnimatePresence mode="wait">
                   {step === 'input' && (
@@ -130,7 +130,7 @@ export function AddPlaceModal({ isOpen, onClose, onSubmit }: AddPlaceModalProps)
                                 handleSubmit();
                               }
                             }}
-                            className="w-full pl-9 pr-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            className="w-full pl-9 pr-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                           />
                         </div>
 

@@ -11,7 +11,7 @@ interface AlternativeCardProps {
 export function AlternativeCard({ alt, delayMs = 0 }: AlternativeCardProps) {
   return (
     <article
-      className="overflow-hidden rounded-xl border border-border bg-background p-3 [animation:alt-enter_400ms_ease_forwards]"
+      className="overflow-hidden rounded-xl border border-border bg-card p-3 [animation:alt-enter_400ms_ease_forwards]"
       style={{ animationDelay: `${delayMs}ms`, opacity: 0 }}
     >
       {/* 1:1 photo */}

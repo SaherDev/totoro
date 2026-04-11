@@ -30,7 +30,7 @@ function SavePlaceCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="flex items-center gap-3 rounded-2xl border border-border bg-background p-3"
+      className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
     >
       {/* Thumbnail */}
       <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-muted" />

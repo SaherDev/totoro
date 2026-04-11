@@ -24,7 +24,7 @@ export function SaveResultBubble({ place, sourceUrl }: SaveResultBubbleProps) {
       className="flex gap-2 transition-opacity duration-200"
       style={{ opacity: visible ? 1 : 0 }}
     >
-      <div className="rounded-2xl rounded-bl-sm bg-muted px-4 py-3 flex gap-3 items-start max-w-[85%]">
+      <div className="rounded-2xl rounded-bl-sm bg-card px-4 py-3 border border-border flex gap-3 items-start max-w-[85%]">
         {/* Check badge */}
         <div className="flex-shrink-0 mt-0.5 h-6 w-6 rounded-full bg-green-100 dark:bg-green-950 flex items-center justify-center">
           <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />

@@ -18,7 +18,7 @@ function RecallResultCard({ item, index }: { item: RecallItem; index: number }) 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="rounded-2xl border border-border bg-muted p-4"
+      className="rounded-2xl border border-border bg-card p-4"
     >
       <div className="flex gap-3">
         {/* Thumbnail placeholder */}
