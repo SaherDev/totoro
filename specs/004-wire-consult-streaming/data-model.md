@@ -3,7 +3,7 @@
 **Feature**: 001-wire-consult-streaming
 **Date**: 2026-03-18
 
-No database schema changes. No new tables, columns, or Prisma migrations.
+No database schema changes. No new tables, columns, or migrations.
 
 ---
 

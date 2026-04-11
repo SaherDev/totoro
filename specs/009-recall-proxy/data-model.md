@@ -98,6 +98,6 @@ recall(payload: AiRecallPayload): Promise<AiRecallResponse>
 
 ---
 
-## No Prisma Changes
+## No Schema Changes
 
-Recall results are not persisted. The `recommendations` table stores consult results only. No migration needed.
+Recall results are not persisted. No migration needed.

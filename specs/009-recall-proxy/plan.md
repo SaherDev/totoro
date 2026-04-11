@@ -77,7 +77,7 @@ services/api/src/
 └── recall.bru                           CREATE — Bruno test file (external repo)
 ```
 
-**No changes to**: `recall-response.dto.ts`, `app.module.ts`, `prisma/`, `libs/shared/`
+**No changes to**: `recall-response.dto.ts`, `app.module.ts`, `libs/shared/`
 
 **Structure Decision**: NestJS single-project pattern. All changes are within `services/api/src/`. Bruno file goes to the external `totoro-config` repo at `/Users/saher/dev/repos/totoro-dev/totoro-config/bruno/nestjs-api/`. No new modules or projects created.
 

@@ -6,7 +6,7 @@
 
 ## Overview
 
-This feature has no new database tables or Prisma schema changes. It introduces DTOs for HTTP contract validation and reuses the existing `AiExtractPlacePayload` / `AiExtractPlaceResponse` interfaces from `ai-service-client.interface.ts`.
+This feature has no database tables or schema changes. It introduces DTOs for HTTP contract validation and reuses the existing `AiExtractPlacePayload` / `AiExtractPlaceResponse` interfaces from `ai-service-client.interface.ts`.
 
 ---
 

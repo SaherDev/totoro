@@ -229,7 +229,7 @@ These tasks set up the infrastructure that both the client and service depend on
 
 ## Notes
 
-- **No database changes required** — recall is a pure proxy; no Prisma migrations
+- **No database changes required** — recall is a pure proxy; no schema changes
 - **No auth middleware added** — `user_id` from request body (per task spec)
 - **Future work**: `@RequiresAi()` guard and `user_id` from Clerk auth (ADR-022)
 - **Tests are optional but recommended** — this task list includes unit + manual tests for completeness; core implementation is T001–T008

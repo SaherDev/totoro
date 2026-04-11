@@ -8,7 +8,7 @@ NestJS has exactly four responsibilities:
 
 1. Authenticate every request (Clerk)
 2. Forward AI requests to totoro-ai with user context
-3. Write product data to PostgreSQL (users, user_settings, recommendations)
+3. Write product data to PostgreSQL (users, user_settings) via TypeORM
 4. Serve user CRUD
 
 NestJS NEVER: calls LLMs, generates embeddings, runs vector search, calls Google Places API, writes place/embedding/taste_model records, or touches Redis. If a task requires any of these, it belongs in totoro-ai.
@@ -33,13 +33,13 @@ Current binding decisions:
 - **ADR-001**: Nx (not Turborepo)
 - **ADR-003**: YAML config for non-secrets, shell env vars for secrets, no `.env` files
 - **ADR-004**: Clerk for auth everywhere
-- **ADR-005**: Prisma as ORM and schema owner for all tables
+- **ADR-035**: TypeORM as the ORM for services/api (supersedes ADR-005)
 - **ADR-007**: Tailwind v3 + shadcn/ui (not v4)
 - **ADR-010**: `/api/v1/` global prefix via constant in `libs/shared`
 - **ADR-012**: YAML ConfigModule, `ConfigService` for all config access
 - **ADR-013**: `ClerkAuthGuard` global + `@Public()` opt-out
 - **ADR-014**: One NestJS module per domain
-- **ADR-015**: `PrismaService` as global singleton
+- **ADR-035**: TypeORM with `synchronize: true`, two entities (users, user_settings)
 - **ADR-016**: `AiServiceClient` for all forwarding to totoro-ai
 - **ADR-017**: Global `ValidationPipe` with `whitelist: true, forbidNonWhitelisted: true, transform: true`
 - **ADR-018**: Global `AllExceptionsFilter` for AI service error mapping
@@ -50,28 +50,26 @@ Current binding decisions:
 
 ## IV. Configuration Rules
 
-- Non-secret config → `config/dev.yml` / `config/prod.yml` / `config/test.yml`
-- Secrets → per-repo local files (`.env.local` for NestJS and Next.js, `config/.local.yaml` for FastAPI), gitignored
-- No `.env` files committed — developers create these locally with their own secret values
+- Non-secret config → `services/api/config/app.yaml` (NestJS), `apps/web/next.config.js` (Next.js)
+- Secrets → `.env.local` in each service (gitignored, symlinked from `totoro-config/secrets/`). FastAPI uses `config/.local.yaml`
+- No `.env` or secret files committed — developers create these locally with their own secret values
 - Constants shared across apps → `libs/shared/src/lib/constants.ts`
 - Nothing hardcoded: URLs, ports, thresholds, labels must come from config or a named constant
 
 ## V. Database Write Ownership
 
-- NestJS writes: `users`, `user_settings`, `recommendations`
-- FastAPI writes: `places`, `embeddings`, `taste_model`
-- Prisma owns all migrations
-- Embedding dimension in Prisma must stay in sync with FastAPI's model output
+- NestJS writes: `users`, `user_settings` (via TypeORM with `synchronize: true`)
+- FastAPI writes: `places`, `embeddings`, `taste_model`, `consult_logs`, `user_memories`, `interaction_log`
+- Alembic in totoro-ai owns all AI-table migrations
+- pgvector columns are owned entirely by totoro-ai's Alembic migrations — NestJS never defines vector columns
 
 ## VI. AI Service Contract
 
-Three endpoints, all via `AiServiceClient`:
+Single endpoint (ADR-036), via `AiServiceClient`:
 
-- `POST /v1/extract-place` — 10s timeout
-- `POST /v1/consult` — 20s timeout (supports `stream: true` for SSE proxy mode)
-- `POST /v1/recall` — 20s timeout
+- `POST /v1/chat` — 30s timeout; totoro-ai classifies intent and returns a discriminated `ChatResponseDto`.
 
-Base URL: `ai_service.base_url` in YAML config (add to `.local.yaml` for local dev: `http://localhost:8000`).
+Base URL: `AI_SERVICE_BASE_URL` env var (`.env.local` locally, Railway variable in production).
 Full schema in `docs/api-contract.md`. Response DTOs must tolerate extra fields (forward-compatible, `@IsOptional()` on all AI response fields).
 
 ## VII. Frontend Standards

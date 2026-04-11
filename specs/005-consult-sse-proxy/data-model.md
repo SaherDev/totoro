@@ -7,7 +7,7 @@
 
 ## No New Database Tables
 
-This feature introduces no new Prisma schema changes. The consult endpoint forwards to totoro-ai and optionally stores the result in the `recommendations` table (existing). SSE proxying is stateless pass-through.
+This feature introduces no schema changes. The consult endpoint forwards to totoro-ai and returns the response. SSE proxying is stateless pass-through.
 
 ---
 

@@ -45,7 +45,7 @@
 - `places.service.ts` — one method `extractPlace()` calling `aiClient.extractPlace()`
 - `dto/extract-place-request.dto.ts` — `raw_input: string` with `class-validator` decorators
 
-**Rationale:** ADR-014 (one module per domain), ADR-032 (facade controller), ADR-033 (inject via `IAiServiceClient`). Mirrors exactly how `ConsultModule` is structured. Controller is a pure facade. Service makes one AI client call. No Prisma, no business logic.
+**Rationale:** ADR-014 (one module per domain), ADR-032 (facade controller), ADR-033 (inject via `IAiServiceClient`). Mirrors exactly how `ConsultModule` is structured. Controller is a pure facade. Service makes one AI client call. No DB, no business logic.
 
 **Alternatives considered:**
 - Adding to `AppController`: Rejected — violates ADR-014 (one module per domain)
