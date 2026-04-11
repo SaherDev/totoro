@@ -1,5 +1,6 @@
 'use client';
 
+import { UtensilsCrossed } from 'lucide-react';
 import type { ConsultPlace } from '@totoro/shared';
 
 interface AlternativeCardProps {
@@ -22,7 +23,9 @@ export function AlternativeCard({ alt, delayMs = 0 }: AlternativeCardProps) {
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="h-full w-full bg-gradient-to-br from-muted to-muted/60" />
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted via-muted/80 to-muted/60">
+            <UtensilsCrossed className="h-6 w-6 text-muted-foreground/30" />
+          </div>
         )}
       </div>
 

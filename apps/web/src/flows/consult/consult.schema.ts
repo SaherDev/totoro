@@ -8,10 +8,10 @@ const ConsultPlaceSchema = z.object({
   source: z.enum(['saved', 'discovered']),
   photos: z
     .object({
-      hero: z.string().optional(),
-      square: z.string().optional(),
+      hero: z.string().nullish(),
+      square: z.string().nullish(),
     })
-    .optional(),
+    .nullish(),
 });
 
 const ReasoningStepSchema = z.object({

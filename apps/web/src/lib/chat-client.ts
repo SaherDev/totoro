@@ -5,7 +5,6 @@ import { classifyIntent } from './classify-intent';
 
 export interface ChatClientOptions {
   message: string;
-  userId: string;
   location: { lat: number; lng: number } | null;
   signal?: AbortSignal;
 }
@@ -22,10 +21,9 @@ function categorizeError(err: unknown): 'offline' | 'timeout' | 'server' | 'gene
 
 function makeRealChatClient(getToken: () => Promise<string>): ChatClient {
   return {
-    async chat({ message, userId, location, signal }) {
+    async chat({ message, location, signal }) {
       const token = await getToken();
       const body: ChatRequestDto = {
-        user_id: userId,
         message,
         ...(location ? { location } : {}),
       };

@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { UtensilsCrossed } from 'lucide-react';
 import type { ConsultPlace } from '@totoro/shared';
 import { cn } from '@totoro/ui';
 
@@ -23,7 +24,9 @@ export function PrimaryResultCard({ result, children }: PrimaryResultCardProps) 
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="h-full w-full bg-gradient-to-br from-muted to-muted/60" />
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted via-muted/80 to-muted/60">
+            <UtensilsCrossed className="h-10 w-10 text-muted-foreground/30" />
+          </div>
         )}
 
         {/* Place name overlay */}
