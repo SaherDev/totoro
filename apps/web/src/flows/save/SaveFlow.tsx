@@ -24,7 +24,16 @@ export function SaveFlow({ store }: SaveFlowProps) {
           selectedIndex={saveSheetSelectedIndex}
           status={saveSheetStatus}
           onSelectPlace={(index) => store.setSaveSheetSelectedIndex(index)}
-          onConfirm={() => store.confirmSave()}
+          onConfirm={() => {
+            // For unresolved places, save directly without API call
+            // For resolved places, confirm through API
+            const selectedPlace = saveSheetPlaces[saveSheetSelectedIndex];
+            if (selectedPlace?.status === 'unresolved' || !selectedPlace?.place_id) {
+              store.confirmPlaceSelection();
+            } else {
+              store.confirmSave();
+            }
+          }}
           onCancel={() => store.dismissSaveSheet()}
           originalSavedAt={saveSheetOriginalSavedAt}
         />

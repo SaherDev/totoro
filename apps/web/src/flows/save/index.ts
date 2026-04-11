@@ -26,8 +26,24 @@ export const saveFlow: FlowDefinition<ExtractPlaceData> = {
         }
       }
 
-      // If confirmation needed OR any unresolved places, show selection sheet
-      store.openSaveSheet(store.query || '', data.places);
+      // If confirmation needed, unresolved, or any candidates exist, show selection sheet
+      // This lets user pick which place to save (even with uncertain/low-confidence candidates)
+      if (data.places.length > 0) {
+        store.openSaveSheet(store.query || '', data.places);
+      } else {
+        // No places extracted at all — show error
+        store.openSaveSheet(store.query || '', [
+          {
+            place_id: null,
+            place_name: 'Could not identify place',
+            address: 'Please try a different description',
+            cuisine: null,
+            price_range: null,
+            confidence: 0,
+            status: 'unresolved',
+          },
+        ]);
+      }
     }
   },
   Component: SaveFlow,

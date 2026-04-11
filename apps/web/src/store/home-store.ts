@@ -97,6 +97,7 @@ interface HomeState {
   openSaveSheet: (message: string, places: SaveExtractPlace[]) => void;
   setSaveSheetSelectedIndex: (index: number) => void;
   confirmSave: () => Promise<void>;
+  confirmPlaceSelection: () => void;
   dismissSaveSheet: () => void;
   dismissAssistantReply: () => void;
   incrementSavedCount: (place: SavedPlaceStub) => void;
@@ -508,6 +509,26 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     } catch (_err) {
       set({ saveSheetStatus: 'error' });
     }
+  },
+
+  // ── confirmPlaceSelection ─────────────────────────────────────────────────────
+  confirmPlaceSelection: () => {
+    const { saveSheetPlaces, saveSheetSelectedIndex } = get();
+    const selectedPlace = saveSheetPlaces[saveSheetSelectedIndex];
+
+    if (!selectedPlace) return;
+
+    // Save the selected place (even if uncertain/unresolved)
+    const place: SavedPlaceStub = {
+      place_id: selectedPlace.place_id || `temp-${Date.now()}`,
+      place_name: selectedPlace.place_name || 'Unknown place',
+      address: selectedPlace.address || '',
+      saved_at: new Date().toISOString(),
+      source_url: null,
+      thumbnail_url: selectedPlace.thumbnail_url,
+    };
+    get().incrementSavedCount(place);
+    set({ phase: 'save-snackbar' });
   },
 
   // ── dismissSaveSheet ───────────────────────────────────────────────────────

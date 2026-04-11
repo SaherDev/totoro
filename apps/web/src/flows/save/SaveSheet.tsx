@@ -71,6 +71,7 @@ export function SaveSheet({ places, selectedIndex, status, onSelectPlace, onConf
   const t = useTranslations('save');
   const selectedPlace = places[selectedIndex];
   const isDuplicate = selectedPlace?.status === 'duplicate';
+  const isUnresolved = selectedPlace?.status === 'unresolved';
 
   return (
     <motion.div
@@ -106,6 +107,19 @@ export function SaveSheet({ places, selectedIndex, status, onSelectPlace, onConf
         >
           <p className="text-amber-900 dark:text-amber-100">
             {t('duplicate', { date: new Date(originalSavedAt).toLocaleDateString() })}
+          </p>
+        </motion.div>
+      )}
+
+      {/* Unresolved/uncertain warning */}
+      {isUnresolved && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 rounded-lg bg-blue-50 dark:bg-blue-950 p-3 text-sm"
+        >
+          <p className="text-blue-900 dark:text-blue-100">
+            We're not sure about this place. Please confirm it's the right one, or try a different search.
           </p>
         </motion.div>
       )}
