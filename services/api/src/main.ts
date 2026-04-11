@@ -24,6 +24,9 @@ async function bootstrap() {
   if (!port) {
     throw new Error('PORT environment variable is not set.');
   }
+  if (!apiPrefix) {
+    throw new Error('app.api_prefix is not set. config/app.yaml failed to load.');
+  }
 
   app.enableCors({ origin: corsOrigins, credentials: true });
 

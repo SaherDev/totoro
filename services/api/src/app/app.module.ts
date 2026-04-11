@@ -19,12 +19,20 @@ import { DatabaseModule } from '../database/database.module';
 import { ChatModule } from '../chat/chat.module';
 
 function loadAppYaml(): Record<string, unknown> {
-  const yamlPath = path.join(process.cwd(), 'services/api/config/app.yaml');
-  try {
-    return yaml.parse(fs.readFileSync(yamlPath, 'utf-8')) ?? {};
-  } catch {
-    return {};
+  const candidates = [
+    path.join(__dirname, 'config/app.yaml'),                     // bundled next to main.js
+    path.join(process.cwd(), 'config/app.yaml'),                 // cwd = services/api on Railway
+    path.join(process.cwd(), 'services/api/config/app.yaml'),    // cwd = monorepo root locally
+  ];
+  for (const p of candidates) {
+    try {
+      const content = fs.readFileSync(p, 'utf-8');
+      return yaml.parse(content) ?? {};
+    } catch {
+      continue;
+    }
   }
+  throw new Error(`config/app.yaml not found. Tried: ${candidates.join(', ')}`);
 }
 
 @Module({
