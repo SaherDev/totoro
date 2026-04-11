@@ -36,22 +36,26 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-6 pb-8 pt-12">
-      <motion.div
-        className="flex w-full max-w-sm flex-col items-center md:max-w-md"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-      >
+    <div className="relative flex min-h-screen flex-col items-center bg-background px-6 pb-8">
+      {/* Spacer to push circle to middle */}
+      <div className="flex-1 flex items-center justify-center">
+        {/* Circle container */}
         <motion.div
-          className="w-[220px] h-[220px] md:w-[260px] md:h-[260px] mb-5 anim-breathe"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          className="relative w-[320px] h-[320px] md:w-[400px] md:h-[400px] rounded-full bg-gradient-to-br from-muted/30 to-muted/10 border border-border flex items-center justify-center"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8 }}
         >
-          <Illustration id="auth" />
+          <motion.div
+            className="w-[220px] h-[220px] md:w-[260px] md:h-[260px] anim-breathe"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <Illustration id="auth" />
+          </motion.div>
         </motion.div>
-      </motion.div>
+      </div>
 
       <motion.div
         className="mt-auto pt-12 w-full max-w-sm md:max-w-md md:mt-10"

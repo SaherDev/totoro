@@ -108,11 +108,13 @@
     "noHistoryDesc": "היסטוריית ההמלצות שלך תופיע כאן כשתחקור"
   },
   "recall": {
+    "placeholder": "זה מקום הרמן שחיסכנתי מ-TikTok",
     "header": "נמצא בשמורים שלך",
     "breadcrumb": "חיפוש בשמורים שלך…",
     "modeOverride": "רוצה המלצה במקום?",
     "provenance": "{source} • {savedAt} • {address}",
-    "emptyFooter": "כמעט תאומות. רוצה שאני אחפש עוד כאלה?"
+    "emptyFooter": "כמעט תאומות. רוצה שאני אחפש עוד כאלה?",
+    "hasMore": "טען תוצאות נוסף"
   },
   "save": {
     "heading": "שמור מקום זה",
@@ -150,6 +152,7 @@
   "coldStartOneFour": {
     "headline": "ככל שתשמור יותר, אני אשתפר יותר.",
     "subline": "Recall עובד עכשיו. Consult מראה מה טוב קרוב.",
+    "pasteHint": "נסה לשאול משהו ספציפי",
     "savedListEmpty": "אין מקומות שמורים עדיין",
     "popularLabel": "פופולרי כרגע",
     "popularFootnote": "כולם הלכו לשם. כשתשמור יותר, אמצא אותנות במקום.",

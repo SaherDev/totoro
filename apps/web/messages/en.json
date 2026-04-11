@@ -110,11 +110,13 @@
     "noHistoryDesc": "Your recommendation history will appear here as you explore"
   },
   "recall": {
+    "placeholder": "That ramen place I saved from TikTok",
     "header": "Found in your saves",
     "breadcrumb": "searching your saves…",
     "modeOverride": "Want a recommendation instead?",
     "provenance": "{source} • {savedAt} • {address}",
-    "emptyFooter": "Nothing else matches. Want me to find more like this?"
+    "emptyFooter": "Nothing else matches. Want me to find more like this?",
+    "hasMore": "Load more results"
   },
   "save": {
     "heading": "Save this place",
@@ -152,6 +154,7 @@
   "coldStartOneFour": {
     "headline": "The more you save, the better I get.",
     "subline": "Recall works now. Consult shows what's good nearby.",
+    "pasteHint": "Try asking for something specific",
     "savedListEmpty": "No saved places yet",
     "popularLabel": "Popular right now",
     "popularFootnote": "Everyone's been to this one. As you save more, I'll find hidden gems instead.",

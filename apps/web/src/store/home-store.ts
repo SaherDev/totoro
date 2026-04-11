@@ -90,6 +90,7 @@ interface HomeState {
 
   // Actions — stubbed until sub-plans 3–7
   submitRecall: (message: string) => Promise<void>;
+  setRecallResults: (results: RecallItem[], hasMore: boolean) => void;
   openSaveSheet: (message: string, places: SaveExtractPlace[]) => void;
   setSaveSheetSelectedIndex: (index: number) => void;
   confirmSave: () => Promise<void>;
@@ -425,6 +426,11 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       if (breadcrumbTimer) clearTimeout(breadcrumbTimer);
       set({ recallBreadcrumb: false });
     }
+  },
+
+  // ── setRecallResults ───────────────────────────────────────────────────────
+  setRecallResults: (results, hasMore) => {
+    set({ recallResults: results, recallHasMore: hasMore });
   },
 
   // ── openSaveSheet ─────────────────────────────────────────────────────────

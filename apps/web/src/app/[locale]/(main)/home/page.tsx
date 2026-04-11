@@ -15,15 +15,21 @@ import { ConsultError } from '@/components/home/ConsultError';
 import { ConsultResult } from '@/flows/consult/ConsultResult';
 import { TASTE_CHIP_BANK } from '@/constants/home-suggestions';
 import { TotoroCard } from '@totoro/ui';
-import { useHomeStore, type ThreadEntry } from '@/store/home-store';
+import { useHomeStore, type ThreadEntry, type HomeStoreApi } from '@/store/home-store';
 import { FLOW_REGISTRY } from '@/flows/registry';
 
-function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
+function ThreadEntryView({ entry, store }: { entry: ThreadEntry; store: HomeStoreApi }) {
   if (entry.role === 'user') {
     return <UserBubble content={entry.content} />;
   }
-  if (entry.type === 'clarification') {
-    return <AssistantBubble message={entry.message} />;
+  if (entry.type === 'clarification' || entry.type === 'assistant') {
+    return (
+      <AssistantBubble
+        message={entry.message}
+        type={entry.type}
+        onDismiss={!entry.dismissed ? () => store.dismissAssistantReply() : undefined}
+      />
+    );
   }
   if (entry.type === 'consult') {
     return <ConsultResult message={entry.message} result={entry.data} />;
@@ -109,7 +115,7 @@ export default function HomePage() {
                 />
               );
             }
-            return <ThreadEntryView key={entry.id} entry={entry} />;
+            return <ThreadEntryView key={entry.id} entry={entry} store={store} />;
           })}
 
           {/* Active in-progress flow — thinking animation */}
