@@ -30,7 +30,7 @@ Format:
 **Date:** 2026-04-09\
 **Status:** accepted\
 **Context:** services/api manages exactly two domain tables — users and user_settings. Prisma added friction: a separate generate step, a global PrismaService singleton, and migration ownership split across two tools (Prisma for product tables, Alembic for AI tables). For a two-table gateway service, this overhead is not justified.\
-**Decision:** Replace Prisma with TypeORM in services/api. Use TypeOrmModule.forRootAsync() with ConfigService injecting database.url from YAML config. Set synchronize: true — acceptable at this stage (small team, no production data at risk). Define UserEntity and UserSettingsEntity mapping to the existing users and user_settings tables. Use @PrimaryColumn() with @BeforeInsert() CUID generation to match existing CUID primary keys. Column names use explicit name decorators to match Prisma-created camelCase column names (createdAt, updatedAt, userId). TypeORM with synchronize: true only touches registered entities — FastAPI-owned tables (places, embeddings, taste_model) are not registered and will not be altered.\
+**Decision:** Replace Prisma with TypeORM in services/api. Use TypeOrmModule.forRootAsync() with ConfigService injecting the `DATABASE_URL` env var. Set synchronize: true — acceptable at this stage (small team, no production data at risk). Define UserEntity and UserSettingsEntity mapping to the existing users and user_settings tables. Use @PrimaryColumn() with @BeforeInsert() CUID generation to match existing CUID primary keys. Column names use explicit name decorators to match Prisma-created camelCase column names (createdAt, updatedAt, userId). TypeORM with synchronize: true only touches registered entities — FastAPI-owned tables (places, embeddings, taste_model) are not registered and will not be altered.\
 **Consequences:** Prisma, prisma CLI, and @prisma/client are removed from the monorepo. PrismaModule and PrismaService are deleted from services/api. prisma/schema.prisma remains for migration history only (no further migrations). If the team grows or production data accrues, replace synchronize: true with explicit TypeORM migrations via a future ADR.
 
 ---
@@ -59,8 +59,8 @@ Format:
 
 **Date:** 2026-03-14\
 **Status:** accepted\
-**Context:** NestJS controllers are entry points into the domain layer. Without a constraint, controllers accumulate business logic, direct Prisma calls, and inline HTTP forwarding to totoro-ai when building quickly. This couples the HTTP layer to infrastructure and makes both harder to test.\
-**Decision:** Controllers are facades. Each controller method makes exactly one service call and returns the result. No Prisma queries, no direct AiServiceClient calls, no Redis, no business logic appear inside any controller file. All orchestration lives in the service layer. The one exception is request validation via pipes and guards, which are decorators and do not count as logic inside the method body.\
+**Context:** NestJS controllers are entry points into the domain layer. Without a constraint, controllers accumulate business logic, direct database calls, and inline HTTP forwarding to totoro-ai when building quickly. This couples the HTTP layer to infrastructure and makes both harder to test.\
+**Decision:** Controllers are facades. Each controller method makes exactly one service call and returns the result. No direct database calls, no direct AiServiceClient calls, no Redis, no business logic appear inside any controller file. All orchestration lives in the service layer. The one exception is request validation via pipes and guards, which are decorators and do not count as logic inside the method body.\
 **Consequences:** Controller files stay under 50 lines. Infrastructure concerns are testable independently of HTTP routing. Violations of this rule must be flagged during Constitution Check in the Plan phase before implementation begins.
 
 ---
@@ -187,23 +187,23 @@ See `docs/examples/consult-example.ts` for the full flow.
 
 ---
 
-## ADR-026: Database migration ownership split between Prisma and Alembic
+## ADR-026: Database migration ownership split between Prisma and Alembic _(superseded by ADR-035)_
 
 **Date:** 2026-03-09\
-**Status:** accepted\
+**Status:** superseded\
 **Context:** Two services write to one shared PostgreSQL instance. Giving Prisma sole ownership of all migrations would require opening the product repo every time FastAPI evolves its AI table schemas. Two separate databases would force HTTP calls or data duplication mid-pipeline, adding latency to the consult agent.\
 **Decision:** Split migration ownership by domain. Prisma in the product repo owns and migrates users, user_settings, and recommendations. Alembic in the AI repo owns and migrates places, embeddings, and taste_model. Each tool touches only its own tables. No exceptions.\
 **Consequences:** Two migration tools in the system. Accepted because each repo stays autonomous within its domain. Schema changes to AI tables never require opening the product repo and vice versa.
 
 ---
 
-## ADR-025: Per-repo local secrets (NestJS and Next.js use .env.local, FastAPI uses config/.local.yaml)
+## ADR-025: Secrets in .env.local, non-secrets in config/app.yaml (NestJS); .env.local for Next.js; config/.local.yaml for FastAPI
 
 **Date:** 2026-03-09\
 **Status:** accepted\
 **Context:** Secrets must never be stored in version control. Each service needs a simple way to manage its own secrets without external dependencies or complex setup.\
-**Decision:** Each service manages secrets locally in a gitignored file: (1) **NestJS** (totoro/services/api) reads secrets from `.env.local`; (2) **Next.js** (totoro/apps/web) reads secrets from `.env.local`; (3) **FastAPI** (totoro-ai) reads secrets from `config/.local.yaml`. All three files are gitignored and never committed. Developers create these files manually and populate them with their own secret values. No template files, no shell scripts, no other files needed.\
-**Consequences:** Each service owns its secrets. No shared dependency files. Simple setup — developers create the file and fill in values. CI/CD injects secrets as environment variables at deploy time.
+**Decision:** (1) **NestJS** (totoro/services/api) — secrets in `.env.local` (gitignored, symlinked to `totoro-config/secrets/api.env.local`); non-secrets in `services/api/config/app.yaml` (committed). `ConfigModule` loads `.env.local` via `envFilePath` for local dev; Railway injects the same variable names as env vars in production. (2) **Next.js** (totoro/apps/web) — secrets in `.env.local` (gitignored). (3) **FastAPI** (totoro-ai) — secrets in `config/.local.yaml` (gitignored). Secret files are never committed.\
+**Consequences:** Non-secret NestJS config (`app.yaml`) is version-controlled and reviewable. Secrets are isolated in gitignored files symlinked from `totoro-config/secrets/`. Railway variable names are the canonical names — `.env.local` keys must match them exactly for local/prod parity.
 
 ---
 
@@ -221,8 +221,8 @@ See `docs/examples/consult-example.ts` for the full flow.
 
 **Date:** 2026-03-08\
 **Status:** accepted\
-**Context:** Controllers returning raw Prisma models or AI response objects would expose internal fields and couple the response shape to the persistence layer. A consistent serialization mechanism is needed across all controllers.\
-**Decision:** A custom `@Serialize(DtoClass)` decorator applies an interceptor that calls `plainToInstance(DtoClass, data, { excludeExtraneousValues: true })` on every response. All controller methods that return data use `@Serialize(ResponseDto)`. Response DTOs use `@Expose()` on fields that should be included. Raw Prisma models and AI response objects are never returned directly.\
+**Context:** Controllers returning raw TypeORM entity objects or AI response objects would expose internal fields and couple the response shape to the persistence layer. A consistent serialization mechanism is needed across all controllers.\
+**Decision:** A custom `@Serialize(DtoClass)` decorator applies an interceptor that calls `plainToInstance(DtoClass, data, { excludeExtraneousValues: true })` on every response. All controller methods that return data use `@Serialize(ResponseDto)`. Response DTOs use `@Expose()` on fields that should be included. Raw entity objects and AI response objects are never returned directly.\
 **Consequences:** Response shape is decoupled from persistence layer. Adding or removing a response field requires only updating the DTO. Controllers stay clean — no manual mapping logic.
 
 ---
@@ -252,7 +252,7 @@ See `docs/examples/consult-example.ts` for the full flow.
 **Date:** 2026-03-07\
 **Status:** accepted\
 **Context:** The repo was initially set up with Yarn (ADR-006). Yarn was migrated away from in commit `eadf081` ("chore: migrate from yarn to pnpm"). pnpm has stricter dependency isolation, faster installs via a content-addressable store, and good Nx monorepo support with workspace protocol. CLAUDE.md and all dev commands already reference pnpm.\
-**Decision:** pnpm is the package manager for the entire monorepo. All installs use `pnpm install`. Workspace packages reference each other via `workspace:*`. All scripts in CLAUDE.md and CI use `pnpm nx …` and `pnpm prisma …`. No `yarn.lock` or `package-lock.json` is committed — only `pnpm-lock.yaml`.\
+**Decision:** pnpm is the package manager for the entire monorepo. All installs use `pnpm install`. Workspace packages reference each other via `workspace:*`. All scripts in CLAUDE.md and CI use `pnpm nx …`. No `yarn.lock` or `package-lock.json` is committed — only `pnpm-lock.yaml`.\
 **Consequences:** Developers must have pnpm installed (`npm i -g pnpm`). Phantom dependency bugs are caught earlier due to pnpm's strict hoisting. ADR-006 is superseded and its Yarn-specific guidance no longer applies.
 
 ---
@@ -287,20 +287,20 @@ See `docs/examples/consult-example.ts` for the full flow.
 
 ---
 
-## ADR-016: AiServiceClient encapsulating all forwarding to totoro-ai
+## ADR-016: AiServiceClient encapsulating all forwarding to totoro-ai _(superseded by ADR-036)_
 
 **Date:** 2026-03-07\
-**Status:** accepted\
+**Status:** superseded\
 **Context:** Both the places and recommendations domains need to call totoro-ai. Without a shared abstraction, each service would duplicate base URL config, timeout setup, and error normalization.\
 **Decision:** `AiServiceModule` in `services/api/src/ai-service/` wraps NestJS `HttpModule` (Axios). `AiServiceClient` (injectable service) exposes two typed methods: `extractPlace(payload)` → calls `POST /v1/extract-place` and `consult(payload)` → calls `POST /v1/consult`. Base URL is read from `ConfigService` (`ai_service.base_url`). Timeouts are set per endpoint: 10s for extract-place, 20s for consult. Implementation is pending.\
 **Consequences:** All AI forwarding is in one place. Domain services call `AiServiceClient` methods rather than raw HTTP. Timeout policy from api-contract.md is enforced consistently. Future auth header between services (shared secret) is added once in this module.
 
 ---
 
-## ADR-015: PrismaService as a global singleton provider
+## ADR-015: PrismaService as a global singleton provider _(superseded by ADR-035)_
 
 **Date:** 2026-03-07\
-**Status:** accepted\
+**Status:** superseded\
 **Context:** Prisma's `PrismaClient` is a stateful singleton that manages connection pooling. Instantiating it per-module or per-request would create redundant connections and break lifecycle management.\
 **Decision:** `PrismaService` in `services/api/src/prisma/prisma.service.ts` extends `PrismaClient` and implements `OnModuleInit` to call `$connect()`. It is exported from `PrismaModule`, which is declared with `@Global()` so all domain modules can inject `PrismaService` without importing `PrismaModule` explicitly. Implementation is pending.\
 **Consequences:** One database connection pool for the entire NestJS process. Domain services declare `PrismaService` in their constructor without importing `PrismaModule`. NestJS lifecycle hooks (`OnModuleInit`, `OnModuleDestroy`) manage the connection cleanly.
@@ -362,10 +362,10 @@ See `docs/examples/consult-example.ts` for the full flow.
 
 ---
 
-## ADR-009: SSE streaming as future consult response mode
+## ADR-009: SSE streaming as future consult response mode _(superseded by ADR-036)_
 
 **Date:** 2026-03-05\
-**Status:** accepted\
+**Status:** superseded\
 **Context:** The consult endpoint returns reasoning_steps in a synchronous JSON response. When the frontend needs to show agent thinking in real time, the API contract would need redesigning mid-build without a plan.\
 **Decision:** Document SSE as a future response mode now. When needed, FastAPI streams reasoning steps as they complete, NestJS proxies the SSE stream to the frontend. The synchronous mode remains the default. No implementation until the frontend requires it.\
 **Consequences:** API contract is forward-compatible. No work needed today. When SSE is implemented, NestJS must proxy the stream and the frontend must handle incremental rendering.
@@ -396,16 +396,16 @@ See `docs/examples/consult-example.ts` for the full flow.
 
 **Date:** 2026-03-04\
 **Status:** superseded\
-**Context:** A package manager was needed for the Nx monorepo at project creation. Yarn with `nodeLinker: node-modules` was chosen to avoid PnP compatibility issues with Prisma.\
+**Context:** A package manager was needed for the Nx monorepo at project creation. Yarn with `nodeLinker: node-modules` was chosen to avoid PnP compatibility issues.\
 **Decision:** Use Yarn with `nodeLinker: node-modules`. Alternatives considered: pnpm, npm.\
 **Consequences:** Superseded by ADR-020. The repo has since migrated to pnpm.
 
 ---
 
-## ADR-005: Prisma over TypeORM
+## ADR-005: Prisma over TypeORM _(superseded by ADR-035)_
 
 **Date:** 2026-03-04\
-**Status:** accepted\
+**Status:** superseded\
 **Context:** NestJS needs a database access layer for PostgreSQL. The team prioritised type safety and migration ergonomics over the NestJS-default TypeORM.\
 **Decision:** Use Prisma as the ORM and schema owner. Prisma generates TypeScript types from the schema and manages all migrations. Alternatives considered: TypeORM, Drizzle, raw SQL.\
 **Consequences:** Prisma is the single source of truth for the database schema. All migrations run through `prisma migrate`. Vector operations that Prisma cannot express use raw SQL via `$queryRaw`.

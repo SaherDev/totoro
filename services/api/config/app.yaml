@@ -1,0 +1,13 @@
+app:
+  environment: development
+  port: 3333
+  api_prefix: api/v1
+
+auth:
+  public_paths:
+    - /health
+    - /webhooks/clerk
+
+ai:
+  enabled_default: true
+  global_kill_switch: false

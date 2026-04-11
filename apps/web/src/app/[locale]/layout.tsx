@@ -4,9 +4,8 @@ import { NextIntlClientProvider } from 'next-intl';
 import { Providers } from '@/app/providers';
 import { LocaleHtmlAttrs } from '@/components/locale-html-attrs';
 import en from '../../../messages/en.json';
-import he from '../../../messages/he.json';
 
-const messages: Record<string, any> = { en, he };
+const messages: Record<string, any> = { en };
 
 interface LayoutProps {
   children: ReactNode;
@@ -16,7 +15,7 @@ interface LayoutProps {
 export default async function LocaleLayout({ children, params }: LayoutProps) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const dir = locale === 'he' ? 'rtl' : 'ltr';
+  const dir = 'ltr';
 
   return (
     <Providers>

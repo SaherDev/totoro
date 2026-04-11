@@ -7,7 +7,7 @@ main          ← stable only, merge when a feature/phase is complete and tested
   └─ dev      ← active development, day-to-day work
        └─ <number>-<feature-name>               (spec-kit feature branch, e.g., 001-nx-monorepo-setup)
        └─ feature/<short-description>           (manual feature, e.g., feature/clerk-auth)
-       └─ fix/<short-description>               (hotfix, e.g., fix/prisma-migration-order)
+       └─ fix/<short-description>               (hotfix, e.g., fix/auth-token-expiry)
 ```
 
 ### Spec-kit Features

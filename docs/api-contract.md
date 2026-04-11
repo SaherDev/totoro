@@ -15,265 +15,105 @@ All requests come from NestJS after auth verification. totoro-ai never receives 
 
 ---
 
-## POST /v1/extract-place
+## POST /v1/chat
 
-Extract and validate a place from raw user input (ADR-017, ADR-018). Accepts TikTok URLs (with optional descriptive text), plain text descriptions, or mixed formats (text + URL in any order). Validates via Google Places API and returns either a saved place record or a candidate requiring user confirmation.
-
-**Request:**
-
-```json
-{
-  "user_id": "string",
-  "raw_input": "https://www.tiktok.com/@foodie/video/123 amazing ramen shop"
-}
-```
-
-Alternative formats:
-
-```json
-{
-  "user_id": "string",
-  "raw_input": "amazing ramen shop https://www.tiktok.com/@foodie/video/123"
-}
-```
-
-```json
-{
-  "user_id": "string",
-  "raw_input": "amazing ramen shop"
-}
-```
-
-**Response (Saved — confidence ≥ 0.70):**
-
-```json
-{
-  "place_id": "550e8400-e29b-41d4-a716-446655440000",
-  "place": {
-    "place_name": "Fuji Ramen",
-    "address": "123 Sukhumvit Soi 33, Bangkok",
-    "cuisine": "ramen",
-    "price_range": "low"
-  },
-  "confidence": 0.9,
-  "status": "resolved",
-  "requires_confirmation": false,
-  "source_url": "https://www.tiktok.com/@foodie/video/123"
-}
-```
-
-**Response (Confirmation Required — 0.30 < confidence < 0.70):**
-
-```json
-{
-  "place_id": null,
-  "place": {
-    "place_name": "Fuji Ramen",
-    "address": "123 Sukhumvit Soi 33, Bangkok",
-    "cuisine": null,
-    "price_range": null
-  },
-  "confidence": 0.55,
-  "status": "resolved",
-  "requires_confirmation": true,
-  "source_url": null
-}
-```
-
-**Response (Unresolved — confidence ≤ 0.30 or invalid URL):**
-
-```json
-{
-  "place_id": null,
-  "place": {
-    "place_name": null,
-    "address": null,
-    "cuisine": null,
-    "price_range": null
-  },
-  "confidence": 0.20,
-  "status": "unresolved",
-  "requires_confirmation": false,
-  "source_url": "https://www.tiktok.com/@foodie/video/123"
-}
-```
-
-Low confidence extractions (confidence ≤ 0.30) and invalid URLs are never rejected. The place is saved with `status: "unresolved"` and queued for background reprocessing. The response returns HTTP 200. The product repo surfaces this to the user as a pending save, not an error. The system retries extraction in the background.
-
-**Error Responses:**
-
-| Status | Error Type           | Trigger                                                        |
-| ------ | -------------------- | -------------------------------------------------------------- |
-| 400    | `bad_request`        | `raw_input` is empty                                           |
-| 422    | `unsupported_input`  | Non-TikTok URL in Phase 2                                      |
-| 500    | `extraction_error`   | TikTok oEmbed timeout, Places API failure, or DB write failure |
-
-**Error Response Body:**
-
-```json
-{
-  "error_type": "bad_request",
-  "detail": "raw_input is required and cannot be empty."
-}
-```
-
-**Notes:**
-
-- **Input formats**: Supports TikTok URLs, plain text, and hybrid formats (URL + descriptive text in any order). Parser extracts URL and merges surrounding text as supplementary context.
-- **Phase 2 support**: TikTok URLs, plain text, and hybrid inputs. Instagram/generic URLs are Phase 3.
-- **Extraction**:
-  - **TikTok URLs**: System fetches the caption via oEmbed (3-second timeout), then merges any supplementary text from raw_input before LLM extraction. Example: "amazing ramen https://tiktok.com/.../123" → LLM sees "amazing ramen + oEmbed caption".
-  - **Plain text**: Text is passed directly to the LLM.
-  - **Hybrid (URL + text)**: Text before and after the URL is combined and passed to the LLM alongside the URL or caption.
-- **Validation**: Extracted place name is validated against Google Places API. Match quality (EXACT, FUZZY, CATEGORY_ONLY, NONE) feeds into confidence scoring.
-- **Confidence threshold**: ≥ 0.70 saves automatically with `status: "resolved"`; 0.30–0.70 requires user confirmation with `status: "resolved"`; ≤ 0.30 saves as unresolved with `status: "unresolved"` and queues for background retry. Never returns an error for low confidence.
-- **Embeddings**: NOT generated in this endpoint (ADR-040). Embeddings are handled separately.
-- **Deduplication**: If a `(external_provider, external_id)` match exists, the existing Place record is returned without a new write (ADR-041).
-- **Timeout**: Total budget 10s; TikTok oEmbed timeout 3s; remaining budget covers LLM extraction and Places validation.
-- `source_url`: Original TikTok URL (populated for TikTok input); `null` for plain text.
-- `cuisine` and `price_range`: Nullable — may be `null` if LLM cannot determine them.
-- The response schema tolerates extra fields (forward-compatible).
-
----
-
-## POST /v1/consult
-
-Recommend a place. FastAPI runs the full LangGraph agent pipeline autonomously: parse intent, retrieve saved places via pgvector, discover external candidates via Google Places API, validate, rank, and generate a response.
-
-This endpoint has two response modes. The default mode returns a synchronous JSON response. A future SSE (Server-Sent Events) mode will stream agent reasoning steps in real time before the final response. The SSE mode will be added when the frontend needs to show the agent's thinking process. Until then, all clients use the synchronous mode.
+Unified conversational entry point (ADR-052). Replaces all four former individual endpoints.
+The system classifies intent, dispatches to the correct pipeline, and returns a structured response.
 
 **Request:**
 
 ```json
 {
-  "user_id": "string",
-  "query": "good ramen near Sukhumvit for a date night",
-  "location": {
-    "lat": 13.7563,
-    "lng": 100.5018
-  }
+  "user_id": "user_3AhqBhtLzKKlbKrjVNGTHro1o76",
+  "message": "cheap dinner nearby",
+  "location": { "lat": 13.7563, "lng": 100.5018 }
 }
 ```
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `user_id` | `string` | Yes | Clerk-issued user ID; injected by NestJS from the verified token |
+| `message` | `string` | Yes | Natural language message from the user |
+| `location` | `{ lat: float, lng: float }` | No | Passed to consult pipeline only; ignored for all other intents |
 
 **Response:**
 
 ```json
 {
-  "primary": {
-    "place_name": "Fuji Ramen",
-    "address": "123 Sukhumvit Soi 33, Bangkok",
-    "reasoning": "Your top-rated ramen spot, 10 minutes from you, and perfect for a quiet dinner.",
-    "source": "saved"
-  },
-  "alternatives": [
-    {
-      "place_name": "Bankara Ramen",
-      "address": "456 Sukhumvit Soi 39, Bangkok",
-      "reasoning": "Known for rich tonkotsu broth. You haven't tried it yet but it matches your preferences.",
-      "source": "discovered"
-    }
-  ],
-  "reasoning_steps": [
-    {
-      "step": "intent_parsing",
-      "summary": "Parsed: cuisine=ramen, occasion=date night, area=Sukhumvit"
-    },
-    {
-      "step": "retrieval",
-      "summary": "Found 3 saved ramen places near Sukhumvit"
-    },
-    {
-      "step": "discovery",
-      "summary": "Searching 38 restaurants within 1.2km"
-    },
-    {
-      "step": "validation",
-      "summary": "24 places open now"
-    },
-    {
-      "step": "ranking",
-      "summary": "Ranked 8 candidates by taste fit, distance, and occasion match"
-    },
-    {
-      "step": "completion",
-      "summary": "Found your match"
-    }
-  ]
+  "type": "consult",
+  "message": "Based on what I know about you, try Nara Eatery…",
+  "data": { }
 }
 ```
 
+| Field | Type | Notes |
+|---|---|---|
+| `type` | `string` | One of: `extract-place`, `consult`, `recall`, `assistant`, `clarification`, `error` |
+| `message` | `string` | Human-readable response text |
+| `data` | `object \| null` | Structured payload from downstream service; null for clarification/assistant/error |
+
+**Response Types by Intent:**
+
+### `extract-place`
+```json
+{ "type": "extract-place", "message": "Saved: Nara Eatery, Bangkok", "data": { /* ExtractPlaceResponse */ } }
+```
+
+### `consult`
+```json
+{ "type": "consult", "message": "Here's my top pick for dinner nearby", "data": { /* ConsultResponse */ } }
+```
+
+### `recall`
+```json
+{ "type": "recall", "message": "Found 3 places matching your search", "data": { /* RecallResponse */ } }
+```
+
+### `assistant`
+```json
+{ "type": "assistant", "message": "Tipping is not expected in Japan…", "data": null }
+```
+
+### `clarification`
+```json
+{ "type": "clarification", "message": "Are you looking for a place called Fuji you saved, or a recommendation near there?", "data": null }
+```
+
+### `error`
+```json
+{ "type": "error", "message": "Something went wrong, try again", "data": { "detail": "..." } }
+```
+
+**HTTP Status Codes:**
+
+| Code | When |
+|---|---|
+| `200` | All successful responses including clarification |
+| `400` | Malformed request body |
+| `422` | Validation error |
+| `500` | Unhandled internal error |
+
 **Notes:**
 
-- `query` is the raw user input, unmodified.
-- `location` is the user's current location (optional, used for distance-aware ranking).
-- Returns exactly 1 `primary` and up to 2 `alternatives`.
-- Each result contains four core fields: `place_name`, `address`, `reasoning`, `source`.
-- `source` is `"saved"` (from user's collection) or `"discovered"` (external lookup via Google Places).
-- NestJS stores the recommendation in the recommendations table for history and analytics.
-- One HTTP call. The agent runs autonomously. No mid-pipeline callbacks to NestJS.
-- `reasoning_steps` is an array of objects showing what the agent did at each stage. Each object has `step` (string identifier) and `summary` (human-readable description). Initially returned as part of the synchronous response. When SSE mode is added, these same steps will stream in real time before the final response. Step summaries must carry real counts from the pipeline, not generic text.
-- `photos` is required. The primary recommendation card requires a full-width 16:9 hero photo URL. Each alternative requires a 1:1 square photo URL.
-- Additional fields (distance, price, open_status, confidence) will be added as needed. Design DTOs to tolerate extra fields.
+- `location` is only forwarded to the consult pipeline — all other intents ignore it.
+- Confidence threshold for intent classification is 0.7. Messages below threshold return `type="clarification"`.
+- All downstream exceptions are caught and returned as `type="error"` with HTTP 200 (not 5xx).
+- Consult results are persisted to the `consult_logs` table after a successful response (ADR-053). Write failures are logged but do not fail the caller response.
 
 ---
 
-## POST /v1/recall
+## GET /v1/health
 
-Retrieve saved places matching a natural language memory fragment. Only searches the user's collection — no external discovery.
-
-**Request (Frontend → NestJS):**
-
-```json
-{
-  "query": "that ramen place I saved from TikTok"
-}
-```
-
-**Request (NestJS → totoro-ai):**
-
-```json
-{
-  "user_id": "string",
-  "query": "that ramen place I saved from TikTok"
-}
-```
-
-**Response:**
-
-```json
-{
-  "results": [
-    {
-      "place_id": "string",
-      "place_name": "Fuji Ramen",
-      "address": "123 Sukhumvit Soi 33, Bangkok",
-      "cuisine": "ramen",
-      "price_range": "low",
-      "source_url": "https://www.tiktok.com/@foodie/video/123",
-      "saved_at": "2026-02-12T14:30:00Z",
-      "match_reason": "Saved from TikTok, tagged ramen"
-    }
-  ],
-  "total": 1
-}
-```
-
-**Notes:**
-
-- `user_id` is injected by NestJS from the Clerk auth token. The frontend request body does NOT include `user_id`.
-- `saved_at`: ISO 8601 timestamp when the user saved this place. Used to display provenance as "Saved from TikTok · Feb 12 · Bangkok".
-- Phase 1: NestJS stub returns 501 Not Implemented. Phase 3 will forward to totoro-ai.
-- Error handling follows the same table as `/v1/consult`.
+Health check endpoint. Returns service status and database connectivity.
 
 ---
 
 ## API Contract Summary
 
-| Endpoint               | Purpose                                     | NestJS Sends             | totoro-ai Returns                          |
-| ---------------------- | ------------------------------------------- | ------------------------ | ------------------------------------------ |
-| POST /v1/extract-place | Extract and validate a place from raw input | raw_input, user_id       | place_id, place metadata, confidence score |
-| POST /v1/consult       | Get a recommendation from natural language  | query, user_id, location | 1 primary + 2 alternatives with reasoning  |
-| POST /v1/recall        | Retrieve saved places matching memory       | query, user_id           | list of saved places matching query        |
+| Endpoint | Purpose | NestJS Sends | totoro-ai Returns |
+| --- | --- | --- | --- |
+| POST /v1/chat | Unified conversational entry point | user_id, message, optional location | type, message, optional data payload |
+| GET /v1/health | Service health check | — | status, db connectivity |
 
 ---
 
@@ -281,15 +121,15 @@ Retrieve saved places matching a natural language memory fragment. Only searches
 
 The AI service returns standard HTTP status codes:
 
-| Status  | Meaning                              | Product repo action                                     |
-| ------- | ------------------------------------ | ------------------------------------------------------- |
-| 200     | Success                              | Process response                                        |
-| 400     | Bad request (malformed input)        | Log error, return 400 to frontend                       |
-| 422     | Could not parse intent or no results | Return friendly "couldn't understand" message           |
-| 500     | AI service internal error            | Log error, return 503 to frontend with retry suggestion |
-| Timeout | Service unreachable                  | Return 503 with "service temporarily unavailable"       |
+| Status | Meaning | Product repo action |
+| --- | --- | --- |
+| 200 | Success (including clarification and error type responses) | Process response |
+| 400 | Bad request (malformed input) | Log error, return 400 to frontend |
+| 422 | Validation error | Return friendly message to frontend |
+| 500 | AI service internal error | Log error, return 503 to frontend with retry suggestion |
+| Timeout | Service unreachable | Return 503 with "service temporarily unavailable" |
 
-**Timeout policy:** Set HTTP client timeout to 30 seconds for all AI service calls. extract-place should respond within 10s. consult may take up to 20s for complex queries.
+**Timeout policy:** Set HTTP client timeout to 30 seconds for all AI service calls. /v1/chat responses targeting consult intent may take up to 20s for complex queries.
 
 ---
 
@@ -300,23 +140,25 @@ These values must stay in sync between both repos. A mismatch breaks the system.
 **Embedding dimensions:**
 
 - Current: 1024 (Voyage 4-lite)
-- The pgvector column definition in Prisma (product repo) must match the embedding model output in FastAPI (AI repo)
-- If the embedding model changes, both the Prisma migration and FastAPI config must update together
+- Defined and managed entirely in totoro-ai (FastAPI + Alembic)
+- If the embedding model changes, only the totoro-ai config and Alembic migration need updating
 
 **Database tables FastAPI writes to:**
 
 - places
 - embeddings
 - taste_model
+- consult_logs (ADR-053 — AI recommendation history)
+- user_memories (personal facts extracted from chat messages)
+- interaction_log (append-only behavioral signal log)
 
-Alembic in totoro-ai owns migrations for these tables. Prisma never migrates these tables. If the schema changes, run the migration from totoro-ai only.
+Alembic in totoro-ai owns all migrations for these tables. This repo (totoro) has no database write ownership.
 
 ---
 
 ## General Notes
 
-- All requests include `user_id` so FastAPI can load user-specific taste models and saved places.
-- FastAPI writes AI-generated data (places, embeddings, taste model) directly to PostgreSQL.
-- NestJS writes product data (users, settings, recommendation history) to PostgreSQL.
-- Neither service writes to the other's tables.
+- All requests include `user_id` (injected by NestJS from the Clerk token) so FastAPI can load user-specific taste models and saved places.
+- FastAPI owns all database writes — places, embeddings, taste model, consult_logs, and all other tables.
+- NestJS has no database writes. It authenticates, forwards, and returns.
 - The product repo is responsible for auth and validating `user_id` before calling these endpoints.

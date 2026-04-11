@@ -40,12 +40,12 @@ export class ClerkWebhookController {
 
   private verifySignature(req: RawBodyRequest<Request>): ClerkWebhookEvent {
     const webhookSecret = this.configService.get<string>(
-      "auth.clerk.webhook_secret",
+      "CLERK_WEBHOOK_SECRET",
     );
     if (!webhookSecret) {
-      this.logger.error("auth.clerk.webhook_secret not configured");
+      this.logger.error("CLERK_WEBHOOK_SECRET not configured");
       throw new BadRequestException(
-        "Webhook secret not configured. Check services/api/config/.local.yaml → auth.clerk.webhook_secret.",
+        "Webhook secret not configured. Set the CLERK_WEBHOOK_SECRET environment variable.",
       );
     }
 
@@ -66,7 +66,7 @@ export class ClerkWebhookController {
 
   private async onUserCreated(userId: string): Promise<void> {
     this.logger.log(`New user created: ${userId}`);
-    const secretKey = this.configService.get<string>("auth.clerk.secret_key");
+    const secretKey = this.configService.get<string>("CLERK_SECRET_KEY");
     const aiEnabled = this.configService.get<boolean>(
       "ai.enabled_default",
       true,

@@ -25,7 +25,7 @@ describe('ClerkMiddleware', () => {
           useValue: {
             get: jest.fn((key: string, defaultValue?: any) => {
               const config: Record<string, any> = {
-                'auth.clerk.secret_key': 'sk_test_mock_secret',
+                'CLERK_SECRET_KEY': 'sk_test_mock_secret',
                 'ai.enabled_default': true,
               };
               return config[key] ?? defaultValue;
@@ -250,7 +250,7 @@ describe('ClerkMiddleware', () => {
       // Mock ConfigService to return undefined for secret key
       const mockConfigService = {
         get: jest.fn((key: string, defaultValue?: any) => {
-          if (key === 'auth.clerk.secret_key') return undefined;
+          if (key === 'CLERK_SECRET_KEY') return undefined;
           return defaultValue;
         }),
       };

@@ -8,7 +8,7 @@ describe('AiServiceClient', () => {
   beforeEach(() => {
     configService = {
       get: jest.fn((key: string) => {
-        if (key === 'ai_service.base_url') {
+        if (key === 'AI_SERVICE_BASE_URL') {
           return 'http://localhost:8000';
         }
         return undefined;
@@ -21,7 +21,7 @@ describe('AiServiceClient', () => {
   describe('initialization', () => {
     it('should initialize with valid base URL', () => {
       expect(client).toBeDefined();
-      expect(configService.get).toHaveBeenCalledWith('ai_service.base_url');
+      expect(configService.get).toHaveBeenCalledWith('AI_SERVICE_BASE_URL');
     });
 
     it('should throw if base_url is not configured', () => {
@@ -30,7 +30,7 @@ describe('AiServiceClient', () => {
       } as unknown as ConfigService;
 
       expect(() => new AiServiceClient(configServiceNoUrl)).toThrow(
-        'ai_service.base_url is not configured'
+        'AI_SERVICE_BASE_URL is not configured'
       );
     });
   });

@@ -29,14 +29,14 @@
 
 - All shared types live in `libs/shared` — never duplicate types between apps
 - API responses use shared DTOs; frontend consumes the same types
-- Database models are Prisma-generated; do not manually define entity types
+- Database entities are TypeORM classes with `@Entity()` and `@Column()` decorators in `services/api`; do not duplicate them in `libs/shared`
 
 ## Technical Notes
 
-- **pgvector**: PostgreSQL must have the `vector` extension enabled. Prisma schema uses `Unsupported("vector")` until Prisma adds native support — handle vector operations via raw SQL.
+- **pgvector**: PostgreSQL must have the `vector` extension enabled. All vector operations live in totoro-ai (FastAPI + Alembic). NestJS never defines or queries vector columns.
 - **Clerk middleware**: Runs in both Next.js middleware and NestJS guards. Auth state is verified independently in each app — do not pass raw tokens between apps; use Clerk's backend SDK to verify.
-- **YAML config**: The `config/` directory is NOT for secrets. Pattern: `config/dev.yml` contains `ai_service.base_url` and similar non-secret settings. Load via NestJS `ConfigModule` with a custom YAML loader.
+- **Config split**: `services/api/config/app.yaml` (committed) contains port, api prefix, public paths, and AI feature flags. Secrets go in `.env.local` (gitignored, symlinked to `totoro-config/secrets/api.env.local`). Both are loaded by `ConfigModule` at startup.
 - **Free-text place input**: The frontend sends a raw string to the API. The API forwards it to totoro-ai for parsing. totoro-ai writes the place and embedding directly to PostgreSQL and returns a confirmation (place_id + metadata). This repo never parses place names, URLs, or extracts metadata — that is the AI repo's job.
 - **totoro-ai returns 1+2**: One primary recommendation plus two alternatives. Each has: place name, address, reasoning text, source (saved vs discovered). Do not expect or depend on additional fields until they are added.
-- **No .env files**: Secrets are stored in per-repo local files (`.env.local` for NestJS/Next.js, `config/.local.yaml` for FastAPI). These files are gitignored and created locally by developers. Never commit secret files.
+- **No committed secrets**: NestJS secrets in `.env.local` (gitignored, symlinked to `totoro-config/secrets/api.env.local`). Next.js secrets in `.env.local`. FastAPI secrets in `config/.local.yaml`. Never commit secret files.
 - **git comment character**: This repo uses `;` as git's comment character (not `#`). Run `git config --global core.commentChar ";"` once per machine.

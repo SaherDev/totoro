@@ -23,7 +23,7 @@ jest.mock('@clerk/backend', () => ({
 
 const mockConfigService = {
   get: jest.fn((key: string) => {
-    if (key === 'auth.clerk.webhook_secret') return 'whsec_test_secret';
+    if (key === 'CLERK_WEBHOOK_SECRET') return 'whsec_test_secret';
     return undefined;
   }),
 };

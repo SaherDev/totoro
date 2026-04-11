@@ -19,10 +19,10 @@ async function bootstrap() {
 
   const apiPrefix = configService.get<string>('app.api_prefix');
   const port = process.env.PORT || configService.get<number>('app.port');
-  const corsOrigins = configService.get<string[]>('app.cors_origins', []);
+  const corsOrigins = (configService.get<string>('APP_CORS_ORIGINS') ?? '').split(',').filter(Boolean);
 
   if (!port) {
-    throw new Error('PORT not configured. Check config/.local.yaml');
+    throw new Error('PORT environment variable is not set.');
   }
 
   app.enableCors({ origin: corsOrigins, credentials: true });

@@ -23,9 +23,9 @@ export class AiServiceClient implements IAiServiceClient {
     configService: ConfigService,
     private readonly httpService: HttpService
   ) {
-    this.baseUrl = configService.get<string>('ai_service.base_url');
+    this.baseUrl = configService.get<string>('AI_SERVICE_BASE_URL');
     if (!this.baseUrl) {
-      throw new Error('ai_service.base_url is not configured');
+      throw new Error('AI_SERVICE_BASE_URL is not configured');
     }
 
     this.logger.debug(`Initialized with base URL: ${this.baseUrl}`);

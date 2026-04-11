@@ -56,9 +56,9 @@ export class ClerkMiddleware implements NestMiddleware {
 
     // Dev bypass: allow a static token for local testing (never enabled in production)
     const isProd = this.configService.get<string>('app.environment') === 'production';
-    const bypassEnabled = this.configService.get<boolean>('auth.dev_bypass.enabled', false);
-    const bypassToken = this.configService.get<string>('auth.dev_bypass.token');
-    const bypassUserId = this.configService.get<string>('auth.dev_bypass.user_id');
+    const bypassEnabled = this.configService.get<string>('APP_DEV_BYPASS_ENABLED') === 'true';
+    const bypassToken = this.configService.get<string>('DEV_BYPASS_TOKEN');
+    const bypassUserId = this.configService.get<string>('DEV_BYPASS_USER_ID');
     if (!isProd && bypassEnabled && bypassToken && token === bypassToken && bypassUserId) {
       const aiEnabledDefault = this.configService.get<boolean>('ai.enabled_default', true);
       req.user = { id: bypassUserId, ai_enabled: aiEnabledDefault };
@@ -68,7 +68,7 @@ export class ClerkMiddleware implements NestMiddleware {
 
     try {
       // Verify token using Clerk backend SDK
-      const clerkSecretKey = this.configService.get<string>('auth.clerk.secret_key');
+      const clerkSecretKey = this.configService.get<string>('CLERK_SECRET_KEY');
       if (!clerkSecretKey) {
         throw new Error('CLERK_SECRET_KEY not configured');
       }

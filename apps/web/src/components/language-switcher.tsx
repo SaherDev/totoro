@@ -22,7 +22,6 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
 
   const locales = [
     { code: 'en', label: 'English' },
-    { code: 'he', label: 'עברית' },
   ];
 
   return (

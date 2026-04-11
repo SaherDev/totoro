@@ -3,9 +3,7 @@ import { NextResponse } from 'next/server';
 
 const isPublicRoute = createRouteMatcher([
   '/en/login',
-  '/he/login',
   '/en/sso-callback',
-  '/he/sso-callback',
 ]);
 
 export default clerkMiddleware((auth, request) => {
@@ -19,9 +17,7 @@ export default clerkMiddleware((auth, request) => {
   if (!isPublicRoute(request)) {
     const { userId } = auth();
     if (!userId) {
-      // Detect locale from path prefix, fall back to 'en'
-      const locale = pathname.startsWith('/he') ? 'he' : 'en';
-      return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+      return NextResponse.redirect(new URL('/en/login', request.url));
     }
   }
 

@@ -149,18 +149,18 @@ Usage — last class wins, no conflicts:
 
 ---
 
-## 5. RTL with Logical Properties
+## 5. RTL / Logical Properties (reserved for future Hebrew locale)
 
-Hebrew support requires logical properties instead of physical directions.
+Use logical property utilities instead of physical directions.
 
 ```tsx
-// CORRECT — works in both LTR (English) and RTL (Hebrew)
+// CORRECT
 <div className="flex items-center gap-3 ps-4 pe-2 ms-2 text-start">
   <MapPinIcon className="size-5 text-muted-foreground" />
   <span className="text-foreground">{placeName}</span>
 </div>
 
-// WRONG — breaks in Hebrew
+// WRONG
 <div className="flex items-center gap-3 pl-4 pr-2 ml-2 text-left">
   ...
 </div>

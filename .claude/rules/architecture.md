@@ -38,7 +38,7 @@ These boundaries are enforced by Nx module boundary rules. If you get a lint err
 | Runtime          | Node 20                                                  | Python 3.11+                                                                                                        |
 | Role             | Thin gateway + schema owner                              | Autonomous AI brain                                                                                                 |
 | Responsibilities | Auth, user CRUD, recommendation history, HTTP forwarding | Intent parsing, embeddings, vector search, ranking, LLM calls, Google Places, writing places/embeddings/taste_model |
-| Database access  | Read-write for product tables (Prisma)                   | Read-write for AI tables (direct connection)                                                                        |
+| Database access  | Read-write for product tables (TypeORM)                  | Read-write for AI tables (direct connection)                                                                        |
 | Redis access     | None                                                     | Read-write (LLM cache, session state, agent state)                                                                  |
 | Communication    | Sends HTTP requests                                      | Receives HTTP requests                                                                                              |
 
@@ -48,7 +48,7 @@ These boundaries are enforced by Nx module boundary rules. If you get a lint err
 
 Write ownership is split by domain. Each service writes to its own tables. Neither service writes to the other's tables. This prevents race conditions and conflicting updates.
 
-Migration ownership is split by domain. Prisma in this repo owns and migrates product tables only (users, user_settings, recommendations). Alembic in totoro-ai owns and migrates AI tables (places, embeddings, taste_model). Never run Prisma migrations against AI tables.
+Migration ownership is split by domain. TypeORM (synchronize: true) in this repo manages product tables (users, user_settings). Alembic in totoro-ai owns and migrates AI tables (places, embeddings, taste_model, consult_logs, user_memories, interaction_log). NestJS entities must only reference product tables — never AI-owned tables.
 
 - **NestJS writes and reads:** users, user_settings, recommendations (history of consult results)
 - **FastAPI writes and reads:** places, embeddings, taste_model
@@ -56,14 +56,14 @@ Migration ownership is split by domain. Prisma in this repo owns and migrates pr
 
 Both services read from any table as needed. One shared PostgreSQL instance. Two connection strings with appropriate write permissions.
 
-**Embedding dimensions must stay in sync:** pgvector column definition in Prisma must match the embedding model output in FastAPI. If the model changes, both the Prisma migration and FastAPI config must update together.
+**pgvector is owned entirely by totoro-ai.** NestJS never defines or queries vector columns. If the embedding model changes, only totoro-ai's Alembic migration and config need updating.
 
 ## AI Service Communication
 
 - All calls to `totoro-ai` originate from `services/api` (NestJS services).
 - `apps/web` never calls `totoro-ai` directly. The frontend talks to the NestJS API, which forwards to the AI service.
-- The AI service base URL is loaded from YAML config (`config/*.yml` → `ai_service.base_url`), not from environment variables.
-- Three endpoints: `POST /v1/extract-place`, `POST /v1/consult`, `POST /v1/recall`. See @docs/api-contract.md for schemas.
+- The AI service base URL is loaded from `AI_SERVICE_BASE_URL` env var (`.env.local` locally, Railway variable in production).
+- Single endpoint: `POST /v1/chat`. The AI service classifies intent internally. See @docs/api-contract.md for the full schema.
 
 ## API Versioning
 
@@ -83,7 +83,7 @@ Docker Compose is for local development only. Never deploy Docker containers to 
 
 ## Coding Constraints
 
-- **Prisma is the schema owner and NestJS's database access layer.** FastAPI writes to its own tables directly. No raw SQL in NestJS except for pgvector operations that Prisma cannot express.
+- **TypeORM is NestJS's database access layer.** Register only `UserEntity` and `UserSettingsEntity`. FastAPI writes to its own tables directly. NestJS never queries AI-owned tables.
 - **Clerk is the only auth provider.** Do not implement custom JWT verification or session management.
 - **One NestJS module per domain.** Each business domain (places, recommendations, users) gets its own module with its own service and controller.
 - **Shared types are the contract.** If both apps need a type, it goes in `libs/shared`. If only one app uses it, keep it local to that app.

@@ -10,13 +10,12 @@ Totoro is an AI-native place decision engine. The AI IS the product — NestJS i
 
 ```
 apps/web/          → Next.js frontend (Tailwind v3, shadcn/ui, Clerk auth)
-services/api/      → NestJS backend (Prisma, PostgreSQL + pgvector)
+services/api/      → NestJS backend (auth gateway, no DB writes)
 libs/shared/       → Shared TypeScript types, DTOs, constants
 libs/ui/           → Design system (shadcn/ui components, cva variants, cn() utility)
-apps/web/messages/ → i18n translation files (en.json, he.json)
+apps/web/messages/ → i18n translation files (en.json)
 config/            → YAML configuration files (dev.yml, prod.yml, test.yml)
 scripts/           → Shell scripts (utilities)
-prisma/            → Prisma schema and migrations
 docs/              → Operational docs (architecture, API contract, decisions)
 .claude/rules/     → Claude Code rules (git, architecture, frontend, standards)
 ```
@@ -50,12 +49,12 @@ Details in @.claude/rules/standards.md, @.claude/rules/architecture.md, @.claude
 - **Zero hardcoding** — config (YAML/env vars) or constants in `libs/shared` for everything
 - **Path aliases** — `@totoro/shared`, `@totoro/ui`; app-internal imports use relative paths
 - **Naming** — files: `kebab-case.ts`, classes: `PascalCase`, DTOs: `PascalCase` + `Dto` suffix
-- **Types** — shared types in `libs/shared`, Prisma-generated DB models, no type duplication
+- **Types** — shared types in `libs/shared`, no type duplication; Zod schemas in `apps/web` for runtime validation of AI responses
 - **Linting** — Nx-generated ESLint configs only, no plugins, no inline disables without comments
 - **Nx boundaries** — `apps/web` imports `libs/shared` + `libs/ui`; `services/api` imports `libs/shared` only; `libs/shared` imports nothing
-- **Architecture** — NestJS: authenticate, forward AI requests, store recommendation history, serve user CRUD — nothing else. NestJS never touches Redis, LLMs, embeddings, vector search, or Google Places. DB writes split: NestJS writes users/settings/recommendations (Prisma owns their migrations); FastAPI writes places/embeddings/taste_model (Alembic owns their migrations)
-- **Frontend** — Tailwind v3 + shadcn/ui, CSS variables with raw HSL, dark mode via `next-themes`, RTL logical properties only (`ms`/`me`/`ps`/`pe`), i18n via `next-intl` with URL routing `/en/` and `/he/`
-- **API routes** — all NestJS routes use `/api/v1/` prefix; AI service called via three endpoints (`POST /v1/extract-place`, `POST /v1/consult`, `POST /v1/recall`)
+- **Architecture** — NestJS: authenticate, forward all user messages to totoro-ai via `POST /v1/chat`, return the response — nothing else. NestJS has no database writes. FastAPI owns all DB writes (places, embeddings, taste_model, consult_logs, user_memories, interaction_log) via Alembic migrations
+- **Frontend** — Tailwind v3 + shadcn/ui, CSS variables with raw HSL, dark mode via `next-themes`, i18n via `next-intl` with URL routing `/en/`
+- **API routes** — all NestJS routes use `/api/v1/` prefix; AI service called via single endpoint (`POST /v1/chat`); frontend calls `POST /api/v1/chat` for all interactions (ADR-036)
 - **Commits** — `type(scope): description`, types: `feat|fix|chore|docs|refactor|test`, scopes: `api|web|shared` (details in @.claude/rules/git.md)
 - **Code quality** — single responsibility, constructor injection only, strategy pattern over if/switch on type, repository pattern for all DB access, no duplication (extract to `libs/shared`), new behavior = new class not an edit. Violations must be fixed before presenting code.
 
@@ -79,11 +78,10 @@ See `.claude/workflows.md` for the complete 5-step token-efficient workflow (ADR
 
 ## Notes
 
-- **Secrets management** (ADR-025): Each service manages secrets locally in a gitignored file. NestJS (`services/api`) uses `.env.local`. Next.js (`apps/web`) uses `.env.local`. FastAPI (`totoro-ai`) uses `config/.local.yaml`. Never commit secret files. Developers create these files manually and fill in values. CI/CD injects secrets as environment variables at deploy time.
+- **Secrets management** (ADR-025): NestJS secrets in `.env.local` (gitignored, symlinked to `totoro-config/secrets/api.env.local`); non-secrets in `services/api/config/app.yaml` (committed). Next.js (`apps/web`) uses `.env.local`. FastAPI (`totoro-ai`) uses `config/.local.yaml`. Railway injects secrets as environment variables — names must match the `.env.local` keys exactly.
 - **Git comment char is `;`** not `#` — run `git config core.commentChar ";"` once per machine.
 - **Bruno API testing**: Collection at `totoro-config/bruno/`. New endpoints need a corresponding `.bru` request file.
-- **Prisma + pgvector**: PostgreSQL must have `vector` extension. Prisma uses `Unsupported("vector")` — handle vector ops via raw SQL.
-- **Embedding dimensions must stay in sync**: pgvector column in Prisma must match the model output in FastAPI. Both repos must update together.
+- **pgvector**: All vector operations live in totoro-ai. NestJS never touches the database. Embedding dimensions and migrations are totoro-ai's concern only.
 - **Deployment**: Vercel (frontend), Railway (backend + AI service + PostgreSQL + Redis). Redis is FastAPI-only. Docker Compose for local dev only.
 
 ## Active Technologies

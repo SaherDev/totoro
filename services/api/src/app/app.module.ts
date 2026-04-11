@@ -18,43 +18,12 @@ import { UserSettingsEntity } from '../database/entities/user-settings.entity';
 import { DatabaseModule } from '../database/database.module';
 import { ChatModule } from '../chat/chat.module';
 
-const configPath = path.join(process.cwd(), 'services/api/config/.local.yaml');
-
-function loadConfig(): Record<string, unknown> {
+function loadAppYaml(): Record<string, unknown> {
+  const yamlPath = path.join(process.cwd(), 'services/api/config/app.yaml');
   try {
-    const fileContent = fs.readFileSync(configPath, 'utf-8');
-    return yaml.parse(fileContent);
+    return yaml.parse(fs.readFileSync(yamlPath, 'utf-8')) ?? {};
   } catch {
-    // No YAML file — build config from environment variables (Railway / production)
-    const apiPrefix = process.env.APP_API_PREFIX ?? 'api/v1';
-    return {
-      app: {
-        environment: process.env.APP_ENVIRONMENT ?? 'production',
-        port: parseInt(process.env.PORT ?? '3333', 10),
-        api_prefix: apiPrefix,
-        cors_origins: (process.env.APP_CORS_ORIGINS ?? '').split(',').filter(Boolean),
-      },
-      database: { url: process.env.DATABASE_URL },
-      auth: {
-        public_paths: [`/${apiPrefix}/health`, `/${apiPrefix}/webhooks/clerk`],
-        clerk: {
-          secret_key: process.env.CLERK_SECRET_KEY,
-          webhook_secret: process.env.CLERK_WEBHOOK_SECRET,
-        },
-        dev_bypass: { enabled: false },
-      },
-      cache: { redis: { url: process.env.REDIS_URL } },
-      integrations: { slack: { webhook_url: process.env.SLACK_WEBHOOK_URL } },
-      ai_service: { base_url: process.env.AI_SERVICE_BASE_URL },
-      ai: {
-        enabled_default: process.env.AI_ENABLED_DEFAULT !== 'false',
-        global_kill_switch: process.env.AI_GLOBAL_KILL_SWITCH === 'true',
-      },
-      features: {
-        enable_external_places: process.env.FEATURES_ENABLE_EXTERNAL_PLACES !== 'false',
-        enable_slack_alerts: process.env.FEATURES_ENABLE_SLACK_ALERTS === 'true',
-      },
-    };
+    return {};
   }
 }
 
@@ -62,14 +31,17 @@ function loadConfig(): Record<string, unknown> {
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [loadConfig],
+      // Secrets: loaded from .env.local for local dev; Railway injects them as env vars in production
+      envFilePath: path.join(process.cwd(), 'services/api/.env.local'),
+      // Non-secrets: loaded from committed app.yaml
+      load: [loadAppYaml],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
-        url: config.get<string>('database.url'),
+        url: config.get<string>('DATABASE_URL'),
         entities: [UserEntity, UserSettingsEntity],
         synchronize: true,
       }),

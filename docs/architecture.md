@@ -2,7 +2,7 @@
 
 ## Overview
 
-Totoro is split across two repositories. This repo (totoro) is the product layer. It owns the UI, authentication, user management, and recommendation history. It delegates all AI work to the totoro-ai repo over HTTP.
+Totoro is split across two repositories. This repo (totoro) is the product layer. It owns the UI, authentication, and the HTTP gateway to the AI brain. It delegates all AI work and all database writes to the totoro-ai repo over HTTP.
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -19,29 +19,24 @@ Totoro is split across two repositories. This repo (totoro) is the product layer
                        │ HTTP (REST)
                        ▼
 ┌─────────────────────────────────────────────────────┐
-│           services/api (NestJS + Prisma)             │
+│              services/api (NestJS)                   │
 │  - Auth verification (Clerk backend SDK)            │
-│  - User management and settings                     │
-│  - Recommendation history storage                   │
-│  - Forwards AI requests to totoro-ai                │
-│  - Prisma manages product table migrations only      │
-└────────────┬────────────────────┬───────────────────┘
-             │ SQL (read-write)   │ HTTP (JSON)
-             │                    │
-             ▼                    ▼
+│  - Forwards all user messages to totoro-ai          │
+│  - No database writes                               │
+└─────────────────────────────┬───────────────────────┘
+                              │ HTTP (JSON) POST /v1/chat
+                              ▼
 ┌──────────────────────┐  ┌──────────────────────────┐
 │  PostgreSQL           │  │  totoro-ai (FastAPI)     │
-│  + pgvector           │  │  - Extracts places       │
-│                       │  │  - Generates embeddings  │
-│  NestJS writes:       │  │  - Runs consult agent    │
-│  - users              │  │  - Writes places,        │
-│  - user_settings      │  │    embeddings, taste     │
-│  - recommendations    │  │    model to PostgreSQL   │
-│                       │  │                          │
-│  FastAPI writes:      │  │                          │
-│  - places             │  │                          │
+│  + pgvector           │  │  - Classifies intent     │
+│                       │  │  - Runs agent pipeline   │
+│  FastAPI writes:      │  │  - Generates embeddings  │
+│  - places             │  │  - Owns all DB writes    │
 │  - embeddings         │  │                          │
 │  - taste_model        │  │                          │
+│  - consult_logs       │  │                          │
+│  - user_memories      │  │                          │
+│  - interaction_log    │  │                          │
 └──────────────────────┘  └──────────────────────────┘
 ```
 
@@ -49,10 +44,7 @@ Totoro is split across two repositories. This repo (totoro) is the product layer
 
 - All user-facing UI (Next.js)
 - Authentication and authorization (Clerk)
-- Database schema and all migrations (Prisma)
-- User records and settings
-- Recommendation history (storing what the AI returned for display and analytics)
-- HTTP orchestration: receives user requests, forwards to totoro-ai, stores recommendation history
+- HTTP gateway: receives user messages, forwards to totoro-ai via `POST /v1/chat`, returns the response
 
 ## What This Repo Does NOT Do
 
@@ -63,96 +55,51 @@ Totoro is split across two repositories. This repo (totoro) is the product layer
 - Write place records or embeddings (FastAPI owns these)
 - Touch Redis
 
-## Data Flow: Share a Place
+## Data Flow: All User Interactions
 
-1. User sends raw input (URL, name, or screenshot) to apps/web.
-2. apps/web sends the raw input to services/api via REST.
-3. services/api verifies auth (Clerk), then forwards to totoro-ai via POST /v1/extract-place with user_id.
-4. totoro-ai parses the input, validates against Google Places API, generates embedding, and writes both the place record and embedding to PostgreSQL directly.
-5. totoro-ai returns a confirmation with the place_id and extracted metadata to NestJS.
-6. services/api returns confirmation to apps/web.
+All user messages — save, consult, recall — flow through a single endpoint (ADR-036):
 
-One HTTP call to totoro-ai. FastAPI writes what it generates. NestJS does not touch place data.
+1. User submits input in apps/web.
+2. apps/web sends the message to services/api via `POST /api/v1/chat`.
+3. services/api verifies auth (Clerk), then forwards to totoro-ai via `POST /v1/chat` with user_id and message.
+4. totoro-ai classifies intent (save / consult / recall / assistant / clarification) and handles the full pipeline autonomously.
+5. totoro-ai returns a typed `ChatResponseDto` with a discriminated `type` field.
+6. services/api returns HTTP 200 with the response. The frontend reads the `type` field to determine what happened.
+7. apps/web renders the appropriate UI based on response type.
 
-## Data Flow: Consult (Recommend a Place)
-
-1. User types intent (e.g., "cheap dinner nearby") in apps/web.
-2. apps/web sends the query to services/api via REST.
-3. services/api verifies auth, then forwards to totoro-ai via POST /v1/consult with user_id and location.
-4. totoro-ai handles everything internally: parses intent, queries pgvector, calls Google Places for external candidates, validates open hours, runs ranking, generates response.
-5. totoro-ai returns 1 primary recommendation + 2 alternatives with reasoning, plus an array of reasoning_steps showing what the agent did at each stage.
-6. services/api stores the recommendation in the recommendations table (for history and analytics).
-7. services/api returns the response to apps/web.
-8. apps/web renders the recommendation with reasoning text and agent thinking steps.
-
-One HTTP call to totoro-ai. The agent runs autonomously. NestJS stores recommendation history only.
-
-Streaming note: The current flow uses a synchronous JSON response. When the frontend needs to show agent thinking in real time (instead of after the fact), the consult endpoint will add an SSE (Server-Sent Events) mode. In SSE mode, FastAPI streams reasoning steps as they complete, and NestJS proxies the SSE stream to the frontend. Until then, the reasoning_steps array in the synchronous response is sufficient.
-
-## Data Flow: Recall (Retrieve Saved Places)
-
-1. User types a memory fragment (e.g., "that ramen place I saved from TikTok") in apps/web.
-2. apps/web sends the query to services/api via REST.
-3. services/api verifies auth, then forwards to totoro-ai via POST /v1/recall with user_id and query.
-4. totoro-ai performs vector search on the user's saved places, filters by similarity to the query, and returns matching results.
-5. services/api returns the results to apps/web.
-6. apps/web renders the list of saved places with match reasons.
-
-One HTTP call to totoro-ai. Recall only searches saved places — no external discovery, no ranking, no taste model.
+One HTTP call to totoro-ai. Intent classification is the AI service's responsibility. NestJS never inspects response content — it forwards and returns. HTTP error codes (401, 403, 503) are reserved for transport failures only.
 
 ## Intent Classification
 
-Every submission from the input bar is classified into one of three intents before
-any pipeline runs. Classification happens in FastAPI as the first step of request
-handling — not in NestJS, not in the frontend.
+Classification happens in totoro-ai as the first step of request handling — not in NestJS, not in the frontend.
 
-Intent types:
-- consult — natural language intent query ("cheap dinner nearby", "good ramen for a date")
-- recall — memory fragment referencing a saved place ("that ramen place from TikTok")
-- save — URL or place name ("tiktok.com/@foodie/video/123", "Fuji Ramen Bangkok")
+Intent types returned in `type` field:
+- `extract-place` — URL or place name was saved
+- `consult` — natural language intent query was answered
+- `recall` — memory fragment search was performed
+- `assistant` — general assistant reply
+- `clarification` — AI needs more information
 
-Classification rules:
-- URL detected via urllib.parse → always save
-- Contains memory language ("that", "I saved", "from TikTok/Instagram") → recall
-- Everything else → consult
-- Default when uncertain → consult
-
-NestJS routes the request to the correct FastAPI endpoint based on intent.
-The frontend never sees the classification. The response shape tells the user
-what happened.
-
-Empty state rule: the system always returns something. At zero saves, a consult
-query returns nearby popular options. A recall with no matches returns the closest
-consult result with a note that nothing was found in saves. Never return a
-zero-result response.
+Empty state rule: the system always returns something. At zero saves, a consult query returns nearby popular options. A recall with no matches returns the closest consult result with a note that nothing was found in saves. Never return a zero-result response.
 
 ## API Contract (NestJS to totoro-ai)
 
-| Endpoint               | Purpose                                     | NestJS Sends             | totoro-ai Returns                          |
-| ---------------------- | ------------------------------------------- | ------------------------ | ------------------------------------------ |
-| POST /v1/extract-place | Extract and validate a place from raw input | raw_input, user_id       | place_id, place metadata, confidence score |
-| POST /v1/consult       | Get a recommendation from natural language  | query, user_id, location | 1 primary + 2 alternatives with reasoning  |
-| POST /v1/recall        | Retrieve saved places matching memory       | query, user_id           | list of saved places matching query        |
+| Endpoint       | Purpose                      | NestJS Sends                   | totoro-ai Returns                    |
+| -------------- | ---------------------------- | ------------------------------ | ------------------------------------ |
+| POST /v1/chat  | All user interactions        | message, user_id, location?    | typed ChatResponseDto (discriminated union) |
 
-## Database Table Ownership
+See `docs/api-contract.md` for the full request/response schema.
 
-Prisma in this repo defines and migrates product tables only. Alembic in totoro-ai defines and migrates AI tables. Write ownership is split by domain.
+## Database Ownership
 
-NestJS writes and reads:
-
-- users
-- user_settings
-- recommendations (history of consult results)
+totoro-ai (FastAPI) owns all database writes. Alembic in totoro-ai owns all migrations. NestJS does not write to any database table.
 
 FastAPI writes and reads:
 
-- places
-- embeddings
-- taste_model
+- places, embeddings, taste_model
+- consult_logs, user_memories, interaction_log
 
-Both services read from any table as needed. They write to different tables. No write conflicts.
-
-One shared PostgreSQL instance. Migration ownership split: Prisma owns users, user_settings, recommendations. Alembic in totoro-ai owns places, embeddings, taste_model. Never run Prisma migrations against AI tables. Two connection strings with appropriate write permissions.
+NestJS has no database write responsibilities. It reads nothing from the DB directly — all data it needs comes from totoro-ai responses or Clerk.
 
 ## Technology Stack
 
@@ -161,7 +108,7 @@ One shared PostgreSQL instance. Migration ownership split: Prisma owns users, us
 | Frontend        | Next.js + Tailwind CSS     | Server and client components     |
 | Auth            | Clerk                      | Free tier, 50K MAU               |
 | Backend         | NestJS                     | Modular architecture             |
-| ORM             | Prisma                     | Schema owner for all tables      |
+| ORM             | —                          | NestJS has no DB writes; FastAPI owns all tables |
 | Database        | PostgreSQL + pgvector      | Vector similarity search         |
 | Package Manager | pnpm                       |                                  |
 | Monorepo        | Nx                         | Workspace with module boundaries |
@@ -180,8 +127,8 @@ Behavioral and implementation patterns live in docs/decisions.md.
 
 ### Facade — Controllers
 Controllers are the HTTP entry point only. Each controller method
-makes exactly one service call and returns the result. No Prisma
-queries, no AiServiceClient calls, no business logic appear inside
+makes exactly one service call and returns the result. No TypeORM
+repository calls, no AiServiceClient calls, no business logic appear inside
 any controller file. All orchestration lives in the service layer.
 Guards and pipes via decorators do not count as logic inside the
 method body.
