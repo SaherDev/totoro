@@ -117,20 +117,16 @@
     "emptyFooter": "Nothing else matches. Want me to find more like this?"
   },
   "flow4": {
-    "sheetTitle": "Save to Totoro",
-    "saveButton": "Save to Totoro",
-    "saving": "Saving…",
-    "saved": "Saved!",
+    "heading": "Save this place",
+    "confirm": "Save place",
+    "saveDuplicate": "Got it",
+    "cancel": "Cancel",
+    "saving": "Adding to your collection…",
+    "saved": "{place} saved!",
     "savedSubline": "Added to your collection",
-    "duplicate": {
-      "headline": "Already in your places",
-      "savedDate": "Saved {date}",
-      "viewButton": "View saved place"
-    },
-    "error": {
-      "message": "Couldn't save this place",
-      "tryAgain": "Try again"
-    },
+    "duplicate": "You already saved this on {date}",
+    "error": "Couldn't save this place. Try again.",
+    "undoLink": "Manage taste signals",
     "undo": "Undo",
     "tasteSignals": "Taste signals updating."
   },

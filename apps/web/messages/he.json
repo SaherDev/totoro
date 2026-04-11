@@ -115,20 +115,16 @@
     "emptyFooter": "כמעט תאומות. רוצה שאני אחפש עוד כאלה?"
   },
   "flow4": {
-    "sheetTitle": "שמור ל-Totoro",
-    "saveButton": "שמור ל-Totoro",
-    "saving": "שומר…",
-    "saved": "שמור!",
+    "heading": "שמור מקום זה",
+    "confirm": "שמור מקום",
+    "saveDuplicate": "הבנתי",
+    "cancel": "ביטול",
+    "saving": "הוספה לאוסף שלך…",
+    "saved": "{place} נשמר!",
     "savedSubline": "נוסף לאוסף שלך",
-    "duplicate": {
-      "headline": "כבר בשמורים שלך",
-      "savedDate": "שמור ב-{date}",
-      "viewButton": "הצג מקום שמור"
-    },
-    "error": {
-      "message": "לא הצלחתי לשמור את המקום הזה",
-      "tryAgain": "נסה שוב"
-    },
+    "duplicate": "כבר שמרת את זה ב-{date}",
+    "error": "לא הצלחתי לשמור את המקום הזה. נסה שוב.",
+    "undoLink": "ניהול אותות טעם",
     "undo": "בטל",
     "tasteSignals": "אותות הטעם מתעדכנים."
   },
