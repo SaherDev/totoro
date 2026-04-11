@@ -64,20 +64,22 @@ export interface SavedPlaceStub {
   thumbnail_url?: string;
 }
 
-export interface ExtractPlaceData {
+export interface SaveExtractPlace {
   place_id: string | null;
-  place: {
-    place_name: string | null;
-    address: string | null;
-    cuisine: string | null;
-    price_range: string | null;
-    thumbnail_url?: string;
-  };
-  confidence: number;
-  status: 'resolved' | 'unresolved' | 'duplicate';
+  place_name: string | null;
+  address: string | null;
+  cuisine: string | null;
+  price_range: string | null;
+  thumbnail_url?: string;
+  confidence?: number;
+  status?: 'resolved' | 'duplicate' | 'unresolved';
+  original_saved_at?: string;
+}
+
+export interface ExtractPlaceData {
+  places: SaveExtractPlace[];
   requires_confirmation: boolean;
   source_url: string | null;
-  original_saved_at?: string;
 }
 
 export interface SaveSheetPlace {

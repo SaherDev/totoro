@@ -8,6 +8,7 @@ import type {
   RecallItem,
   SavedPlaceStub,
   ExtractPlaceData,
+  SaveExtractPlace,
   SaveSheetPlace,
 } from '@totoro/shared';
 import type { FlowId, HomePhase } from '../flows/flow-definition';
@@ -66,6 +67,8 @@ interface HomeState {
   recallQuery: string | null;
   recallBreadcrumb: boolean;
   saveSheetPlace: SaveSheetPlace | null;
+  saveSheetPlaces: SaveExtractPlace[];
+  saveSheetSelectedIndex: number;
   saveSheetMessage: string | null;
   saveSheetStatus: 'pending' | 'saving' | 'duplicate' | 'error';
   saveSheetOriginalSavedAt: string | null;
@@ -87,7 +90,8 @@ interface HomeState {
 
   // Actions — stubbed until sub-plans 3–7
   submitRecall: (message: string) => Promise<void>;
-  openSaveSheet: (message: string) => void;
+  openSaveSheet: (message: string, places: SaveExtractPlace[]) => void;
+  setSaveSheetSelectedIndex: (index: number) => void;
   confirmSave: () => Promise<void>;
   dismissSaveSheet: () => void;
   dismissAssistantReply: () => void;
@@ -145,6 +149,8 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   recallQuery: null,
   recallBreadcrumb: false,
   saveSheetPlace: null,
+  saveSheetPlaces: [],
+  saveSheetSelectedIndex: 0,
   saveSheetMessage: null,
   saveSheetStatus: 'pending',
   saveSheetOriginalSavedAt: null,
@@ -422,19 +428,26 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   },
 
   // ── openSaveSheet ─────────────────────────────────────────────────────────
-  openSaveSheet: (message) => {
+  openSaveSheet: (message, places) => {
     const { phase } = get();
     set({
       preSavePhase: phase,
       saveSheetMessage: message,
+      saveSheetPlaces: places,
+      saveSheetSelectedIndex: 0,
       saveSheetStatus: 'pending',
       phase: 'save-sheet',
     });
   },
 
+  // ── setSaveSheetSelectedIndex ──────────────────────────────────────────────
+  setSaveSheetSelectedIndex: (index) => {
+    set({ saveSheetSelectedIndex: index });
+  },
+
   // ── confirmSave ────────────────────────────────────────────────────────────
   confirmSave: async () => {
-    const { getToken, location, saveSheetMessage } = get();
+    const { getToken, location, saveSheetMessage, saveSheetSelectedIndex } = get();
 
     set({ saveSheetStatus: 'saving' });
 
@@ -447,26 +460,27 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
       if (res.type === 'extract-place' && res.data) {
         const data = res.data as ExtractPlaceData;
+        const selectedPlace = data.places[saveSheetSelectedIndex] || data.places[0];
 
-        if (data.status === 'resolved') {
-          // Resolved save — increment count and show snackbar
-          const place: SavedPlaceStub = {
-            place_id: data.place_id || '',
-            place_name: data.place.place_name || '',
-            address: data.place.address || '',
-            saved_at: new Date().toISOString(),
-            source_url: data.source_url,
-            thumbnail_url: data.place.thumbnail_url,
-          };
-          get().incrementSavedCount(place);
-          set({ phase: 'save-snackbar', saveSheetStatus: 'pending' });
-        } else if (data.status === 'duplicate') {
+        if (selectedPlace.status === 'duplicate') {
           // Duplicate save — show duplicate state
           set({
             phase: 'save-duplicate',
             saveSheetStatus: 'duplicate',
-            saveSheetOriginalSavedAt: data.original_saved_at || null,
+            saveSheetOriginalSavedAt: selectedPlace.original_saved_at || null,
           });
+        } else if (selectedPlace.status === 'resolved') {
+          // Resolved save — increment count and show snackbar
+          const place: SavedPlaceStub = {
+            place_id: selectedPlace.place_id || '',
+            place_name: selectedPlace.place_name || '',
+            address: selectedPlace.address || '',
+            saved_at: new Date().toISOString(),
+            source_url: data.source_url,
+            thumbnail_url: selectedPlace.thumbnail_url,
+          };
+          get().incrementSavedCount(place);
+          set({ phase: 'save-snackbar', saveSheetStatus: 'pending' });
         } else {
           // Unresolved — keep sheet in pending state
           set({ saveSheetStatus: 'pending' });
@@ -485,6 +499,8 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       phase: restorePhase,
       preSavePhase: null,
       saveSheetPlace: null,
+      saveSheetPlaces: [],
+      saveSheetSelectedIndex: 0,
       saveSheetMessage: null,
       saveSheetStatus: 'pending',
     });
