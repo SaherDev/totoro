@@ -108,4 +108,5 @@ See `.claude/workflows.md` for the complete 5-step token-efficient workflow (ADR
 
 ## Recent Changes
 
+- 012-home-subplans-3-7: Implemented below-threshold confirmation flow for place extraction — shows SaveSheet with "Confirm" badges for candidates with confidence < 70%, auto-saves high-confidence places
 - 001-nx-monorepo-setup: Added TypeScript 5.x / Node 20 LTS + Nx (ADR-001), pnpm (ADR-020), Next.js 16 (apps/web), NestJS 11 (services/api), Tailwind v3 + shadcn/ui (ADR-007)
