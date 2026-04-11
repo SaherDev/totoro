@@ -7,7 +7,6 @@ import { useRef, useState } from "react";
 
 import { cn } from "@totoro/ui";
 import { useTranslations } from "next-intl";
-import { PastePreview } from "./PastePreview";
 
 interface ChatInputProps {
   onSubmit: (message: string) => void;
@@ -19,7 +18,6 @@ interface ChatInputProps {
 function ChatInput({ onSubmit, disabled, placeholder, className }: ChatInputProps) {
   const t = useTranslations("chat");
   const [hasContent, setHasContent] = useState(false);
-  const [pastedItems, setPastedItems] = useState<Array<{ id: string; content: string }>>([]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = () => {
@@ -49,34 +47,13 @@ function ChatInput({ onSubmit, disabled, placeholder, className }: ChatInputProp
     }
   };
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    e.preventDefault();
-    try {
-      const pastedText = e.clipboardData.getData("text/plain");
-      if (pastedText && pastedText.trim()) {
-        setPastedItems((prev) => [...prev, { id: `paste-${Date.now()}`, content: pastedText }]);
-      }
-    } catch (err) {
-      console.error("❌ Error accessing clipboard:", err);
-    }
-  };
-
   return (
     <div className={cn("flex flex-col gap-2", className)}>
       <div className="flex flex-col gap-3 p-1">
-        {pastedItems.length > 0 && (
-          <div className="flex flex-nowrap gap-2 overflow-x-auto pb-2">
-            {pastedItems.map((item) => (
-              <PastePreview key={item.id} content={item.content} />
-            ))}
-          </div>
-        )}
-
         <textarea
           ref={inputRef}
           onKeyDown={handleKeyDown}
           onInput={handleInput}
-          onPaste={handlePaste}
           placeholder={placeholder || t("placeholder")}
           disabled={disabled}
           rows={1}
