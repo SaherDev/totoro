@@ -18,7 +18,7 @@ function testColdStartZero() {
 
 function testColdStart1to4() {
   console.log('❄️ Testing Cold-Start 1-4 (3 saved places)')
-  let places = [
+  const places = [
     {place_id:'1',place_name:'Fuji Ramen',address:'123 Sukhumvit'},
     {place_id:'2',place_name:'Steak House',address:'456 Sukhumvit'},
     {place_id:'3',place_name:'Coffee Shop',address:'789 Sukhumvit'}
@@ -30,7 +30,7 @@ function testColdStart1to4() {
 
 function testColdStart5Plus() {
   console.log('🌟 Testing Cold-Start 5+ (6 saved places)')
-  let places = [
+  const places = [
     {place_id:'1',place_name:'Fuji',address:'123 St'},
     {place_id:'2',place_name:'Steak',address:'456 St'},
     {place_id:'3',place_name:'Coffee',address:'789 St'},

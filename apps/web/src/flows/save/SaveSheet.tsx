@@ -16,6 +16,9 @@ interface SaveSheetProps {
 }
 
 function PlaceOption({ place, isSelected, onSelect }: { place: SaveExtractPlace; isSelected: boolean; onSelect: () => void }) {
+  const needsConfirmation = place.confidence !== undefined && place.confidence < 0.7;
+  const confidencePercent = place.confidence ? Math.round(place.confidence * 100) : null;
+
   return (
     <motion.button
       key={place.place_id}
@@ -32,9 +35,21 @@ function PlaceOption({ place, isSelected, onSelect }: { place: SaveExtractPlace;
 
         {/* Place info */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-foreground truncate">{place.place_name || 'Unknown place'}</h3>
+          <div className="flex items-center gap-2 mb-0.5">
+            <h3 className="font-semibold text-foreground truncate">{place.place_name || 'Unknown place'}</h3>
+            {needsConfirmation && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-100 font-medium whitespace-nowrap flex-shrink-0">
+                Confirm
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground truncate">{place.address}</p>
-          {place.cuisine && <p className="text-xs text-muted-foreground mt-1">{place.cuisine}</p>}
+          <div className="flex items-center gap-2 mt-1">
+            {place.cuisine && <p className="text-xs text-muted-foreground">{place.cuisine}</p>}
+            {confidencePercent && (
+              <p className="text-xs text-muted-foreground">{confidencePercent}% match</p>
+            )}
+          </div>
         </div>
 
         {/* Selection indicator */}

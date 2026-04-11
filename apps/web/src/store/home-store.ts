@@ -100,6 +100,7 @@ interface HomeState {
   dismissSaveSheet: () => void;
   dismissAssistantReply: () => void;
   incrementSavedCount: (place: SavedPlaceStub) => void;
+  autoSavePlace: (place: SaveExtractPlace, sourceUrl: string | null) => void;
 }
 
 // Exported type for use in FlowDefinition — replaces the `any` forward declaration
@@ -552,5 +553,19 @@ export const useHomeStore = create<HomeState>((set, get) => ({
         found = true;
       }
     }
+  },
+
+  // ── autoSavePlace ──────────────────────────────────────────────────────────
+  autoSavePlace: (place, sourceUrl) => {
+    const savedPlace: SavedPlaceStub = {
+      place_id: place.place_id || '',
+      place_name: place.place_name || '',
+      address: place.address || '',
+      saved_at: new Date().toISOString(),
+      source_url: sourceUrl,
+      thumbnail_url: place.thumbnail_url,
+    };
+    get().incrementSavedCount(savedPlace);
+    set({ phase: 'save-snackbar' });
   },
 }));
