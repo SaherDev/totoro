@@ -25,13 +25,13 @@ Format:
 
 ---
 
-## ADR-035: TypeORM replaces Prisma in services/api
+## ADR-035: TypeORM as the ORM for services/api
 
 **Date:** 2026-04-09\
 **Status:** accepted\
-**Context:** services/api manages exactly two domain tables — users and user_settings. Prisma added friction: a separate generate step, a global PrismaService singleton, and migration ownership split across two tools (Prisma for product tables, Alembic for AI tables). For a two-table gateway service, this overhead is not justified.\
-**Decision:** Replace Prisma with TypeORM in services/api. Use TypeOrmModule.forRootAsync() with ConfigService injecting the `DATABASE_URL` env var. Set synchronize: true — acceptable at this stage (small team, no production data at risk). Define UserEntity and UserSettingsEntity mapping to the existing users and user_settings tables. Use @PrimaryColumn() with @BeforeInsert() CUID generation to match existing CUID primary keys. Column names use explicit name decorators to match Prisma-created camelCase column names (createdAt, updatedAt, userId). TypeORM with synchronize: true only touches registered entities — FastAPI-owned tables (places, embeddings, taste_model) are not registered and will not be altered.\
-**Consequences:** Prisma, prisma CLI, and @prisma/client are removed from the monorepo. PrismaModule and PrismaService are deleted from services/api. prisma/schema.prisma remains for migration history only (no further migrations). If the team grows or production data accrues, replace synchronize: true with explicit TypeORM migrations via a future ADR.
+**Context:** services/api manages exactly two domain tables — users and user_settings. A lightweight ORM is sufficient for a two-table gateway service.\
+**Decision:** Use TypeORM in services/api. `TypeOrmModule.forRootAsync()` reads `DATABASE_URL` from env vars via `ConfigService`. `synchronize: true` — acceptable at this stage (small team, no production data at risk). `UserEntity` and `UserSettingsEntity` map to the `users` and `user_settings` tables; `@PrimaryColumn()` with `@BeforeInsert()` CUID generation. TypeORM with `synchronize: true` only touches registered entities — AI-owned tables (places, embeddings, taste_model, consult_logs, user_memories, interaction_log) are never registered and are fully owned by totoro-ai's Alembic migrations.\
+**Consequences:** Single-tool schema management on the NestJS side. If the team grows or production data accrues, replace `synchronize: true` with explicit TypeORM migrations via a future ADR.
 
 ---
 
@@ -49,7 +49,7 @@ Format:
 
 **Date:** 2026-03-14\
 **Status:** accepted\
-**Context:** The product repo depends on external systems: Clerk for auth, Prisma for database access, Axios for HTTP calls to totoro-ai, and any future integrations. ADR-030 establishes that interfaces are implemented via classes. This ADR extends that to require an interface abstraction for any dependency that meets one or more criteria: (1) has more than one possible implementation now or in the future, (2) is an external system that could be swapped for cost, performance, or availability reasons, (3) needs to be mockable in tests without hitting a real service. This mirrors ADR-039 in totoro-ai and makes the rule consistent across both repos.\
+**Context:** The product repo depends on external systems: Clerk for auth, TypeORM for database access, Axios for HTTP calls to totoro-ai, and any future integrations. ADR-030 establishes that interfaces are implemented via classes. This ADR extends that to require an interface abstraction for any dependency that meets one or more criteria: (1) has more than one possible implementation now or in the future, (2) is an external system that could be swapped for cost, performance, or availability reasons, (3) needs to be mockable in tests without hitting a real service. This mirrors ADR-039 in totoro-ai and makes the rule consistent across both repos.\
 **Decision:** Any dependency meeting the criteria above must be abstracted behind a TypeScript interface before a concrete class is written. Concrete implementations live in their domain module or in a shared provider if used across multiple modules. Controllers and services depend on the interface only, injected via NestJS Depends(). No concrete class is imported directly in business logic. Swapping any dependency requires a config change and a new implementation class, never a change to business logic. AiServiceClient (ADR-016) is the first example of this pattern applied correctly — it abstracts all totoro-ai HTTP forwarding behind a typed interface.\
 **Consequences:** Every new external dependency introduced must be evaluated against the three criteria before implementation begins. If it qualifies, an interface is defined first, then the concrete class. This rule is a Constitution Check item — any plan that introduces a concrete external dependency directly into a controller or service must be flagged and revised before implementation starts.
 
@@ -187,13 +187,12 @@ See `docs/examples/consult-example.ts` for the full flow.
 
 ---
 
-## ADR-026: Database migration ownership split between Prisma and Alembic _(superseded by ADR-035)_
+## ADR-026: Database migration ownership split _(superseded by ADR-035)_
 
 **Date:** 2026-03-09\
 **Status:** superseded\
-**Context:** Two services write to one shared PostgreSQL instance. Giving Prisma sole ownership of all migrations would require opening the product repo every time FastAPI evolves its AI table schemas. Two separate databases would force HTTP calls or data duplication mid-pipeline, adding latency to the consult agent.\
-**Decision:** Split migration ownership by domain. Prisma in the product repo owns and migrates users, user_settings, and recommendations. Alembic in the AI repo owns and migrates places, embeddings, and taste_model. Each tool touches only its own tables. No exceptions.\
-**Consequences:** Two migration tools in the system. Accepted because each repo stays autonomous within its domain. Schema changes to AI tables never require opening the product repo and vice versa.
+**Context:** Originally defined how two ORM tools would share one PostgreSQL instance.\
+**Decision:** Superseded by ADR-035. Current state: NestJS uses TypeORM with `synchronize: true` for `users` and `user_settings`; Alembic in totoro-ai owns all AI tables. See ADR-035 for details.
 
 ---
 
@@ -297,13 +296,12 @@ See `docs/examples/consult-example.ts` for the full flow.
 
 ---
 
-## ADR-015: PrismaService as a global singleton provider _(superseded by ADR-035)_
+## ADR-015: Global singleton DB provider _(superseded by ADR-035)_
 
 **Date:** 2026-03-07\
 **Status:** superseded\
-**Context:** Prisma's `PrismaClient` is a stateful singleton that manages connection pooling. Instantiating it per-module or per-request would create redundant connections and break lifecycle management.\
-**Decision:** `PrismaService` in `services/api/src/prisma/prisma.service.ts` extends `PrismaClient` and implements `OnModuleInit` to call `$connect()`. It is exported from `PrismaModule`, which is declared with `@Global()` so all domain modules can inject `PrismaService` without importing `PrismaModule` explicitly. Implementation is pending.\
-**Consequences:** One database connection pool for the entire NestJS process. Domain services declare `PrismaService` in their constructor without importing `PrismaModule`. NestJS lifecycle hooks (`OnModuleInit`, `OnModuleDestroy`) manage the connection cleanly.
+**Context:** Originally specified the shape of a global DB service provider.\
+**Decision:** Superseded by ADR-035. `TypeOrmModule.forRootAsync()` now provides the global DataSource; domain services inject repositories via `@InjectRepository()`.
 
 ---
 
@@ -402,13 +400,12 @@ See `docs/examples/consult-example.ts` for the full flow.
 
 ---
 
-## ADR-005: Prisma over TypeORM _(superseded by ADR-035)_
+## ADR-005: Initial ORM choice _(superseded by ADR-035)_
 
 **Date:** 2026-03-04\
 **Status:** superseded\
-**Context:** NestJS needs a database access layer for PostgreSQL. The team prioritised type safety and migration ergonomics over the NestJS-default TypeORM.\
-**Decision:** Use Prisma as the ORM and schema owner. Prisma generates TypeScript types from the schema and manages all migrations. Alternatives considered: TypeORM, Drizzle, raw SQL.\
-**Consequences:** Prisma is the single source of truth for the database schema. All migrations run through `prisma migrate`. Vector operations that Prisma cannot express use raw SQL via `$queryRaw`.
+**Context:** Initial ORM decision for services/api.\
+**Decision:** Superseded by ADR-035. Current ORM: TypeORM.
 
 ---
 

@@ -3,7 +3,7 @@
 **Generated**: 2026-03-25
 **Branch**: `001-ai-service-axios`
 
-This feature adds no new database tables or Prisma migrations. It only modifies the TypeScript interface and implementation of the AI service client. The data model here describes the TypeScript type contract between NestJS and totoro-ai.
+This feature adds no database tables or migrations. It only modifies the TypeScript interface and implementation of the AI service client. The data model here describes the TypeScript type contract between NestJS and totoro-ai.
 
 ---
 

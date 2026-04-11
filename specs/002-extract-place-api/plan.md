@@ -19,7 +19,7 @@ Add a global `ValidationPipe` and `AllExceptionsFilter` to `services/api/main.ts
 **Target Platform**: NestJS API service (`services/api`)
 **Project Type**: Web service — thin HTTP gateway
 **Performance Goals**: Validation and error mapping add < 1ms overhead per request
-**Constraints**: No Prisma queries, no business logic, AxiosError propagates raw from service to filter
+**Constraints**: No DB queries, no business logic, AxiosError propagates raw from service to filter
 **Scale/Scope**: Single new module (3 files), 2 `main.ts` additions, 1 `app.controller.ts` removal, 1 filter file
 
 ---
