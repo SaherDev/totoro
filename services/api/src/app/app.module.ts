@@ -43,7 +43,7 @@ function loadAppYaml(): Record<string, unknown> {
         type: 'postgres',
         url: config.get<string>('DATABASE_URL'),
         entities: [UserEntity, UserSettingsEntity],
-        synchronize: true,
+        synchronize: config.get<string>('app.environment') !== 'production',
       }),
     }),
     DatabaseModule,
