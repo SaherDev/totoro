@@ -2,6 +2,9 @@
   "name": "@totoro/source",
   "version": "0.0.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "packageManager": "pnpm@10.28.2",
   "scripts": {
     "dev": "sh -c 'set -a && . ../totoro-config/.env.shared && . ../totoro-config/.env.totoro && . ../totoro-config/.env.totoro-ai && set +a && nx run-many -t dev serve -p web api'",
