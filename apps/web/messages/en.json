@@ -160,10 +160,9 @@
   "coldStartOneFour": {
     "headline": "The more you save, the better I get.",
     "subline": "Recall works now. Consult shows what's good nearby.",
-    "pasteHint": "Try asking for something specific",
-    "savedListEmpty": "No saved places yet",
-    "popularLabel": "Popular right now",
-    "popularFootnote": "Everyone's been to this one. As you save more, I'll find hidden gems instead.",
+    "whatGoodNearby": "What's good nearby",
+    "popularRightNow": "Popular right now",
+    "alreadySaved": "Already have places saved?",
     "starterPackLink": "City starter pack"
   },
   "illustrations": {

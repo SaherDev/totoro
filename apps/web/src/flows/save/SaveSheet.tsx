@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check } from 'lucide-react';
+import { PlaceAvatar } from '@/components/PlaceAvatar';
 import type { SaveExtractPlace } from '@totoro/shared';
 
 interface SaveSheetProps {
@@ -32,8 +33,7 @@ function SavePlaceCard({
       transition={{ delay: index * 0.05 }}
       className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
     >
-      {/* Thumbnail */}
-      <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-muted" />
+      <PlaceAvatar name={place.place_name || 'place'} size={48} className="rounded-lg overflow-hidden" />
 
       {/* Place info */}
       <div className="flex-1 min-w-0">

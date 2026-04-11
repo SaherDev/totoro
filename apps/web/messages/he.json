@@ -158,10 +158,9 @@
   "coldStartOneFour": {
     "headline": "ככל שתשמור יותר, אני אשתפר יותר.",
     "subline": "Recall עובד עכשיו. Consult מראה מה טוב קרוב.",
-    "pasteHint": "נסה לשאול משהו ספציפי",
-    "savedListEmpty": "אין מקומות שמורים עדיין",
-    "popularLabel": "פופולרי כרגע",
-    "popularFootnote": "כולם הלכו לשם. כשתשמור יותר, אמצא אותנות במקום.",
+    "whatGoodNearby": "מה טוב קרוב",
+    "popularRightNow": "פופולרי כרגע",
+    "alreadySaved": "כבר יש לך מקומות שמורים?",
     "starterPackLink": "חבילת ההתחלה של העיר"
   },
   "illustrations": {

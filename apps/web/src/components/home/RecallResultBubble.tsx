@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { PlaceAvatar } from '@/components/PlaceAvatar';
 import type { RecallResponseData, RecallItem } from '@totoro/shared';
 
 interface RecallResultBubbleProps {
@@ -22,8 +23,7 @@ function RecallCard({ place, index }: { place: RecallItem; index: number }) {
       transition={{ delay: index * 0.05 }}
       className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
     >
-      {/* Thumbnail placeholder */}
-      <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-muted" />
+      <PlaceAvatar name={place.place_name} size={48} className="rounded-lg overflow-hidden" />
 
       {/* Info */}
       <div className="flex-1 min-w-0">

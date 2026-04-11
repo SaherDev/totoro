@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PlaceAvatar } from '@/components/PlaceAvatar';
 import type { RecallItem } from '@totoro/shared';
 
 interface RecallResultsProps {
@@ -21,8 +22,7 @@ function RecallResultCard({ item, index }: { item: RecallItem; index: number }) 
       className="rounded-2xl border border-border bg-card p-4"
     >
       <div className="flex gap-3">
-        {/* Thumbnail placeholder */}
-        <div className="h-16 w-16 flex-shrink-0 rounded-lg bg-muted" />
+        <PlaceAvatar name={item.place_name} size={64} className="rounded-lg overflow-hidden" />
 
         {/* Place info */}
         <div className="flex-1 min-w-0">

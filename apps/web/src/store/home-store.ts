@@ -107,6 +107,7 @@ interface HomeState {
   dismissAssistantReply: () => void;
   incrementSavedCount: (place: SavedPlaceStub) => void;
   autoSavePlace: (place: SaveExtractPlace, sourceUrl: string | null) => void;
+  saveQuiet: (place: SaveExtractPlace) => void;
   pushMessage: (message: string) => void;
   pushRecallResults: (message: string, data: RecallResponseData) => void;
 }
@@ -662,6 +663,21 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       animationComplete: false,
       fetchComplete: false,
     });
+  },
+
+  // ── saveQuiet ─────────────────────────────────────────────────────────────
+  // Saves a place silently — updates count + localStorage, no thread entry, no phase change.
+  // Used for inline saves from Discovery/starter-pack lists.
+  saveQuiet: (place) => {
+    const stub: SavedPlaceStub = {
+      place_id: place.place_id || '',
+      place_name: place.place_name || '',
+      address: place.address || '',
+      saved_at: new Date().toISOString(),
+      source_url: null,
+      thumbnail_url: place.thumbnail_url,
+    };
+    get().incrementSavedCount(stub);
   },
 
   // ── pushMessage ────────────────────────────────────────────────────────────
