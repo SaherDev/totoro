@@ -15,6 +15,7 @@ import { UserBubble } from '@/components/home/UserBubble';
 import { AssistantBubble } from '@/components/home/AssistantBubble';
 import { ConsultError } from '@/components/home/ConsultError';
 import { ConsultResult } from '@/flows/consult/ConsultResult';
+import { DiscoveryResults } from '@/flows/discovery';
 import { TASTE_CHIP_BANK } from '@/constants/home-suggestions';
 import { TotoroCard } from '@totoro/ui';
 import { useHomeStore, type ThreadEntry, type HomeStoreApi } from '@/store/home-store';
@@ -119,6 +120,15 @@ export default function HomePage() {
             }
             return <ThreadEntryView key={entry.id} entry={entry} store={store} />;
           })}
+
+          {/* Discovery results — multi-place search results */}
+          {store.discoveryPlaces && store.discoveryQuery && (
+            <DiscoveryResults
+              places={store.discoveryPlaces}
+              query={store.discoveryQuery}
+              store={store}
+            />
+          )}
 
           {/* Active in-progress flow — thinking animation */}
           {store.activeFlowId && (() => {

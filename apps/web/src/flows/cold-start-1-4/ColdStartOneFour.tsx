@@ -18,6 +18,45 @@ export function ColdStartOneFour({ store }: ColdStartOneFourProps) {
     { name: 'Local Coffee Shop', area: 'Silom' },
   ];
 
+  // Dummy discovery data for city starter pack
+  const dummyDiscoveryPlaces = [
+    {
+      place_id: '1',
+      place_name: 'Samlor Restaurant',
+      cuisine: 'Thai',
+      price_range: '$$',
+      address: 'Silom',
+    },
+    {
+      place_id: '2',
+      place_name: 'Fuji Ramen',
+      cuisine: 'Ramen',
+      price_range: '$',
+      address: 'Sukhumvit',
+    },
+    {
+      place_id: '3',
+      place_name: 'Roots Coffee',
+      cuisine: 'Coffee',
+      price_range: '$',
+      address: 'Ekamai',
+    },
+    {
+      place_id: '4',
+      place_name: 'Paste Bangkok',
+      cuisine: 'Fine Thai',
+      price_range: '$$$',
+      address: 'Sathorn',
+    },
+    {
+      place_id: '5',
+      place_name: 'Laab Ubol',
+      cuisine: 'Isaan',
+      price_range: '$',
+      address: 'Ratchathewi',
+    },
+  ];
+
   return (
     <div className="flex flex-col items-center gap-6 py-8">
       {/* Illustration */}
@@ -54,7 +93,7 @@ export function ColdStartOneFour({ store }: ColdStartOneFourProps) {
 
         {/* Starter pack link */}
         <button
-          onClick={() => store.submit(t('starterPackLink'))}
+          onClick={() => store.setDiscoveryResults(dummyDiscoveryPlaces, "What's good in Bangkok")}
           className="w-full rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3 text-center text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
         >
           {t('starterPackLink')}

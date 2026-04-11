@@ -66,6 +66,8 @@ interface HomeState {
   recallHasMore: boolean;
   recallQuery: string | null;
   recallBreadcrumb: boolean;
+  discoveryPlaces: Array<{ place_id: string; place_name: string; cuisine?: string; price_range?: string; address: string }> | null;
+  discoveryQuery: string | null;
   saveSheetPlace: SaveSheetPlace | null;
   saveSheetPlaces: SaveExtractPlace[];
   saveSheetSelectedIndex: number;
@@ -91,6 +93,7 @@ interface HomeState {
   // Actions — stubbed until sub-plans 3–7
   submitRecall: (message: string) => Promise<void>;
   setRecallResults: (results: RecallItem[], hasMore: boolean) => void;
+  setDiscoveryResults: (places: Array<{ place_id: string; place_name: string; cuisine?: string; price_range?: string; address: string }>, query: string) => void;
   openSaveSheet: (message: string, places: SaveExtractPlace[]) => void;
   setSaveSheetSelectedIndex: (index: number) => void;
   confirmSave: () => Promise<void>;
@@ -149,6 +152,8 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   recallHasMore: false,
   recallQuery: null,
   recallBreadcrumb: false,
+  discoveryPlaces: null,
+  discoveryQuery: null,
   saveSheetPlace: null,
   saveSheetPlaces: [],
   saveSheetSelectedIndex: 0,
@@ -431,6 +436,11 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   // ── setRecallResults ───────────────────────────────────────────────────────
   setRecallResults: (results, hasMore) => {
     set({ recallResults: results, recallHasMore: hasMore });
+  },
+
+  // ── setDiscoveryResults ────────────────────────────────────────────────────
+  setDiscoveryResults: (places, query) => {
+    set({ discoveryPlaces: places, discoveryQuery: query });
   },
 
   // ── openSaveSheet ─────────────────────────────────────────────────────────
