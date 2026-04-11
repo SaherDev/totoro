@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
@@ -12,6 +13,15 @@ interface SavedSnackbarProps {
 
 export function SavedSnackbar({ placeName, onUndo, onDismiss }: SavedSnackbarProps) {
   const t = useTranslations('save');
+
+  // Auto-dismiss after 3 seconds
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      onDismiss?.();
+    }, 3000);
+
+    return () => clearTimeout(timeout);
+  }, [onDismiss]);
 
   return (
     <motion.div
