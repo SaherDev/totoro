@@ -449,14 +449,18 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
   // ── openSaveSheet ─────────────────────────────────────────────────────────
   openSaveSheet: (message, places) => {
-    const { phase } = get();
+    const { phase, activeFlowId } = get();
+    // Save the pre-save phase only if we're not already in a save phase
+    const preSavePhase = phase !== 'save-sheet' && phase !== 'save-snackbar' ? phase : null;
     set({
-      preSavePhase: phase,
+      preSavePhase,
       saveSheetMessage: message,
       saveSheetPlaces: places,
       saveSheetSelectedIndex: 0,
       saveSheetStatus: 'pending',
       phase: 'save-sheet',
+      // Ensure SaveFlow component is shown regardless of initial intent classification
+      activeFlowId: activeFlowId !== 'save' ? 'save' : activeFlowId,
     });
   },
 
