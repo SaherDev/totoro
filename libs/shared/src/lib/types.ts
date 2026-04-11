@@ -3,7 +3,6 @@
  * Handles extract-place, consult, recall, and general queries
  */
 export interface ChatRequestDto {
-  user_id: string;
   message: string;
   location?: { lat: number; lng: number };
 }
@@ -28,7 +27,7 @@ export interface ConsultPlace {
   address: string;
   reasoning: string;
   source: 'saved' | 'discovered';
-  photos?: { hero?: string; square?: string };
+  photos?: { hero?: string | null; square?: string | null } | null;
 }
 
 export interface ConsultResponseData {

@@ -2,23 +2,19 @@
 
 import type { HomeStoreApi } from '@/store/home-store';
 import { ConsultThinking } from './ConsultThinking';
-import { ConsultResult } from './ConsultResult';
 
-/** Routes between ConsultThinking and ConsultResult based on store.phase */
+/** Shows the thinking animation while the consult flow is in progress.
+ *  The result is pushed to the chat thread on completion and rendered there. */
 export function ConsultDispatcher({ store }: { store: HomeStoreApi }) {
   if (store.phase === 'thinking') {
     return (
       <ConsultThinking
         query={store.query ?? ''}
-        contextPills={store.result?.context_chips ?? []}
         reasoningSteps={store.reasoningSteps}
+        fetchComplete={store.fetchComplete}
         onAnimationComplete={store.markAnimationComplete}
       />
     );
-  }
-
-  if (store.phase === 'result') {
-    return <ConsultResult />;
   }
 
   return null;

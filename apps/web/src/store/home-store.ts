@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import type { ClientIntent, ConsultResponseData, ReasoningStep, RecallItem, SavedPlaceStub, ChatRequestDto } from '@totoro/shared';
+import type { ClientIntent, ConsultResponseData, ReasoningStep, RecallItem, SavedPlaceStub } from '@totoro/shared';
 import type { FlowId, HomePhase } from '../flows/flow-definition';
 import { getSavedPlaceCount } from '../storage/saved-places-storage';
 import { getTasteProfileConfirmed, setTasteProfileConfirmed } from '../storage/taste-profile-storage';
@@ -9,6 +9,13 @@ import { getLocation, setLocation as persistLocation } from '../storage/location
 import { classifyIntent } from '../lib/classify-intent';
 import { getChatClient } from '../lib/chat-client';
 import { FLOW_BY_CLIENT_INTENT, FLOW_BY_RESPONSE_TYPE } from '../flows/registry';
+
+// ── Thread entry types ─────────────────────────────────────────────────────────
+export type ThreadEntry =
+  | { id: string; role: 'user'; content: string }
+  | { id: string; role: 'assistant'; type: 'clarification'; message: string }
+  | { id: string; role: 'assistant'; type: 'consult'; message: string; data: ConsultResponseData }
+  | { id: string; role: 'assistant'; type: 'error'; category: 'offline' | 'timeout' | 'generic' | 'server' };
 
 interface HomeState {
   // Phase
@@ -37,8 +44,12 @@ interface HomeState {
   animationComplete: boolean;
   fetchComplete: boolean;
   pendingResult: ConsultResponseData | null;
+  pendingMessage: string | null;
   pendingError: { message: string; category: 'offline' | 'timeout' | 'generic' | 'server' } | null;
   abortController: AbortController | null;
+
+  // Chat thread — accumulates all user + assistant exchanges
+  thread: ThreadEntry[];
 
   // Flow-specific slots (stubbed until sub-plans 3–7)
   recallResults: RecallItem[] | null;
@@ -54,7 +65,7 @@ interface HomeState {
   init: (opts: { userId: string | null; getToken: () => Promise<string> }) => void;
   setUserId: (id: string | null) => void;
   setLocation: (loc: { lat: number; lng: number } | null) => void;
-  submit: (message: string, opts?: { forceIntent?: ClientIntent }) => Promise<void>;
+  submit: (message: string, opts?: { forceIntent?: ClientIntent; isRetry?: boolean }) => Promise<void>;
   markAnimationComplete: () => void;
   setPendingResult: (data: ConsultResponseData) => void;
   tryRevealResult: () => void;
@@ -90,6 +101,11 @@ function categorizeError(err: unknown): 'offline' | 'timeout' | 'server' | 'gene
   return 'generic';
 }
 
+let entryCounter = 0;
+function nextId() {
+  return `e-${Date.now()}-${++entryCounter}`;
+}
+
 export const useHomeStore = create<HomeState>((set, get) => ({
   // ── Initial state ──────────────────────────────────────────────────────────
   phase: 'hydrating',
@@ -107,8 +123,10 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   animationComplete: false,
   fetchComplete: false,
   pendingResult: null,
+  pendingMessage: null,
   pendingError: null,
   abortController: null,
+  thread: [],
   recallResults: null,
   recallHasMore: false,
   saveSheetPlace: null,
@@ -119,19 +137,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
   // ── hydrate ────────────────────────────────────────────────────────────────
   hydrate: () => {
-    const devOverride =
-      process.env.NODE_ENV !== 'production'
-        ? process.env.NEXT_PUBLIC_DEV_SAVED_COUNT
-        : undefined;
-
-    let savedPlaceCount: number;
-    if (devOverride !== undefined && devOverride !== '') {
-      const parsed = parseInt(devOverride, 10);
-      savedPlaceCount = isNaN(parsed) || parsed < 0 ? 0 : parsed;
-    } else {
-      savedPlaceCount = getSavedPlaceCount();
-    }
-
+    const savedPlaceCount = getSavedPlaceCount();
     const tasteProfileConfirmed = getTasteProfileConfirmed();
     const location = getLocation();
     const phase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
@@ -156,9 +162,8 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   },
 
   // ── submit ─────────────────────────────────────────────────────────────────
-  // Classifies intent → pre-routes to flow → fires fetch → race with animation.
   submit: async (message, opts) => {
-    const { userId, getToken, location } = get();
+    const { getToken, location, thread } = get();
 
     // Cancel any in-flight request
     get().abortController?.abort();
@@ -172,7 +177,20 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     const initialFlowId: FlowId = preFlow?.id ?? 'consult';
     const initialPhase = preFlow?.phase ?? 'thinking';
 
+    // Build new thread: retry replaces last error entry; normal submit appends user message
+    let newThread: ThreadEntry[];
+    if (opts?.isRetry) {
+      const last = thread[thread.length - 1];
+      newThread = (last?.role === 'assistant' && last?.type === 'error')
+        ? thread.slice(0, -1)
+        : thread;
+    } else {
+      const userEntry: ThreadEntry = { id: nextId(), role: 'user', content: message };
+      newThread = [...thread, userEntry];
+    }
+
     set({
+      thread: newThread,
       phase: initialPhase,
       activeFlowId: initialFlowId,
       query: message,
@@ -183,6 +201,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       fetchComplete: false,
       pendingResult: null,
       pendingError: null,
+      clarificationMessage: null,
       abortController,
     });
 
@@ -192,24 +211,27 @@ export const useHomeStore = create<HomeState>((set, get) => ({
         ? getChatClient(getToken)
         : getChatClient(async () => '');
 
-      const body: ChatRequestDto = {
-        user_id: userId ?? '',
-        message,
-        ...(location ? { location } : {}),
-      };
-
       const res = await client.chat({
         message,
-        userId: userId ?? '',
         location,
         signal: abortController.signal,
       });
 
-      void body; // suppress unused var warning; body is constructed for type clarity
-
-      // Handle clarification orthogonally — set hint, don't change phase
+      // Clarification — push to thread, reset to resting phase
       if (res.type === 'clarification') {
-        set({ fetchComplete: true, clarificationMessage: res.message });
+        const { savedPlaceCount, tasteProfileConfirmed } = get();
+        const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
+        const entry: ThreadEntry = { id: nextId(), role: 'assistant', type: 'clarification', message: res.message };
+        set({
+          thread: [...get().thread, entry],
+          phase: restingPhase,
+          activeFlowId: null,
+          animationComplete: false,
+          fetchComplete: false,
+          pendingResult: null,
+          pendingError: null,
+          clarificationMessage: null,
+        });
         return;
       }
 
@@ -225,9 +247,12 @@ export const useHomeStore = create<HomeState>((set, get) => ({
         return;
       }
 
-      // Store reasoning steps if present (consult flow populates these)
+      // Store reasoning steps and message if present (consult flow populates these)
       if (res.type === 'consult' && res.data && typeof res.data === 'object' && 'reasoning_steps' in res.data) {
-        set({ reasoningSteps: (res.data as ConsultResponseData).reasoning_steps ?? [] });
+        set({
+          reasoningSteps: (res.data as ConsultResponseData).reasoning_steps ?? [],
+          pendingMessage: res.message ?? null,
+        });
       }
 
       // Delegate to flow's onResponse — flow sets pendingResult and calls tryRevealResult
@@ -254,17 +279,51 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
   // ── tryRevealResult ────────────────────────────────────────────────────────
   // Only fires when both animation AND fetch are complete.
+  // Pushes the result/error to the thread and resets to resting phase.
   tryRevealResult: () => {
-    const { animationComplete, fetchComplete, pendingResult, pendingError } = get();
+    const { animationComplete, fetchComplete, pendingResult, pendingError, savedPlaceCount, tasteProfileConfirmed } = get();
     if (!animationComplete || !fetchComplete) return;
 
+    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
+
     if (pendingError) {
-      set({ phase: 'error', error: pendingError, pendingError: null });
+      const entry: ThreadEntry = {
+        id: nextId(),
+        role: 'assistant',
+        type: 'error',
+        category: pendingError.category,
+      };
+      set({
+        thread: [...get().thread, entry],
+        phase: restingPhase,
+        activeFlowId: null,
+        error: null,
+        pendingError: null,
+        animationComplete: false,
+        fetchComplete: false,
+      });
       return;
     }
 
     if (pendingResult) {
-      set({ phase: 'result', result: pendingResult, pendingResult: null });
+      const { pendingMessage } = get();
+      const entry: ThreadEntry = {
+        id: nextId(),
+        role: 'assistant',
+        type: 'consult',
+        message: pendingMessage ?? "Here's your pick",
+        data: pendingResult,
+      };
+      set({
+        thread: [...get().thread, entry],
+        phase: restingPhase,
+        activeFlowId: null,
+        result: pendingResult,
+        pendingResult: null,
+        pendingMessage: null,
+        animationComplete: false,
+        fetchComplete: false,
+      });
     }
   },
 
@@ -291,6 +350,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       pendingError: null,
       abortController: null,
       clarificationMessage: null,
+      // thread is intentionally preserved — conversation history persists
     });
   },
 

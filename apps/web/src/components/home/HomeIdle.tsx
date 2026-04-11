@@ -6,13 +6,29 @@ import { CONSULT_SUGGESTIONS } from '@/constants/home-suggestions';
 
 interface HomeIdleProps {
   onSuggestionClick: (text: string) => void;
+  firstName?: string | null;
+  savedCount?: number;
 }
 
-export function HomeIdle({ onSuggestionClick }: HomeIdleProps) {
+export function HomeIdle({ onSuggestionClick, firstName, savedCount }: HomeIdleProps) {
   const t = useTranslations('home.idle');
 
   return (
     <div className="flex flex-col items-center gap-6 py-8">
+      {/* Personalized greeting */}
+      {firstName && (
+        <div className="flex flex-col items-center gap-1 text-center">
+          <p className="text-lg font-semibold text-foreground">
+            {t('greeting', { name: firstName })}
+          </p>
+          {savedCount !== undefined && savedCount > 0 && (
+            <p className="text-sm text-muted-foreground">
+              {t('savedCount', { count: savedCount })}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="h-32 w-32">
         <TotoroIdleWelcoming />
       </div>
@@ -21,12 +37,12 @@ export function HomeIdle({ onSuggestionClick }: HomeIdleProps) {
         {t('headline')}
       </h2>
 
-      <div className="flex flex-wrap justify-center gap-2">
+      <div className="flex w-full flex-col gap-2">
         {CONSULT_SUGGESTIONS.map((suggestion) => (
           <button
             key={suggestion}
             onClick={() => onSuggestionClick(suggestion)}
-            className="rounded-full border border-border bg-muted px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            className="w-full rounded-2xl border border-border bg-muted px-4 py-3 text-start text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
           >
             {suggestion}
           </button>

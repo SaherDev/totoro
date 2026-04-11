@@ -18,7 +18,9 @@
       "recall": "Recall a saved place"
     },
     "idle": {
-      "headline": "Where to tonight?"
+      "greeting": "Hey {name}",
+      "savedCount": "{count} places saved",
+      "headline": "What are you in the mood for?"
     }
   },
   "consult": {

@@ -1,31 +1,24 @@
-import type { SavedPlaceStub } from '@totoro/shared';
+const KEY = 'totoro.savedCount';
 
-const KEY = 'totoro.savedPlaces';
-
-export function getSavedPlaces(): SavedPlaceStub[] {
+export function getSavedPlaceCount(): number {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as SavedPlaceStub[];
+    if (!raw) return 0;
+    const parsed = parseInt(raw, 10);
+    return isNaN(parsed) || parsed < 0 ? 0 : parsed;
   } catch {
-    return [];
+    return 0;
   }
 }
 
-export function getSavedPlaceCount(): number {
-  return getSavedPlaces().length;
-}
-
-export function setSavedPlaces(places: SavedPlaceStub[]): void {
+export function setSavedPlaceCount(count: number): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify(places));
+    localStorage.setItem(KEY, String(count));
   } catch {
     // localStorage unavailable — no-op
   }
 }
 
-export function appendSavedPlace(place: SavedPlaceStub): void {
-  const places = getSavedPlaces();
-  places.push(place);
-  setSavedPlaces(places);
+export function incrementSavedPlaceCount(): void {
+  setSavedPlaceCount(getSavedPlaceCount() + 1);
 }
