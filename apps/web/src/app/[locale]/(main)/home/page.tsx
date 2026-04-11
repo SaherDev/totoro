@@ -14,6 +14,7 @@ import { ColdStartOneFour } from '@/flows/cold-start-1-4/ColdStartOneFour';
 import { UserBubble } from '@/components/home/UserBubble';
 import { AssistantBubble } from '@/components/home/AssistantBubble';
 import { ConsultError } from '@/components/home/ConsultError';
+import { SaveError } from '@/components/home/SaveError';
 import { ConsultResult } from '@/flows/consult/ConsultResult';
 import { DiscoveryResults } from '@/flows/discovery';
 import { TASTE_CHIP_BANK } from '@/constants/home-suggestions';
@@ -110,8 +111,9 @@ export default function HomePage() {
           {/* Thread — all past exchanges */}
           {store.thread.map((entry) => {
             if (entry.role === 'assistant' && entry.type === 'error') {
+              const ErrorComponent = entry.flowId === 'save' ? SaveError : ConsultError;
               return (
-                <ConsultError
+                <ErrorComponent
                   key={entry.id}
                   error={{ message: entry.category, category: entry.category }}
                   onTryAgain={() => store.submit(store.query ?? '', { isRetry: true })}

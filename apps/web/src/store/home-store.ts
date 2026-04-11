@@ -25,7 +25,7 @@ export type ThreadEntry =
   | { id: string; role: 'assistant'; type: 'clarification'; message: string; dismissed?: boolean }
   | { id: string; role: 'assistant'; type: 'assistant'; message: string; dismissed?: boolean }
   | { id: string; role: 'assistant'; type: 'consult'; message: string; data: ConsultResponseData }
-  | { id: string; role: 'assistant'; type: 'error'; category: 'offline' | 'timeout' | 'generic' | 'server' };
+  | { id: string; role: 'assistant'; type: 'error'; category: 'offline' | 'timeout' | 'generic' | 'server'; flowId?: FlowId };
 
 interface HomeState {
   // Phase
@@ -319,11 +319,13 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
 
     if (pendingError) {
+      const { activeFlowId } = get();
       const entry: ThreadEntry = {
         id: nextId(),
         role: 'assistant',
         type: 'error',
         category: pendingError.category,
+        ...(activeFlowId && { flowId: activeFlowId }),
       };
       set({
         thread: [...get().thread, entry],
