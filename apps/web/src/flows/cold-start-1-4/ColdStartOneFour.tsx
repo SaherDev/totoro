@@ -32,11 +32,11 @@ export function ColdStartOneFour({ store }: ColdStartOneFourProps) {
       </div>
 
       {/* Popular nearby section */}
-      <div className="w-full max-w-sm">
-        <div className="flex items-center justify-between mb-3 px-4">
+      <div className="w-full space-y-3 max-w-sm">
+        <div className="flex items-center justify-between px-4">
           <p className="text-xs font-semibold text-muted-foreground uppercase">{t('popularLabel')}</p>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 px-4">
           {popularPlaces.map((place, idx) => (
             <motion.button
               key={idx}
@@ -51,12 +51,12 @@ export function ColdStartOneFour({ store }: ColdStartOneFourProps) {
             </motion.button>
           ))}
         </div>
-      </div>
 
-      {/* Starter pack link */}
-      <button className="text-sm text-primary hover:text-primary/80 font-medium transition-colors">
-        {t('starterPackLink')}
-      </button>
+        {/* Starter pack link */}
+        <button className="w-full rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3 text-center text-sm font-medium text-primary hover:bg-primary/10 transition-colors">
+          {t('starterPackLink')}
+        </button>
+      </div>
 
       {/* Footer note */}
       <p className="text-xs text-muted-foreground text-center max-w-sm px-4">{t('popularFootnote')}</p>
