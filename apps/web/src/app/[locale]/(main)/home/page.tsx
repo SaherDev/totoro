@@ -18,13 +18,12 @@ import { RecallResultBubble } from '@/components/home/RecallResultBubble';
 import { ConsultError } from '@/components/home/ConsultError';
 import { SaveError } from '@/components/home/SaveError';
 import { ConsultResult } from '@/flows/consult/ConsultResult';
-import { DiscoveryResults } from '@/flows/discovery';
 import { TASTE_CHIP_BANK } from '@/constants/home-suggestions';
 import { TotoroCard } from '@totoro/ui';
 import { useHomeStore, type ThreadEntry, type HomeStoreApi } from '@/store/home-store';
 import { FLOW_REGISTRY } from '@/flows/registry';
 
-function ThreadEntryView({ entry, store }: { entry: ThreadEntry; store: HomeStoreApi }) {
+function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
   if (entry.role === 'user') {
     return <UserBubble content={entry.content} />;
   }
@@ -77,7 +76,7 @@ export default function HomePage() {
   if (!store.hydrated) return null;
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-dvh flex-col bg-background">
       {/* Navigation Bar */}
       <NavBar>
         <NavBarLogo />
@@ -124,17 +123,9 @@ export default function HomePage() {
                 />
               );
             }
-            return <ThreadEntryView key={entry.id} entry={entry} store={store} />;
+            return <ThreadEntryView key={entry.id} entry={entry} />;
           })}
 
-          {/* Discovery results — multi-place search results */}
-          {store.discoveryPlaces && store.discoveryQuery && (
-            <DiscoveryResults
-              places={store.discoveryPlaces}
-              query={store.discoveryQuery}
-              store={store}
-            />
-          )}
 
           {/* Universal thinking indicator — shown for any flow while waiting for API */}
           {store.phase === 'thinking' && store.activeFlowId !== 'consult' && (

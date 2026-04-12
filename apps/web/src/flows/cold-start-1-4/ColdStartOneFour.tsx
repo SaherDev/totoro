@@ -11,20 +11,6 @@ interface ColdStartOneFourProps {
   store: HomeStoreApi;
 }
 
-const DUMMY_DISCOVERY = [
-  { place_id: '1', place_name: 'Samlor Restaurant', cuisine: 'Thai', price_range: '$$', address: 'Silom' },
-  { place_id: '2', place_name: 'Fuji Ramen', cuisine: 'Ramen', price_range: '$', address: 'Sukhumvit' },
-  { place_id: '3', place_name: 'Roots Coffee', cuisine: 'Coffee', price_range: '$', address: 'Ekamai' },
-  { place_id: '4', place_name: 'Paste Bangkok', cuisine: 'Fine Thai', price_range: '$$$', address: 'Sathorn' },
-  { place_id: '5', place_name: 'Laab Ubol', cuisine: 'Isaan', price_range: '$', address: 'Ratchathewi' },
-];
-
-const NEARBY_FEATURE = {
-  place_name: 'Samlor Restaurant',
-  tags: 'Thai · $$ · 0.4 km · Open now',
-  hint: 'Save more places to get picks matched to your taste',
-};
-
 export function ColdStartOneFour({ store }: ColdStartOneFourProps) {
   const t = useTranslations('coldStartOneFour');
   const savedPlaces = getSavedPlaces().slice(0, 3);
@@ -66,35 +52,13 @@ export function ColdStartOneFour({ store }: ColdStartOneFourProps) {
         </div>
       )}
 
-      {/* What's good nearby */}
-      <div>
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2 px-1">
-          {t('whatGoodNearby')}
-        </p>
-        <div className="rounded-2xl border border-dashed border-accent/60 bg-accent/5 p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-accent mb-1">
-            {t('popularRightNow')}
-          </p>
-          <p className="font-semibold text-foreground text-sm">{NEARBY_FEATURE.place_name}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{NEARBY_FEATURE.tags}</p>
-          <p className="text-xs text-muted-foreground/70 italic mt-1.5">{NEARBY_FEATURE.hint}</p>
-        </div>
-      </div>
-
-      {/* Bottom action pill — two sections in one pill */}
+      {/* Bottom action pill */}
       <div className="flex items-center rounded-full border border-border bg-card overflow-hidden">
         <button
           onClick={() => store.submit('recall a saved place')}
-          className="flex-1 px-4 py-3 text-sm text-muted-foreground hover:bg-muted transition-colors text-start"
+          className="flex-1 px-4 py-3 text-sm text-muted-foreground hover:bg-muted transition-colors text-center"
         >
           {t('alreadySaved')}
-        </button>
-        <div className="w-px h-6 bg-border flex-shrink-0" />
-        <button
-          onClick={() => store.setDiscoveryResults(DUMMY_DISCOVERY, "What's good in Bangkok")}
-          className="flex-1 px-4 py-3 text-sm font-semibold text-foreground hover:bg-muted transition-colors text-end"
-        >
-          {t('starterPackLink')}
         </button>
       </div>
 

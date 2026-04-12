@@ -160,10 +160,7 @@
   "coldStartOneFour": {
     "headline": "The more you save, the better I get.",
     "subline": "Recall works now. Consult shows what's good nearby.",
-    "whatGoodNearby": "What's good nearby",
-    "popularRightNow": "Popular right now",
-    "alreadySaved": "Already have places saved?",
-    "starterPackLink": "City starter pack"
+    "alreadySaved": "Already have places saved?"
   },
   "illustrations": {
     "auth": "Totoro waving hello",
