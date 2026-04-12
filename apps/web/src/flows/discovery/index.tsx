@@ -1,1 +1,0 @@
-export { DiscoveryResults } from './DiscoveryResults';

@@ -69,8 +69,6 @@ interface HomeState {
   recallHasMore: boolean;
   recallQuery: string | null;
   recallBreadcrumb: boolean;
-  discoveryPlaces: Array<{ place_id: string; place_name: string; cuisine?: string; price_range?: string; address: string }> | null;
-  discoveryQuery: string | null;
   saveSheetPlace: SaveSheetPlace | null;
   saveSheetPlaces: SaveExtractPlace[];
   saveSheetSelectedIndex: number;
@@ -96,7 +94,6 @@ interface HomeState {
   // Actions — stubbed until sub-plans 3–7
   submitRecall: (message: string) => Promise<void>;
   setRecallResults: (results: RecallItem[], hasMore: boolean) => void;
-  setDiscoveryResults: (places: Array<{ place_id: string; place_name: string; cuisine?: string; price_range?: string; address: string }>, query: string) => void;
   openSaveSheet: (message: string, places: SaveExtractPlace[]) => void;
   setSaveSheetSelectedIndex: (index: number) => void;
   confirmSave: () => Promise<void>;
@@ -107,7 +104,6 @@ interface HomeState {
   dismissAssistantReply: () => void;
   incrementSavedCount: (place: SavedPlaceStub) => void;
   autoSavePlace: (place: SaveExtractPlace, sourceUrl: string | null) => void;
-  saveQuiet: (place: SaveExtractPlace) => void;
   pushMessage: (message: string) => void;
   pushRecallResults: (message: string, data: RecallResponseData) => void;
 }
@@ -162,8 +158,6 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   recallHasMore: false,
   recallQuery: null,
   recallBreadcrumb: false,
-  discoveryPlaces: null,
-  discoveryQuery: null,
   saveSheetPlace: null,
   saveSheetPlaces: [],
   saveSheetSelectedIndex: 0,
@@ -450,10 +444,6 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     set({ recallResults: results, recallHasMore: hasMore });
   },
 
-  // ── setDiscoveryResults ────────────────────────────────────────────────────
-  setDiscoveryResults: (places, query) => {
-    set({ discoveryPlaces: places, discoveryQuery: query });
-  },
 
   // ── openSaveSheet ─────────────────────────────────────────────────────────
   openSaveSheet: (message, places) => {
@@ -665,20 +655,6 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     });
   },
 
-  // ── saveQuiet ─────────────────────────────────────────────────────────────
-  // Saves a place silently — updates count + localStorage, no thread entry, no phase change.
-  // Used for inline saves from Discovery/starter-pack lists.
-  saveQuiet: (place) => {
-    const stub: SavedPlaceStub = {
-      place_id: place.place_id || '',
-      place_name: place.place_name || '',
-      address: place.address || '',
-      saved_at: new Date().toISOString(),
-      source_url: null,
-      thumbnail_url: place.thumbnail_url,
-    };
-    get().incrementSavedCount(stub);
-  },
 
   // ── pushMessage ────────────────────────────────────────────────────────────
   // Pushes a plain assistant message to the thread and resets to resting phase.

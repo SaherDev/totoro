@@ -22,7 +22,6 @@ export type HomePhase =
   | 'save-snackbar'
   | 'save-duplicate'
   | 'assistant-reply'
-  | 'starter-pack'
   | 'error';
 
 // Forward declaration — HomeStoreApi is the full store type exported from home-store.ts
