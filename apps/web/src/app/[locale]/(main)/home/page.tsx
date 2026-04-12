@@ -20,7 +20,7 @@ import { SaveError } from '@/components/home/SaveError';
 import { ConsultResult } from '@/flows/consult/ConsultResult';
 import { TASTE_CHIP_BANK } from '@/constants/home-suggestions';
 import { TotoroCard } from '@totoro/ui';
-import { useHomeStore, type ThreadEntry, type HomeStoreApi } from '@/store/home-store';
+import { useHomeStore, type ThreadEntry } from '@/store/home-store';
 import { FLOW_REGISTRY } from '@/flows/registry';
 
 function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
