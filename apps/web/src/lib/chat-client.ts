@@ -1,5 +1,6 @@
 'use client';
 
+import { Capacitor } from '@capacitor/core';
 import type { ChatResponseDto } from '@totoro/shared';
 import { classifyIntent } from './classify-intent';
 import { recallFixture } from '../flows/recall/recall.fixtures';
@@ -28,7 +29,13 @@ function makeRealChatClient(getToken: () => Promise<string>): ChatClient {
   // that attaches `location` to outbound bodies (read from locationStore).
   // Call sites pass the message; the transport handles auth, headers,
   // location, and base URL.
-  const http = new FetchClient('', getToken);
+  // In the Capacitor iOS shell, prepend the absolute Railway base URL so
+  // API calls bypass the Vercel rewrite; in the browser, use a relative
+  // path and let Vercel's rewrite proxy to Railway server-to-server.
+  const apiBase = Capacitor.isNativePlatform()
+    ? (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/api\/v1\/?$/, '')
+    : '';
+  const http = new FetchClient(apiBase, getToken);
 
   return {
     async chat({ message, signal }) {
