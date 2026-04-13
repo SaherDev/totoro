@@ -1,2 +1,3 @@
-export * from './lib/constants.js';
-export * from './lib/types.js';
+export * from './lib/constants';
+export * from './lib/types';
+export * from './schemas/location';

@@ -1,10 +1,16 @@
+import type { Location } from '../schemas/location.js';
+
 /**
  * Chat request DTO for unified AI gateway
- * Handles extract-place, consult, recall, and general queries
+ * Handles extract-place, consult, recall, and general queries.
+ *
+ * `location` is always present. The frontend attaches it in the
+ * HttpClient layer from a session-only store. When the user denied
+ * geolocation or the API is unavailable, the value is explicitly `null`.
  */
 export interface ChatRequestDto {
   message: string;
-  location?: { lat: number; lng: number } | null;
+  location: Location | null;
 }
 
 export type ChatResponseType =

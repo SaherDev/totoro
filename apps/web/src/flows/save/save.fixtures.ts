@@ -1,6 +1,7 @@
-import type { ChatRequestDto, ChatResponseDto, ExtractPlaceData } from '@totoro/shared';
+import type { ChatResponseDto, ExtractPlaceData } from '@totoro/shared';
+import type { ChatClientOptions } from '../../lib/chat-client';
 
-export async function saveFixture(req: ChatRequestDto): Promise<ChatResponseDto> {
+export async function saveFixture(req: ChatClientOptions): Promise<ChatResponseDto> {
   const { message } = req;
 
   // High confidence — auto-save

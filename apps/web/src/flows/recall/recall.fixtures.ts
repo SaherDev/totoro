@@ -1,6 +1,7 @@
-import type { ChatRequestDto, ChatResponseDto } from '@totoro/shared';
+import type { ChatResponseDto } from '@totoro/shared';
+import type { ChatClientOptions } from '../../lib/chat-client';
 
-export async function recallFixture(req: ChatRequestDto): Promise<ChatResponseDto> {
+export async function recallFixture(req: ChatClientOptions): Promise<ChatResponseDto> {
   const { message } = req;
 
   // Keyed fixtures by exact match
