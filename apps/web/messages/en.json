@@ -15,7 +15,21 @@
     "brandTagline2": "Tell me what you want. I'll find your match.",
     "brandChip1": "No filter panels",
     "brandChip2": "One answer",
-    "brandChip3": "Learns your taste"
+    "brandChip3": "Learns your taste",
+    "iosOauthDisabledHint": "Google and Apple aren't available in the iOS app yet — use email below.",
+    "emailPlaceholder": "you@example.com",
+    "sendCode": "Send me a code",
+    "sendingCode": "Sending…",
+    "codePlaceholder": "6-digit code",
+    "codeSentTo": "We sent a 6-digit code to {email}",
+    "verify": "Verify and continue",
+    "verifying": "Verifying…",
+    "useAnotherEmail": "Use a different email",
+    "errors": {
+      "generic": "Something went wrong. Please try again.",
+      "invalidCode": "That code didn't work. Please try again.",
+      "emailCodeUnavailable": "Email sign-in isn't available for this account."
+    }
   },
   "home": {
     "suggestions": {

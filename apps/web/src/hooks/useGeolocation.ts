@@ -49,6 +49,20 @@ export class BrowserGeolocationProvider implements GeolocationProvider {
 
 const defaultProvider: GeolocationProvider = new BrowserGeolocationProvider();
 
+export interface UseGeolocationOptions {
+  /**
+   * Gate the geolocation request behind a runtime predicate (e.g.
+   * "user is signed in"). When `false`, the hook is inert — it does
+   * not call `getCurrentPosition`, so no browser permission prompt
+   * appears. Defaults to `true` for backward compatibility.
+   */
+  enabled?: boolean;
+  /**
+   * Override for tests or non-browser runtimes.
+   */
+  provider?: GeolocationProvider;
+}
+
 /**
  * Request the user's current position exactly once per mount and push
  * the result (or `null`) into the in-memory location store.
@@ -58,14 +72,17 @@ const defaultProvider: GeolocationProvider = new BrowserGeolocationProvider();
  * `getLocationSnapshot` from non-React code) instead of invoking the
  * provider themselves.
  *
- * @param provider - Optional override for tests or non-browser runtimes.
+ * Pass `{ enabled: false }` to skip the request entirely — useful for
+ * gating the browser permission prompt until after sign-in so it does
+ * not surface on unauthenticated screens like `/login`.
  */
-export function useGeolocation(provider: GeolocationProvider = defaultProvider): void {
+export function useGeolocation(options: UseGeolocationOptions = {}): void {
+  const { enabled = true, provider = defaultProvider } = options;
   const resolved = useLocationStore((state) => state.resolved);
   const setLocation = useLocationStore((state) => state.setLocation);
 
   useEffect(() => {
-    if (resolved) return;
+    if (!enabled || resolved) return;
 
     let cancelled = false;
     provider.getCurrentPosition().then((location) => {
@@ -75,5 +92,5 @@ export function useGeolocation(provider: GeolocationProvider = defaultProvider):
     return () => {
       cancelled = true;
     };
-  }, [provider, resolved, setLocation]);
+  }, [enabled, provider, resolved, setLocation]);
 }

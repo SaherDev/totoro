@@ -65,8 +65,8 @@ The sibling repo `totoro-config/` receives one doc edit (`deployment.md`) in the
 - [X] T005 [P] [US1] Edit `apps/web/src/app/[locale]/(auth)/login/page.tsx`: add `import { Capacitor } from '@capacitor/core';` to the existing imports. Inside the `LoginPage` component body, just after the existing `const { signIn, isLoaded } = useSignIn();` line, add `const isNativePlatform = Capacitor.isNativePlatform();`. Wrap the entire Apple `<button>` JSX block (the one with `onClick={() => signInWith('oauth_apple')}`) in `{!isNativePlatform && ( … )}`. The Google button remains unwrapped. Verify `pnpm nx lint web` still passes.
 - [X] T006 [US1] Run `npx cap add ios` from inside `apps/web/` to scaffold the native iOS project at `apps/web/ios/`. Depends on T002 (capacitor.config.ts exists). The command runs `pod install` as part of its work and may take 1–2 minutes on a cold run. On failure, check CocoaPods is installed (`pod --version`) and that the CocoaPods spec repo is current (`pod repo update`).
 - [X] T007 [US1] Run `npx cap sync ios` from inside `apps/web/`. Depends on T006. This copies `capacitor.config.ts` into the native project, injects `NSLocationWhenInUseUsageDescription` into `apps/web/ios/App/App/Info.plist` via the `@capacitor/geolocation` plugin, and updates the Podfile. After this task, verify that `apps/web/ios/App/App/Info.plist` contains the `NSLocationWhenInUseUsageDescription` key.
-- [ ] T008 [US1] Stage and commit all hand-written and generated files on branch `013-capacitor-ios-shell`: `git add apps/web/capacitor.config.ts apps/web/package.json pnpm-lock.yaml apps/web/src/lib/chat-client.ts 'apps/web/src/app/[locale]/(auth)/login/page.tsx' apps/web/.gitignore apps/web/ios` and commit with message `feat(web): add Capacitor iOS shell`. The `ios/` directory is large but mostly auto-generated; do not hand-review its contents.
-- [ ] T009 [US1] Run `npx cap open ios` from inside `apps/web/` to open `apps/web/ios/App/App.xcworkspace` in Xcode. This is the hand-off point to the owner. Depends on T008. Do not close Xcode automatically — the owner will follow Steps 10 and 11 of `quickstart.md` to sign the app, trust the developer cert on device, build, run, and perform the manual acceptance checks for User Story 1 (launch + Google sign-in + chat round-trip + relaunch persistence).
+- [X] T008 [US1] Stage and commit all hand-written and generated files on branch `013-capacitor-ios-shell`: `git add apps/web/capacitor.config.ts apps/web/package.json pnpm-lock.yaml apps/web/src/lib/chat-client.ts 'apps/web/src/app/[locale]/(auth)/login/page.tsx' apps/web/.gitignore apps/web/ios` and commit with message `feat(web): add Capacitor iOS shell`. The `ios/` directory is large but mostly auto-generated; do not hand-review its contents.
+- [X] T009 [US1] Run `npx cap open ios` from inside `apps/web/` to open `apps/web/ios/App/App.xcworkspace` in Xcode. This is the hand-off point to the owner. Depends on T008. Do not close Xcode automatically — the owner will follow Steps 10 and 11 of `quickstart.md` to sign the app, trust the developer cert on device, build, run, and perform the manual acceptance checks for User Story 1 (launch + Google sign-in + chat round-trip + relaunch persistence).
 
 **Checkpoint**: At this point, User Story 1 is functionally complete. The iOS app builds, runs, signs in, and talks to the Railway backend directly.
 
@@ -95,7 +95,7 @@ The sibling repo `totoro-config/` receives one doc edit (`deployment.md`) in the
 ### Implementation for User Story 3
 
 - [ ] T011 [US3] Verify on the Railway dashboard (project → api service → Variables) that `APP_CORS_ORIGINS` contains `https://totoro-ten-phi.vercel.app` as one of its comma-separated values. Do the same check for every environment the iOS app will target (typically Production, and Preview/Staging if applicable). If the Vercel origin is missing, add it and redeploy the `api` service. This is an env-var change only — do not touch `services/api/src/**`.
-- [ ] T012 [US3] Run `git diff dev..HEAD -- services/api/ totoro-ai/` from the repo root and confirm the output is empty. If any lines appear, a task drifted — stop and fix before merge. This verification fails User Story 3 if it produces output.
+- [X] T012 [US3] Run `git diff dev..HEAD -- services/api/ totoro-ai/` from the repo root and confirm the output is empty. If any lines appear, a task drifted — stop and fix before merge. This verification fails User Story 3 if it produces output.
 - [ ] T013 [US3] Verify on the Railway dashboard that the set of services in the project is unchanged from before this feature (api, totoro-ai, postgres, redis). No new Railway services must exist.
 
 **Checkpoint**: User Story 3 is satisfied — backend and infra are untouched.
@@ -110,9 +110,22 @@ The sibling repo `totoro-config/` receives one doc edit (`deployment.md`) in the
 
 ### Implementation for User Story 4
 
-- [ ] T014 [US4] Run `git diff dev..HEAD -- apps/web/next.config.js apps/web/src/middleware.ts 'apps/web/src/app/[locale]/layout.tsx' 'apps/web/src/app/[locale]/page.tsx' 'apps/web/src/app/[locale]/(main)/layout.tsx'` from the repo root and confirm the output is empty. These are the five files the spec's SC-006 declared untouchable. If any show diffs, stop and revert those changes — the feature has drifted off C2 and is re-introducing static-export-shaped workarounds.
-- [ ] T015 [US4] Run `pnpm nx build web` from the repo root and confirm it succeeds with no new warnings or errors compared to the pre-feature baseline. This exercises the normal Vercel build path.
-- [ ] T016 [US4] Load `https://totoro-ten-phi.vercel.app` in a desktop browser (Chrome or Safari) after the Vercel deployment rebuilds from the commit in T008. Confirm that: (a) the root `/` redirects to `/en/home`, (b) unauthenticated users land on `/en/login` with both the Google and Apple buttons visible (the Apple button must be visible in web — it is only hidden on iOS native), (c) signing in with either provider completes and redirects to `/en/home`, (d) sending a chat message still works through the Vercel rewrite to Railway. Any regression here fails User Story 4.
+- [X] T014 [US4] Run `git diff dev..HEAD -- apps/web/next.config.js apps/web/src/middleware.ts 'apps/web/src/app/[locale]/layout.tsx' 'apps/web/src/app/[locale]/page.tsx' 'apps/web/src/app/[locale]/(main)/layout.tsx'` from the repo root and confirm the output is empty. These are the five files the spec's SC-006 declared untouchable. If any show diffs, stop and revert those changes — the feature has drifted off C2 and is re-introducing static-export-shaped workarounds.
+- [X] T015 [US4] Run `pnpm nx build web` from the repo root and confirm it succeeds with no new warnings or errors compared to the pre-feature baseline. This exercises the normal Vercel build path.
+- [X] T016 [US4] Load `https://totoro-ten-phi.vercel.app`
+
+---
+
+## Phase 3b: Email-Code Sign-In on iOS (Post-Clarification Scope Expansion)
+
+**Why this exists**: First-run smoke testing surfaced that Google's OAuth provider also blocks WKWebView user agents (Error 403 `disallowed_useragent`), not just Apple's. The original Q3 clarification ("hide Apple, keep Google") was insufficient. Per the new spec clarification, we replace BOTH OAuth buttons on iOS with Clerk's `email_code` sign-in flow, which runs entirely inside the WKWebView with no external browser dependency. See `spec.md` Clarifications session entry for full reasoning.
+
+- [ ] T021 [US1] Verify Clerk dashboard has **Email address** enabled as a sign-in identifier and **Email verification code** enabled as a first factor. Both are typically default-on for new Clerk instances. Owner action via Clerk dashboard → User & Authentication → Email, Phone, Username. If either is missing, enable it before proceeding.
+- [X] T022 [US1] Add new translation keys to `apps/web/messages/en.json` under the existing `auth` namespace: `emailPlaceholder`, `sendCode`, `sendingCode`, `codePlaceholder`, `codeSentTo` (with `{email}` ICU placeholder), `verify`, `verifying`, `useAnotherEmail`, plus an `errors` sub-object with `generic`, `invalidCode`, and `emailCodeUnavailable`.
+- [X] T023 [US1] Rewrite the iOS-native branch of `apps/web/src/app/[locale]/(auth)/login/page.tsx`: when `Capacitor.isNativePlatform() === true`, hide BOTH the Google and Apple buttons and render a two-step email code form. State machine: `step === 'email'` shows an email input + "Send code" button; `step === 'code'` shows a 6-digit code input + "Verify" button + "Use a different email" link. Use `signIn.create`, `signIn.prepareFirstFactor`, `signIn.attemptFirstFactor`, then `setActive` from `useSignIn`. Use a `useState`/`useEffect` deferred check for `isNativePlatform` to avoid SSR hydration mismatches.
+- [X] T024 [US1] Run `pnpm nx lint web` and `pnpm nx test web` to confirm zero new errors.
+- [ ] T025 [US1] Commit the Option 3 implementation as a new commit on `013-capacitor-ios-shell`: `feat(web): replace iOS OAuth buttons with email code sign-in`.
+ in a desktop browser (Chrome or Safari) after the Vercel deployment rebuilds from the commit in T008. Confirm that: (a) the root `/` redirects to `/en/home`, (b) unauthenticated users land on `/en/login` with both the Google and Apple buttons visible (the Apple button must be visible in web — it is only hidden on iOS native), (c) signing in with either provider completes and redirects to `/en/home`, (d) sending a chat message still works through the Vercel rewrite to Railway. Any regression here fails User Story 4.
 
 **Checkpoint**: All four user stories are independently satisfied.
 
@@ -123,8 +136,8 @@ The sibling repo `totoro-config/` receives one doc edit (`deployment.md`) in the
 **Purpose**: Sibling-repo doc update, repo-wide lint/test verification, and the final quickstart walkthrough.
 
 - [ ] T017 [P] Edit `/Users/saher/dev/repos/totoro-dev/totoro-config/deployment.md` line 72: change the `APP_CORS_ORIGINS` example from the placeholder `https://totoro.vercel.app` to the real current value `http://localhost:4200,https://totoro-ten-phi.vercel.app` and append a note explaining the Vercel origin is required for the Capacitor iOS shell's cross-origin calls to Railway (see feature `013-capacitor-ios-shell`). Commit in the `totoro-config` repo separately from the main feature branch.
-- [ ] T018 [P] Run `pnpm nx test web` from the repo root. Confirm all existing Jest + RTL tests still pass. No new tests are expected to be added by this feature.
-- [ ] T019 [P] Run `pnpm nx lint web` from the repo root. Confirm zero new lint errors or warnings. The T004 and T005 edits must pass linting.
+- [X] T018 [P] Run `pnpm nx test web` from the repo root. Confirm all existing Jest + RTL tests still pass. No new tests are expected to be added by this feature.
+- [X] T019 [P] Run `pnpm nx lint web` from the repo root. Confirm zero new lint errors or warnings. The T004 and T005 edits must pass linting.
 - [ ] T020 Walk through `quickstart.md` Step 11 ("Verify acceptance scenarios") end-to-end from a clean install: sign out, kill the iOS app, relaunch, sign in with Google, send a chat message, kill and relaunch again, confirm session persistence. Record any deviations in the PR description.
 
 ---

@@ -1,7 +1,7 @@
 'use client';
 
 import { ThemeProvider } from 'next-themes';
-import { ClerkProvider } from '@clerk/nextjs';
+import { ClerkProvider, useAuth } from '@clerk/nextjs';
 import { TooltipProvider } from '@totoro/ui';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
@@ -10,9 +10,13 @@ import { useGeolocation } from '@/hooks/useGeolocation';
  * the app shell — currently just the browser geolocation request.
  * Kept as its own component so `Providers` stays declarative and the
  * hook is invoked from a single, predictable place (facade pattern).
+ *
+ * Geolocation is gated on `isSignedIn` so the browser permission
+ * prompt does not appear on unauthenticated screens like `/login`.
  */
 function AppEffects() {
-  useGeolocation();
+  const { isSignedIn } = useAuth();
+  useGeolocation({ enabled: isSignedIn === true });
   return null;
 }
 
