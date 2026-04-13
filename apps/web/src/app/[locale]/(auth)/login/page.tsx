@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { motion } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
@@ -14,6 +15,9 @@ export default function LoginPage() {
   const router = useRouter();
   const { isSignedIn } = useAuth();
   const { signIn, isLoaded } = useSignIn();
+  // Apple's OAuth page blocks WKWebView user agents — hide the Apple CTA
+  // when running inside the Capacitor iOS shell. Web users are unaffected.
+  const isNativePlatform = Capacitor.isNativePlatform();
 
   useEffect(() => {
     if (isSignedIn) {
@@ -101,15 +105,17 @@ export default function LoginPage() {
             {t('auth.continueGoogle')}
           </button>
 
-          <button
-            suppressHydrationWarning
-            onClick={() => signInWith('oauth_apple')}
-            disabled={!isLoaded}
-            className="flex items-center justify-center gap-3 w-full h-14 rounded-2xl bg-[hsl(0,0%,0%)] font-body text-base font-medium text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
-          >
-            <Image src="/icons/apple-icon.svg" alt="Apple" width={20} height={20} className="invert" />
-            {t('auth.continueApple')}
-          </button>
+          {!isNativePlatform && (
+            <button
+              suppressHydrationWarning
+              onClick={() => signInWith('oauth_apple')}
+              disabled={!isLoaded}
+              className="flex items-center justify-center gap-3 w-full h-14 rounded-2xl bg-[hsl(0,0%,0%)] font-body text-base font-medium text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+            >
+              <Image src="/icons/apple-icon.svg" alt="Apple" width={20} height={20} className="invert" />
+              {t('auth.continueApple')}
+            </button>
+          )}
 
         </div>
       </motion.div>
