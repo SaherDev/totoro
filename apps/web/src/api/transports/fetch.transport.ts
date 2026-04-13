@@ -1,4 +1,19 @@
+import { getLocationSnapshot } from '../../store/locationStore'
 import { HttpClient } from '../types'
+
+/**
+ * Error thrown by the HTTP transport. Carries the HTTP status so
+ * callers can categorise (4xx vs 5xx) without parsing message strings.
+ */
+export class HttpError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly statusText: string,
+  ) {
+    super(`API error: ${status} ${statusText}`)
+    this.name = 'HttpError'
+  }
+}
 
 export class FetchClient implements HttpClient {
   constructor(
@@ -10,31 +25,47 @@ export class FetchClient implements HttpClient {
     return this.request<T>(path, { method: 'GET' })
   }
 
-  async post<T>(path: string, body: unknown): Promise<T> {
+  /**
+   * POST a JSON body. Every outbound POST is augmented with the
+   * current `location` snapshot (read from the in-memory location
+   * store). When geolocation has not resolved or the user denied the
+   * permission prompt, `location` is sent as `null` — the request is
+   * never blocked on geolocation.
+   */
+  async post<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
     return this.request<T>(path, {
       method: 'POST',
-      body: JSON.stringify(body),
+      body: JSON.stringify(this.attachLocation(body)),
+      signal,
     })
   }
 
   async postStream(path: string, body: unknown): Promise<Response> {
     const res = await this.fetch(path, {
       method: 'POST',
-      body: JSON.stringify(body),
+      body: JSON.stringify(this.attachLocation(body)),
     })
 
     if (!res.ok) {
-      throw new Error(`API error: ${res.status} ${res.statusText}`)
+      throw new HttpError(res.status, res.statusText)
     }
 
     return res
+  }
+
+  private attachLocation(body: unknown): Record<string, unknown> {
+    const base =
+      body && typeof body === 'object' && !Array.isArray(body)
+        ? (body as Record<string, unknown>)
+        : { value: body }
+    return { ...base, location: getLocationSnapshot() }
   }
 
   private async request<T>(path: string, options: RequestInit): Promise<T> {
     const res = await this.fetch(path, options)
 
     if (!res.ok) {
-      throw new Error(`API error: ${res.status} ${res.statusText}`)
+      throw new HttpError(res.status, res.statusText)
     }
 
     return res.json()

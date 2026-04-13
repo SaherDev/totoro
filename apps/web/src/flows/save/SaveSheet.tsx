@@ -96,12 +96,11 @@ export function SaveSheet({ places, onSavePlace, onClose }: SaveSheetProps) {
   useEffect(() => {
     if (autoSaveFired.current) return;
     autoSaveFired.current = true;
-    places.forEach((p, i) => {
+    places.forEach((p) => {
       if ((p.confidence ?? 0) >= 0.7 && p.status !== 'unresolved') {
         onSavePlace(p);
       }
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSave = (index: number) => {

@@ -15,7 +15,6 @@ import type {
 import type { FlowId, HomePhase } from '../flows/flow-definition';
 import { getSavedPlaceCount, appendSavedPlace, incrementSavedPlaceCount } from '../storage/saved-places-storage';
 import { getTasteProfileConfirmed, setTasteProfileConfirmed } from '../storage/taste-profile-storage';
-import { getLocation, setLocation as persistLocation } from '../storage/location-storage';
 import { classifyIntent } from '../lib/classify-intent';
 import { getChatClient } from '../lib/chat-client';
 import { FLOW_BY_CLIENT_INTENT, FLOW_BY_RESPONSE_TYPE } from '../flows/registry';
@@ -50,9 +49,6 @@ interface HomeState {
   tasteProfileConfirmed: boolean;
   savedPlaceCount: number;
 
-  // Location
-  location: { lat: number; lng: number } | null;
-
   // Animation-fetch race
   animationComplete: boolean;
   fetchComplete: boolean;
@@ -83,7 +79,6 @@ interface HomeState {
   hydrate: () => void;
   init: (opts: { userId: string | null; getToken: () => Promise<string> }) => void;
   setUserId: (id: string | null) => void;
-  setLocation: (loc: { lat: number; lng: number } | null) => void;
   submit: (message: string, opts?: { forceIntent?: ClientIntent; isRetry?: boolean }) => Promise<void>;
   markAnimationComplete: () => void;
   setPendingResult: (data: ConsultResponseData) => void;
@@ -146,7 +141,6 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   hydrated: false,
   tasteProfileConfirmed: false,
   savedPlaceCount: 0,
-  location: null,
   animationComplete: false,
   fetchComplete: false,
   pendingResult: null,
@@ -172,10 +166,9 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   hydrate: () => {
     const savedPlaceCount = getSavedPlaceCount();
     const tasteProfileConfirmed = getTasteProfileConfirmed();
-    const location = getLocation();
     const phase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
 
-    set({ phase, savedPlaceCount, tasteProfileConfirmed, location, hydrated: true });
+    set({ phase, savedPlaceCount, tasteProfileConfirmed, hydrated: true });
   },
 
   // ── init ───────────────────────────────────────────────────────────────────
@@ -188,15 +181,9 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     set({ userId: id });
   },
 
-  // ── setLocation ────────────────────────────────────────────────────────────
-  setLocation: (loc) => {
-    persistLocation(loc);
-    set({ location: loc });
-  },
-
   // ── submit ─────────────────────────────────────────────────────────────────
   submit: async (message, opts) => {
-    const { getToken, location, thread } = get();
+    const { getToken, thread } = get();
 
     // Dismiss any visible assistant/clarification bubble before new dispatch
     get().dismissAssistantReply();
@@ -249,7 +236,6 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
       const res = await client.chat({
         message,
-        location,
         signal: abortController.signal,
       });
 
@@ -394,7 +380,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
   // ── submitRecall ──────────────────────────────────────────────────────────
   submitRecall: async (message) => {
-    const { getToken, location } = get();
+    const { getToken } = get();
 
     set({
       recallQuery: message,
@@ -418,7 +404,6 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       const client = getToken ? getChatClient(getToken) : getChatClient(async () => '');
       const res = await client.chat({
         message,
-        location,
       });
 
       // Cancel timer and update state with results
@@ -469,7 +454,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
   // ── confirmSave ────────────────────────────────────────────────────────────
   confirmSave: async () => {
-    const { getToken, location, saveSheetMessage, saveSheetSelectedIndex } = get();
+    const { getToken, saveSheetMessage, saveSheetSelectedIndex } = get();
 
     set({ saveSheetStatus: 'saving' });
 
@@ -477,7 +462,6 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       const client = getToken ? getChatClient(getToken) : getChatClient(async () => '');
       const res = await client.chat({
         message: saveSheetMessage || '',
-        location,
       });
 
       if (res.type === 'extract-place' && res.data) {
