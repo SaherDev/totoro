@@ -1,6 +1,7 @@
-import type { ChatRequestDto, ChatResponseDto } from '@totoro/shared';
+import type { ChatResponseDto } from '@totoro/shared';
+import type { ChatClientOptions } from '../../lib/chat-client';
 
-export async function consultFixture(_req: ChatRequestDto): Promise<ChatResponseDto> {
+export async function consultFixture(_req: ChatClientOptions): Promise<ChatResponseDto> {
   await new Promise((r) => setTimeout(r, 800));
   return {
     type: 'consult',

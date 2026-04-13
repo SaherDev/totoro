@@ -1,6 +1,7 @@
-import type { ChatRequestDto, ChatResponseDto } from '@totoro/shared';
+import type { ChatResponseDto } from '@totoro/shared';
+import type { ChatClientOptions } from '../../lib/chat-client';
 
-export async function assistantFixture(req: ChatRequestDto): Promise<ChatResponseDto> {
+export async function assistantFixture(req: ChatClientOptions): Promise<ChatResponseDto> {
   const { message } = req;
 
   // Clarification fixture

@@ -1,15 +1,15 @@
 'use client';
 
-import type { ChatRequestDto, ChatResponseDto } from '@totoro/shared';
+import type { ChatResponseDto } from '@totoro/shared';
 import { classifyIntent } from './classify-intent';
 import { recallFixture } from '../flows/recall/recall.fixtures';
 import { saveFixture } from '../flows/save/save.fixtures';
 import { assistantFixture } from '../flows/assistant/assistant.fixtures';
 import { consultFixture } from '../flows/consult/consult.fixtures';
+import { FetchClient } from '../api/transports/fetch.transport';
 
 export interface ChatClientOptions {
   message: string;
-  location: { lat: number; lng: number } | null;
   signal?: AbortSignal;
 }
 
@@ -24,36 +24,26 @@ function categorizeError(err: unknown): 'offline' | 'timeout' | 'server' | 'gene
 }
 
 function makeRealChatClient(getToken: () => Promise<string>): ChatClient {
-  return {
-    async chat({ message, location, signal }) {
-      const token = await getToken();
-      const body: ChatRequestDto = {
-        message,
-        ...(location ? { location } : {}),
-      };
+  // Single FetchClient instance — the HttpClient layer is the only place
+  // that attaches `location` to outbound bodies (read from locationStore).
+  // Call sites pass the message; the transport handles auth, headers,
+  // location, and base URL.
+  const http = new FetchClient('', getToken);
 
-      let res: Response;
+  return {
+    async chat({ message, signal }) {
       try {
-        res = await fetch('/api/v1/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(body),
-          signal,
-        });
+        return await http.post<ChatResponseDto>('/api/v1/chat', { message }, signal);
       } catch (err) {
         const category = categorizeError(err);
+        if (err instanceof Error && 'status' in err) {
+          const status = (err as Error & { status: number }).status;
+          throw Object.assign(new Error(`HTTP ${status}`), {
+            category: status >= 500 ? 'server' : 'generic',
+          });
+        }
         throw Object.assign(new Error(String(err)), { category });
       }
-
-      if (!res.ok) {
-        const category = res.status >= 500 ? 'server' : 'generic';
-        throw Object.assign(new Error(`HTTP ${res.status}`), { category });
-      }
-
-      return res.json() as Promise<ChatResponseDto>;
     },
   };
 }
