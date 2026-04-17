@@ -10,10 +10,10 @@ import { AiEnabledGuard } from '../guards/ai-enabled.guard';
  * 2. User has AI enabled in their account
  *
  * @example
- * @Post('/consult')
+ * @Post('/signal')
  * @RequiresAi()
- * async consult(@Body() query: QueryDto) {
- *   return this.recommendationService.consult(query);
+ * async submit(@CurrentUser() userId: string, @Body() dto: SignalRequestDto) {
+ *   return this.signalService.submit(userId, dto);
  * }
  */
 export const RequiresAi = () => applyDecorators(UseGuards(AiEnabledGuard));

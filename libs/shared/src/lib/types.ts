@@ -37,6 +37,7 @@ export interface ConsultPlace {
 }
 
 export interface ConsultResponseData {
+  recommendation_id: string | null;
   primary: ConsultPlace;
   alternatives: ConsultPlace[];
   reasoning_steps: ReasoningStep[];
@@ -103,4 +104,40 @@ export interface ChatResponseDto {
   type: ChatResponseType;
   message: string;
   data: ConsultResponseData | RecallResponseData | ExtractPlaceData | Record<string, unknown> | null;
+}
+
+export type SignalType =
+  | 'recommendation_accepted'
+  | 'recommendation_rejected';
+
+export interface SignalRequestAccepted {
+  signal_type: 'recommendation_accepted';
+  recommendation_id: string;
+  place_id: string;
+}
+
+export interface SignalRequestRejected {
+  signal_type: 'recommendation_rejected';
+  recommendation_id: string;
+  place_id: string;
+}
+
+export type SignalRequest = SignalRequestAccepted | SignalRequestRejected;
+
+export type SignalRequestWithUser = SignalRequest & { user_id: string };
+
+export interface SignalResponse {
+  status: string;
+}
+
+export interface UserContextChip {
+  label: string;
+  source_field: string;
+  source_value: string;
+  signal_count: number;
+}
+
+export interface UserContextResponse {
+  saved_places_count: number;
+  chips: UserContextChip[];
 }
