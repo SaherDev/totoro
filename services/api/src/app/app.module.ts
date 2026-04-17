@@ -17,6 +17,8 @@ import { UserEntity } from '../database/entities/user.entity';
 import { UserSettingsEntity } from '../database/entities/user-settings.entity';
 import { DatabaseModule } from '../database/database.module';
 import { ChatModule } from '../chat/chat.module';
+import { SignalModule } from '../signal/signal.module';
+import { UserContextModule } from '../user-context/user-context.module';
 
 function loadAppYaml(): Record<string, unknown> {
   const candidates = [
@@ -56,6 +58,8 @@ function loadAppYaml(): Record<string, unknown> {
     }),
     DatabaseModule,
     ChatModule,
+    SignalModule,
+    UserContextModule,
   ],
   controllers: [AppController, ClerkWebhookController],
   providers: [AppService, AiEnabledGuard],
