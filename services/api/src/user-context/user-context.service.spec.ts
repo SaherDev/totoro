@@ -18,12 +18,15 @@ describe('UserContextService', () => {
   it('forwards the Clerk user id and returns the AI response unchanged', async () => {
     const body: UserContextResponse = {
       saved_places_count: 4,
+      signal_tier: 'active',
       chips: [
         {
           label: 'Japanese',
           source_field: 'subcategory',
           source_value: 'japanese',
           signal_count: 2,
+          status: 'confirmed',
+          selection_round: null,
         },
       ],
     };
@@ -36,7 +39,7 @@ describe('UserContextService', () => {
   });
 
   it('passes through a cold-start response', async () => {
-    const body: UserContextResponse = { saved_places_count: 0, chips: [] };
+    const body: UserContextResponse = { saved_places_count: 0, signal_tier: 'cold', chips: [] };
     aiClient.getUserContext.mockResolvedValueOnce(body);
 
     const result = await service.get('user_new');

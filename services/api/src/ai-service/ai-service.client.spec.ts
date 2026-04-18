@@ -95,12 +95,15 @@ describe('AiServiceClient', () => {
     it('forwards to GET /v1/user/context with user_id as a query param', async () => {
       const body: UserContextResponse = {
         saved_places_count: 3,
+        signal_tier: 'active',
         chips: [
           {
             label: 'Japanese',
             source_field: 'subcategory',
             source_value: 'japanese',
             signal_count: 2,
+            status: 'confirmed',
+            selection_round: null,
           },
         ],
       };
@@ -117,7 +120,7 @@ describe('AiServiceClient', () => {
     });
 
     it('passes through a cold-start response unchanged', async () => {
-      const body: UserContextResponse = { saved_places_count: 0, chips: [] };
+      const body: UserContextResponse = { saved_places_count: 0, signal_tier: 'cold', chips: [] };
       const response = { data: body } as AxiosResponse<UserContextResponse>;
       httpService.get.mockReturnValueOnce(of(response));
 

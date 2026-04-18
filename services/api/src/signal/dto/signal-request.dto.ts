@@ -1,9 +1,17 @@
-import { IsIn, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsIn,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+  IsString,
+  ValidateIf,
+} from 'class-validator';
 import type { SignalType } from '@totoro/shared';
 
 const ALLOWED_SIGNAL_TYPES: SignalType[] = [
   'recommendation_accepted',
   'recommendation_rejected',
+  'chip_confirm',
 ];
 
 export class SignalRequestDto {
@@ -12,9 +20,15 @@ export class SignalRequestDto {
 
   @IsString()
   @IsNotEmpty()
-  recommendation_id!: string;
+  @ValidateIf(o => o.signal_type !== 'chip_confirm')
+  recommendation_id?: string;
 
   @IsString()
   @IsNotEmpty()
-  place_id!: string;
+  @ValidateIf(o => o.signal_type !== 'chip_confirm')
+  place_id?: string;
+
+  @IsObject()
+  @IsOptional()
+  metadata?: Record<string, unknown>;
 }

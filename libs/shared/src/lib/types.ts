@@ -106,23 +106,51 @@ export interface ChatResponseDto {
   data: ConsultResponseData | RecallResponseData | ExtractPlaceData | Record<string, unknown> | null;
 }
 
+// Signal types
 export type SignalType =
   | 'recommendation_accepted'
-  | 'recommendation_rejected';
+  | 'recommendation_rejected'
+  | 'chip_confirm';
 
+// Chip types
+export type ChipStatus = 'pending' | 'confirmed' | 'rejected';
+
+export interface ChipItem {
+  label: string;
+  source_field: string;
+  source_value: string;
+  signal_count: number;
+  status: ChipStatus;
+  selection_round: string | null;
+}
+
+// Signal request variants
 export interface SignalRequestAccepted {
   signal_type: 'recommendation_accepted';
   recommendation_id: string;
   place_id: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SignalRequestRejected {
   signal_type: 'recommendation_rejected';
   recommendation_id: string;
   place_id: string;
+  metadata?: Record<string, unknown>;
 }
 
-export type SignalRequest = SignalRequestAccepted | SignalRequestRejected;
+export interface SignalRequestChipConfirm {
+  signal_type: 'chip_confirm';
+  metadata: {
+    round: string;
+    chips: ChipItem[];
+  };
+}
+
+export type SignalRequest =
+  | SignalRequestAccepted
+  | SignalRequestRejected
+  | SignalRequestChipConfirm;
 
 export type SignalRequestWithUser = SignalRequest & { user_id: string };
 
@@ -130,14 +158,11 @@ export interface SignalResponse {
   status: string;
 }
 
-export interface UserContextChip {
-  label: string;
-  source_field: string;
-  source_value: string;
-  signal_count: number;
-}
+// User context
+export type SignalTier = 'cold' | 'warming' | 'chip_selection' | 'active';
 
 export interface UserContextResponse {
   saved_places_count: number;
-  chips: UserContextChip[];
+  signal_tier: SignalTier;
+  chips: ChipItem[];
 }
