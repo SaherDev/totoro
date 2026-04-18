@@ -68,7 +68,9 @@
         "directions": "Directions",
         "call": "Call",
         "share": "Share",
-        "menu": "Menu"
+        "menu": "Menu",
+        "accept": "I'll go",
+        "reject": "Not this"
       }
     },
     "error": {
@@ -175,6 +177,23 @@
     "headline": "The more you save, the better I get.",
     "subline": "Recall works now. Consult shows what's good nearby.",
     "alreadySaved": "Already have places saved?"
+  },
+  "chipSelection": {
+    "title": "What sounds like you?",
+    "subtitle": "Tap to confirm what fits. Tap again to reject. Skip if unsure.",
+    "fromBefore": "From before",
+    "done": "Done",
+    "skip": "Skip for now"
+  },
+  "savedProgress": {
+    "label": "{count} of 5 saved"
+  },
+  "placeCard": {
+    "openMap": "Open in Maps",
+    "expand": "See more",
+    "collapse": "See less",
+    "openNow": "Open now",
+    "closed": "Closed"
   },
   "illustrations": {
     "auth": "Totoro waving hello",

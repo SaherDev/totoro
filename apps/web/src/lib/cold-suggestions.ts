@@ -1,0 +1,55 @@
+// PLACEHOLDER — hardcoded until a /v1/suggestions endpoint exists.
+import type { PlaceObject } from '@totoro/shared';
+
+const tier1Place = (
+  id: string,
+  name: string,
+  subcategory: string,
+  tags: string[],
+  cuisine: string,
+  price: string,
+  ambiance: string,
+  goodFor: string[],
+  neighborhood: string,
+  city: string,
+  country: string,
+): PlaceObject => ({
+  place_id: id,
+  place_name: name,
+  place_type: 'food_and_drink',
+  subcategory,
+  tags,
+  attributes: {
+    cuisine,
+    price_hint: price,
+    ambiance,
+    dietary: [],
+    good_for: goodFor,
+    location_context: { neighborhood, city, country },
+  },
+  source_url: null,
+  source: null,
+  provider_id: null,
+  created_at: null,
+  lat: null,
+  lng: null,
+  address: null,
+  geo_fresh: false,
+  hours: null,
+  rating: null,
+  phone: null,
+  photo_url: null,
+  popularity: null,
+  enriched: false,
+});
+
+export const COLD_SUGGESTIONS: PlaceObject[] = [
+  tier1Place('cold-1', 'Nara Eatery', 'restaurant', ['ramen', 'late_night'], 'japanese', '$$', 'casual', ['date_night', 'solo'], 'Ari', 'Bangkok', 'TH'),
+  tier1Place('cold-2', 'Roots Coffee Roaster', 'cafe', ['coffee', 'specialty', 'work_friendly'], 'cafe', '$', 'cozy', ['solo', 'work'], 'Sukhumvit', 'Bangkok', 'TH'),
+  tier1Place('cold-3', 'Gaggan Anand', 'restaurant', ['progressive_indian', 'tasting_menu'], 'indian', '$$$', 'upscale', ['special_occasion', 'date_night'], 'Phloen Chit', 'Bangkok', 'TH'),
+  tier1Place('cold-4', 'Jay Fai', 'restaurant', ['street_food', 'michelin', 'crab_omelette'], 'thai', '$$', 'casual', ['solo', 'groups'], 'Banglamphu', 'Bangkok', 'TH'),
+  tier1Place('cold-5', 'Casa Lapin', 'cafe', ['coffee', 'brunch', 'weekend'], 'cafe', '$$', 'relaxed', ['brunch', 'date_light'], 'Silom', 'Bangkok', 'TH'),
+  tier1Place('cold-6', 'Sushi Sora Bangkok', 'restaurant', ['omakase', 'counter_dining'], 'omakase', '$$$', 'intimate', ['special_occasion'], 'Sukhumvit', 'Bangkok', 'TH'),
+  tier1Place('cold-7', 'Err Urban Rustic Thai', 'restaurant', ['thai', 'craft_cocktails', 'sharing'], 'thai', '$$', 'lively', ['groups', 'date_night'], 'Si Lom', 'Bangkok', 'TH'),
+  tier1Place('cold-8', 'Peppina', 'restaurant', ['pizza', 'neapolitan', 'casual_italian'], 'italian', '$$', 'casual', ['groups', 'family'], 'Ari', 'Bangkok', 'TH'),
+];

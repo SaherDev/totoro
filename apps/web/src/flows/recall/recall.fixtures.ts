@@ -1,123 +1,151 @@
-import type { ChatResponseDto } from '@totoro/shared';
+import type { ChatResponseDto, PlaceObject, RecallResponseData } from '@totoro/shared';
 import type { ChatClientOptions } from '../../lib/chat-client';
+
+const makeTier1Place = (
+  overrides: Pick<PlaceObject, 'place_id' | 'place_name' | 'subcategory' | 'tags' | 'attributes'>,
+): PlaceObject => ({
+  ...overrides,
+  place_type: 'food_and_drink',
+  source_url: null,
+  source: null,
+  provider_id: null,
+  created_at: '2026-02-12T14:30:00Z',
+  lat: null,
+  lng: null,
+  address: null,
+  geo_fresh: false,
+  hours: null,
+  rating: null,
+  phone: null,
+  photo_url: null,
+  popularity: null,
+  enriched: false,
+});
+
+const FUJI_RAMEN = makeTier1Place({
+  place_id: 'pl_fuji_ramen_recall',
+  place_name: 'Fuji Ramen',
+  subcategory: 'restaurant',
+  tags: ['ramen', 'tiktok_save', 'late_night'],
+  attributes: {
+    cuisine: 'japanese',
+    price_hint: '$$',
+    ambiance: 'casual',
+    dietary: [],
+    good_for: ['solo', 'quick_meal'],
+    location_context: { neighborhood: 'Sukhumvit', city: 'Bangkok', country: 'TH' },
+  },
+});
+
+const BANKARA_RAMEN = makeTier1Place({
+  place_id: 'pl_bankara_recall',
+  place_name: 'Bankara Ramen',
+  subcategory: 'restaurant',
+  tags: ['ramen', 'tonkotsu'],
+  attributes: {
+    cuisine: 'japanese',
+    price_hint: '$$',
+    ambiance: 'lively',
+    dietary: [],
+    good_for: ['groups'],
+    location_context: { neighborhood: 'Sukhumvit', city: 'Bangkok', country: 'TH' },
+  },
+});
+
+const NOOK_CAFE = makeTier1Place({
+  place_id: 'pl_nook_cafe',
+  place_name: 'The Nook Cafe',
+  subcategory: 'cafe',
+  tags: ['coffee', 'cozy', 'work_friendly'],
+  attributes: {
+    cuisine: 'cafe',
+    price_hint: '$',
+    ambiance: 'cozy',
+    dietary: ['vegan_option'],
+    good_for: ['solo', 'work'],
+    location_context: { neighborhood: 'Sukhumvit', city: 'Bangkok', country: 'TH' },
+  },
+});
+
+const BREW_AND_BEAN = makeTier1Place({
+  place_id: 'pl_brew_bean',
+  place_name: 'Brew & Bean',
+  subcategory: 'cafe',
+  tags: ['coffee', 'instagram_save'],
+  attributes: {
+    cuisine: 'cafe',
+    price_hint: '$$',
+    ambiance: 'trendy',
+    dietary: [],
+    good_for: ['date_night', 'photos'],
+    location_context: { neighborhood: 'Sukhumvit', city: 'Bangkok', country: 'TH' },
+  },
+});
+
+const SUSHI_MASAKO = makeTier1Place({
+  place_id: 'pl_sushi_masako',
+  place_name: 'Sushi Masako',
+  subcategory: 'restaurant',
+  tags: ['sushi', 'omakase', 'tokyo'],
+  attributes: {
+    cuisine: 'japanese',
+    price_hint: '$$$',
+    ambiance: 'upscale',
+    dietary: [],
+    good_for: ['special_occasion', 'date_night'],
+    location_context: { neighborhood: 'Ginza', city: 'Tokyo', country: 'JP' },
+  },
+});
+
+function makeResponse(data: RecallResponseData, message: string): ChatResponseDto {
+  return { type: 'recall', message, data };
+}
 
 export async function recallFixture(req: ChatClientOptions): Promise<ChatResponseDto> {
   const { message } = req;
+  const lower = message.toLowerCase();
 
-  // Keyed fixtures by exact match
-  if (message === 'that ramen place from TikTok') {
-    return {
-      type: 'recall',
-      message: '',
-      data: {
+  if (lower.includes('ramen')) {
+    return makeResponse(
+      {
         results: [
-          {
-            place_id: '1',
-            place_name: 'Fuji Ramen',
-            address: '123 Sukhumvit Soi 33, Bangkok',
-            cuisine: 'ramen',
-            price_range: 'low',
-            source_url: 'https://www.tiktok.com/@foodie/video/123',
-            saved_at: '2026-02-12T14:30:00Z',
-            match_reason: 'Saved from TikTok, tagged ramen',
-            thumbnail_url: undefined,
-          },
-          {
-            place_id: '2',
-            place_name: 'Bankara Ramen',
-            address: '456 Sukhumvit Soi 39, Bangkok',
-            cuisine: 'ramen',
-            price_range: 'medium',
-            source_url: null,
-            saved_at: '2026-02-05T10:15:00Z',
-            match_reason: 'Ramen with tonkotsu broth',
-            thumbnail_url: undefined,
-          },
+          { place: FUJI_RAMEN, match_reason: 'semantic + keyword', relevance_score: 0.021, score_type: 'rrf' },
+          { place: BANKARA_RAMEN, match_reason: 'semantic', relevance_score: 0.014, score_type: 'rrf' },
         ],
-        total: 2,
-        has_more: true,
+        total_count: 2,
+        empty_state: false,
       },
-    };
+      'Found 2 ramen places in your saves',
+    );
   }
 
-  if (message === 'the cafe near Sukhumvit') {
-    return {
-      type: 'recall',
-      message: '',
-      data: {
+  if (lower.includes('cafe') || lower.includes('coffee')) {
+    return makeResponse(
+      {
         results: [
-          {
-            place_id: '3',
-            place_name: 'The Nook Cafe',
-            address: '789 Sukhumvit Soi 19, Bangkok',
-            cuisine: 'coffee',
-            price_range: 'medium',
-            source_url: null,
-            saved_at: '2026-01-28T09:45:00Z',
-            match_reason: 'Cozy cafe with good coffee',
-            thumbnail_url: undefined,
-          },
-          {
-            place_id: '4',
-            place_name: 'Brew & Bean',
-            address: '100 Sukhumvit Soi 26, Bangkok',
-            cuisine: 'coffee',
-            price_range: 'medium',
-            source_url: 'https://www.instagram.com/brewbean/',
-            saved_at: '2026-02-01T11:20:00Z',
-            match_reason: 'Saved from Instagram',
-            thumbnail_url: undefined,
-          },
-          {
-            place_id: '5',
-            place_name: 'Caffeine Corner',
-            address: '200 Sukhumvit Soi 12, Bangkok',
-            cuisine: 'coffee',
-            price_range: 'low',
-            source_url: null,
-            saved_at: '2026-01-15T08:00:00Z',
-            match_reason: 'Affordable local spot',
-            thumbnail_url: undefined,
-          },
+          { place: NOOK_CAFE, match_reason: 'filter', relevance_score: null, score_type: null },
+          { place: BREW_AND_BEAN, match_reason: 'keyword', relevance_score: 0.009, score_type: 'rrf' },
         ],
-        total: 3,
-        has_more: false,
+        total_count: 3,
+        empty_state: false,
       },
-    };
+      'Found 3 cafes in your saves — showing 2',
+    );
   }
 
-  if (message === 'Japanese spot in Tokyo') {
-    return {
-      type: 'recall',
-      message: '',
-      data: {
+  if (lower.includes('japanese') || lower.includes('sushi')) {
+    return makeResponse(
+      {
         results: [
-          {
-            place_id: '6',
-            place_name: 'Sushi Masako',
-            address: '1-2-3 Ginza, Tokyo',
-            cuisine: 'sushi',
-            price_range: 'high',
-            source_url: null,
-            saved_at: '2026-01-20T16:30:00Z',
-            match_reason: 'High-end sushi experience',
-            thumbnail_url: undefined,
-          },
+          { place: SUSHI_MASAKO, match_reason: 'semantic', relevance_score: 0.018, score_type: 'rrf' },
         ],
-        total: 1,
-        has_more: true,
+        total_count: 1,
+        empty_state: false,
       },
-    };
+      'Found 1 Japanese place in your saves',
+    );
   }
 
-  // Unknown query — empty results
-  return {
-    type: 'recall',
-    message: '',
-    data: {
-      results: [],
-      total: 0,
-      has_more: false,
-    },
-  };
+  // Empty
+  return makeResponse({ results: [], total_count: 0, empty_state: false }, "Nothing found matching that.");
 }

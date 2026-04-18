@@ -2,16 +2,23 @@ import { z } from 'zod';
 import type { RecallResponseData } from '@totoro/shared';
 import type { FlowDefinition } from '../flow-definition';
 import type { HomeStoreApi } from '@/store/home-store';
-
-
+import { PlaceObjectSchema } from '../../lib/place-schema';
 import { recallFixture } from './recall.fixtures';
 
-// Loose schema — normalization happens in onResponse
-const RecallResponseDataSchema = z.object({
-  results: z.array(z.record(z.string(), z.unknown())),
-}).passthrough();
+const RecallResultSchema = z.object({
+  place: PlaceObjectSchema,
+  match_reason: z.enum(['filter', 'semantic', 'keyword', 'semantic + keyword']),
+  relevance_score: z.number().nullable(),
+  score_type: z.enum(['rrf', 'ts_rank']).nullable(),
+});
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- schema is loose; normalization happens in onResponse
+export const RecallResponseDataSchema = z.object({
+  results: z.array(RecallResultSchema),
+  total_count: z.number(),
+  empty_state: z.boolean(),
+}) satisfies z.ZodType<RecallResponseData>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic flow type
 export const recallFlow: FlowDefinition<any> = {
   id: 'recall',
   matches: { clientIntent: 'recall', responseType: 'recall' },
@@ -21,25 +28,16 @@ export const recallFlow: FlowDefinition<any> = {
   fixture: recallFixture,
   onResponse: (res, store: HomeStoreApi) => {
     if (res.type === 'recall' && res.data) {
-      const raw = res.data as Record<string, unknown>;
-      const rawResults = (raw['results'] as Array<Record<string, unknown>>) ?? [];
-
-      const data: RecallResponseData = {
-        results: rawResults.map((r) => ({
-          place_id: (r['place_id'] as string) ?? '',
-          place_name: (r['place_name'] as string) ?? '',
-          address: (r['address'] as string) ?? '',
-          cuisine: (r['cuisine'] as string | null) ?? null,
-          price_range: (r['price_range'] as string | null) ?? null,
-          source_url: (r['source_url'] as string | null) ?? null,
-          saved_at: (r['saved_at'] as string) ?? '',
-          match_reason: (r['match_reason'] as string) ?? '',
-          thumbnail_url: r['thumbnail_url'] as string | undefined,
-        })),
-        total: (raw['total'] as number) ?? rawResults.length,
-        has_more: (raw['has_more'] as boolean) ?? false,
-      };
-
+      const parsed = RecallResponseDataSchema.safeParse(res.data);
+      if (!parsed.success) {
+        store.pushMessage(res.message || "I couldn't find anything matching that in your saved places.");
+        return;
+      }
+      const data = parsed.data;
+      if (data.empty_state) {
+        store.pushMessage(res.message || "You haven't saved any places yet.");
+        return;
+      }
       if (data.results.length > 0) {
         store.pushRecallResults(res.message || 'Found in your saves', data);
       } else {

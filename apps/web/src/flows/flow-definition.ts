@@ -13,6 +13,7 @@ export type HomePhase =
   | 'hydrating'
   | 'cold-0'
   | 'cold-1-4'
+  | 'chip-selection'
   | 'taste-profile'
   | 'idle'
   | 'thinking'

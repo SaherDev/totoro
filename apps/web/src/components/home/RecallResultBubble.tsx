@@ -2,43 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { PlaceAvatar } from '@/components/PlaceAvatar';
-import type { RecallResponseData, RecallItem } from '@totoro/shared';
+import type { RecallResponseData } from '@totoro/shared';
+import { PlaceCard } from '@/components/PlaceCard';
 
 interface RecallResultBubbleProps {
   message: string;
   data: RecallResponseData;
 }
 
-function RecallCard({ place, index }: { place: RecallItem; index: number }) {
-  const meta = [place.cuisine, place.price_range, place.address].filter(Boolean).join(' · ');
-  const savedDate = place.saved_at
-    ? new Date(place.saved_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    : null;
-
+function MatchReasonBadge({ reason }: { reason: string }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
-    >
-      <PlaceAvatar name={place.place_name} size={48} className="rounded-lg overflow-hidden" />
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-foreground text-sm truncate">{place.place_name}</p>
-        <p className="text-xs text-muted-foreground mt-0.5 truncate">{meta}</p>
-        {place.match_reason && (
-          <p className="text-xs text-muted-foreground/70 truncate mt-0.5 italic">{place.match_reason}</p>
-        )}
-      </div>
-
-      {/* Saved date */}
-      {savedDate && (
-        <span className="flex-shrink-0 text-xs text-muted-foreground/60">{savedDate}</span>
-      )}
-    </motion.div>
+    <span className="rounded-full border border-border bg-card/80 px-2 py-0.5 text-[10px] text-muted-foreground">
+      {reason}
+    </span>
   );
 }
 
@@ -50,20 +26,34 @@ export function RecallResultBubble({ message, data }: RecallResultBubbleProps) {
     return () => clearTimeout(timer);
   }, []);
 
+  const hasMore = data.total_count > data.results.length;
+
   return (
     <div
       className="flex flex-col gap-3 transition-opacity duration-200"
       style={{ opacity: visible ? 1 : 0 }}
     >
-      <p className="text-sm font-medium text-foreground px-1">{message}</p>
-      <div className="space-y-2">
-        {data.results.map((place, i) => (
-          <RecallCard key={place.place_id || i} place={place} index={i} />
+      <p className="px-1 text-sm font-medium text-foreground">{message}</p>
+
+      <div className="flex flex-col gap-3">
+        {data.results.map((item, i) => (
+          <motion.div
+            key={item.place.place_id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+          >
+            <PlaceCard
+              place={item.place}
+              badge={<MatchReasonBadge reason={item.match_reason} />}
+            />
+          </motion.div>
         ))}
       </div>
-      {data.has_more && (
-        <p className="text-xs text-muted-foreground/60 text-center">
-          +{data.total - data.results.length} more saved places
+
+      {hasMore && (
+        <p className="text-center text-xs text-muted-foreground/60">
+          Showing {data.results.length} of {data.total_count} saved places
         </p>
       )}
     </div>
