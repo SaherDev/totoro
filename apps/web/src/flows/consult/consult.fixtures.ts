@@ -111,5 +111,6 @@ export async function consultFixture(_req: ChatClientOptions): Promise<ChatRespo
         { step: 'completion', summary: 'Found your match' },
       ],
     },
+    tool_calls_used: 3,
   };
 }
