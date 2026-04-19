@@ -68,7 +68,7 @@ const PACAMARA = makeSavedPlace({
 });
 
 function makeResponse(data: ExtractPlaceData, message: string): ChatResponseDto {
-  return { type: 'extract-place', message, data };
+  return { type: 'extract-place', message, data, tool_calls_used: 1 };
 }
 
 export async function saveFixture(req: ChatClientOptions): Promise<ChatResponseDto> {

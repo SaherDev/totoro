@@ -98,7 +98,7 @@ const SUSHI_MASAKO = makeTier1Place({
 });
 
 function makeResponse(data: RecallResponseData, message: string): ChatResponseDto {
-  return { type: 'recall', message, data };
+  return { type: 'recall', message, data, tool_calls_used: 0 };
 }
 
 export async function recallFixture(req: ChatClientOptions): Promise<ChatResponseDto> {

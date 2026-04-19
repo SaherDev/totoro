@@ -10,6 +10,7 @@ export async function assistantFixture(req: ChatClientOptions): Promise<ChatResp
       type: 'clarification',
       message: 'Could you add a cuisine or area so I can narrow it down?',
       data: null,
+      tool_calls_used: 0,
     };
   }
 
@@ -18,5 +19,6 @@ export async function assistantFixture(req: ChatClientOptions): Promise<ChatResp
     type: 'assistant',
     message: "I'm not sure how to help with that yet — try asking for a place or pasting a link.",
     data: null,
+    tool_calls_used: 0,
   };
 }
