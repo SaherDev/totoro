@@ -2,42 +2,28 @@
 
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PlaceAvatar } from '@/components/PlaceAvatar';
-import type { RecallItem } from '@totoro/shared';
+import type { RecallResult } from '@totoro/shared';
+import { PlaceCard } from '../../components/PlaceCard';
+import { cn } from '@totoro/ui';
+
+function MatchReasonBadge({ reason }: { reason: string }) {
+  return (
+    <span className="rounded-full border border-border bg-card/80 px-2 py-0.5 text-[10px] text-muted-foreground">
+      {reason}
+    </span>
+  );
+}
 
 interface RecallResultsProps {
-  results: RecallItem[];
-  hasMore: boolean;
+  results: RecallResult[];
+  totalCount: number;
   breadcrumb: boolean;
   onModeOverride: () => void;
 }
 
-function RecallResultCard({ item, index }: { item: RecallItem; index: number }) {
-  return (
-    <motion.div
-      key={item.place_id}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      className="rounded-2xl border border-border bg-card p-4"
-    >
-      <div className="flex gap-3">
-        <PlaceAvatar name={item.place_name} size={64} className="rounded-lg overflow-hidden" />
-
-        {/* Place info */}
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-foreground truncate">{item.place_name}</h3>
-          <p className="text-sm text-muted-foreground truncate">{item.address}</p>
-          {item.cuisine && <p className="text-xs text-muted-foreground mt-1">{item.cuisine}</p>}
-          <p className="text-xs text-muted-foreground mt-2">{item.match_reason}</p>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-export function RecallResults({ results, hasMore, breadcrumb, onModeOverride }: RecallResultsProps) {
+export function RecallResults({ results, totalCount, breadcrumb, onModeOverride }: RecallResultsProps) {
   const t = useTranslations('recall');
+  const hasMore = totalCount > results.length;
 
   return (
     <div className="flex flex-col gap-4">
@@ -48,54 +34,57 @@ export function RecallResults({ results, hasMore, breadcrumb, onModeOverride }: 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="px-4"
           >
-            <p className="text-xs text-muted-foreground animate-pulse">{t('breadcrumb')}</p>
+            <p className={cn('text-xs text-muted-foreground animate-pulse')}>{t('breadcrumb')}</p>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Mode override pill */}
-      <div className="px-4">
-        <motion.button
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          onClick={onModeOverride}
-          className="text-xs text-primary hover:text-primary/80 transition-colors border border-primary/20 rounded-full px-3 py-1.5"
-        >
-          {t('modeOverride')}
-        </motion.button>
-      </div>
+      <motion.button
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        onClick={onModeOverride}
+        className="self-start text-xs text-primary transition-colors hover:text-primary/80 border border-primary/20 rounded-full px-3 py-1.5"
+      >
+        {t('modeOverride')}
+      </motion.button>
 
       {/* Results list */}
-      <div className="space-y-2 px-4">
+      <div className="flex flex-col gap-3">
         <AnimatePresence>
           {results.map((item, idx) => (
-            <RecallResultCard key={item.place_id} item={item} index={idx} />
+            <motion.div
+              key={item.place.place_id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05 }}
+            >
+              <PlaceCard
+                place={item.place}
+                badge={<MatchReasonBadge reason={item.match_reason} />}
+              />
+            </motion.div>
           ))}
         </AnimatePresence>
       </div>
 
       {/* Empty state */}
       {results.length === 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-6 px-4"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-6 text-center">
           <p className="text-sm text-muted-foreground">{t('emptyFooter')}</p>
         </motion.div>
       )}
 
-      {/* Has more indicator */}
+      {/* "Showing N of M" hint */}
       {hasMore && results.length > 0 && (
-        <motion.div
+        <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-3 px-4"
+          className="text-center text-xs text-muted-foreground"
         >
-          <p className="text-xs text-muted-foreground">{t('hasMore')}</p>
-        </motion.div>
+          Showing {results.length} of {totalCount} saved places
+        </motion.p>
       )}
     </div>
   );

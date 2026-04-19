@@ -5,18 +5,20 @@ import type {
   ClientIntent,
   ConsultResponseData,
   RecallResponseData,
+  RecallResult,
   ReasoningStep,
-  RecallItem,
   SavedPlaceStub,
-  ExtractPlaceData,
-  SaveExtractPlace,
-  SaveSheetPlace,
+  ExtractPlaceItem,
+  SignalTier,
+  ChipItem,
 } from '@totoro/shared';
 import type { FlowId, HomePhase } from '../flows/flow-definition';
 import { getSavedPlaceCount, appendSavedPlace, incrementSavedPlaceCount } from '../storage/saved-places-storage';
 import { getTasteProfileConfirmed, setTasteProfileConfirmed } from '../storage/taste-profile-storage';
 import { classifyIntent } from '../lib/classify-intent';
 import { getChatClient } from '../lib/chat-client';
+import { getSignalClient } from '../lib/signal-client';
+import { getUserContextClient } from '../lib/user-context-client';
 import { FLOW_BY_CLIENT_INTENT, FLOW_BY_RESPONSE_TYPE } from '../flows/registry';
 
 // ── Thread entry types ─────────────────────────────────────────────────────────
@@ -25,7 +27,7 @@ export type ThreadEntry =
   | { id: string; role: 'assistant'; type: 'clarification'; message: string; dismissed?: boolean }
   | { id: string; role: 'assistant'; type: 'assistant'; message: string; dismissed?: boolean }
   | { id: string; role: 'assistant'; type: 'consult'; message: string; data: ConsultResponseData }
-  | { id: string; role: 'assistant'; type: 'save'; place: SaveExtractPlace; sourceUrl: string | null }
+  | { id: string; role: 'assistant'; type: 'save'; item: ExtractPlaceItem; sourceUrl: string | null }
   | { id: string; role: 'assistant'; type: 'recall'; message: string; data: RecallResponseData }
   | { id: string; role: 'assistant'; type: 'error'; category: 'offline' | 'timeout' | 'generic' | 'server'; flowId?: FlowId };
 
@@ -57,16 +59,16 @@ interface HomeState {
   pendingError: { message: string; category: 'offline' | 'timeout' | 'generic' | 'server' } | null;
   abortController: AbortController | null;
 
-  // Chat thread — accumulates all user + assistant exchanges
+  // Chat thread
   thread: ThreadEntry[];
 
   // Flow-specific slots
-  recallResults: RecallItem[] | null;
-  recallHasMore: boolean;
+  recallResults: RecallResult[] | null;
+  recallTotalCount: number;
   recallQuery: string | null;
   recallBreadcrumb: boolean;
-  saveSheetPlace: SaveSheetPlace | null;
-  saveSheetPlaces: SaveExtractPlace[];
+  saveSheetPlaces: ExtractPlaceItem[];
+  saveSheetSourceUrl: string | null;
   saveSheetSelectedIndex: number;
   saveSheetMessage: string | null;
   saveSheetStatus: 'pending' | 'saving' | 'duplicate' | 'error';
@@ -75,10 +77,17 @@ interface HomeState {
   assistantMessage: string | null;
   clarificationMessage: string | null;
 
+  // User context / tier state
+  signalTier: SignalTier | null;
+  chips: ChipItem[];
+  savedPlacesCountFromContext: number | null;
+  contextLoading: boolean;
+
   // Actions
   hydrate: () => void;
   init: (opts: { userId: string | null; getToken: () => Promise<string> }) => void;
   setUserId: (id: string | null) => void;
+  loadUserContext: () => Promise<void>;
   submit: (message: string, opts?: { forceIntent?: ClientIntent; isRetry?: boolean }) => Promise<void>;
   markAnimationComplete: () => void;
   setPendingResult: (data: ConsultResponseData) => void;
@@ -86,27 +95,39 @@ interface HomeState {
   confirmTasteProfile: () => void;
   reset: () => void;
 
-  // Actions — stubbed until sub-plans 3–7
   submitRecall: (message: string) => Promise<void>;
-  setRecallResults: (results: RecallItem[], hasMore: boolean) => void;
-  openSaveSheet: (message: string, places: SaveExtractPlace[]) => void;
+  setRecallResults: (results: RecallResult[], totalCount: number) => void;
+  openSaveSheet: (message: string, places: ExtractPlaceItem[], sourceUrl: string | null) => void;
   setSaveSheetSelectedIndex: (index: number) => void;
   confirmSave: () => Promise<void>;
   confirmPlaceSelection: () => void;
-  saveIndividualFromSheet: (place: SaveExtractPlace) => void;
-  closeSaveSheetWithResults: (savedPlaces: SaveExtractPlace[]) => void;
+  saveIndividualFromSheet: (item: ExtractPlaceItem) => void;
+  closeSaveSheetWithResults: (savedItems: ExtractPlaceItem[]) => void;
   dismissSaveSheet: () => void;
   dismissAssistantReply: () => void;
   incrementSavedCount: (place: SavedPlaceStub) => void;
-  autoSavePlace: (place: SaveExtractPlace, sourceUrl: string | null) => void;
+  autoSavePlace: (item: ExtractPlaceItem, sourceUrl: string | null) => void;
   pushMessage: (message: string) => void;
   pushRecallResults: (message: string, data: RecallResponseData) => void;
+
+  // Signal actions (fire-and-forget)
+  acceptPlace: (recommendationId: string, placeId: string) => Promise<void>;
+  rejectPlace: (recommendationId: string, placeId: string) => Promise<void>;
+  confirmChips: (decidedChips: ChipItem[]) => Promise<void>;
 }
 
-// Exported type for use in FlowDefinition — replaces the `any` forward declaration
 export type HomeStoreApi = HomeState;
 
-function pickRestingPhase(savedPlaceCount: number, tasteProfileConfirmed: boolean): HomePhase {
+function pickRestingPhase(
+  savedPlaceCount: number,
+  tasteProfileConfirmed: boolean,
+  signalTier: SignalTier | null,
+): HomePhase {
+  if (signalTier === 'cold') return 'cold-0';
+  // Skip chip-selection if user already confirmed chips locally — server may lag
+  if (signalTier === 'chip_selection' && !tasteProfileConfirmed) return 'chip-selection';
+  if (signalTier === 'warming' || signalTier === 'active' || (signalTier === 'chip_selection' && tasteProfileConfirmed)) return 'idle';
+  // null fallback — count-based
   if (savedPlaceCount === 0) return 'cold-0';
   if (savedPlaceCount < 5) return 'cold-1-4';
   if (!tasteProfileConfirmed) return 'taste-profile';
@@ -149,11 +170,11 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   abortController: null,
   thread: [],
   recallResults: null,
-  recallHasMore: false,
+  recallTotalCount: 0,
   recallQuery: null,
   recallBreadcrumb: false,
-  saveSheetPlace: null,
   saveSheetPlaces: [],
+  saveSheetSourceUrl: null,
   saveSheetSelectedIndex: 0,
   saveSheetMessage: null,
   saveSheetStatus: 'pending',
@@ -161,19 +182,23 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   preSavePhase: null,
   assistantMessage: null,
   clarificationMessage: null,
+  signalTier: null,
+  chips: [],
+  savedPlacesCountFromContext: null,
+  contextLoading: false,
 
   // ── hydrate ────────────────────────────────────────────────────────────────
   hydrate: () => {
     const savedPlaceCount = getSavedPlaceCount();
     const tasteProfileConfirmed = getTasteProfileConfirmed();
-    const phase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
-
+    const phase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, null);
     set({ phase, savedPlaceCount, tasteProfileConfirmed, hydrated: true });
   },
 
   // ── init ───────────────────────────────────────────────────────────────────
   init: ({ userId, getToken }) => {
     set({ userId, getToken });
+    void get().loadUserContext();
   },
 
   // ── setUserId ──────────────────────────────────────────────────────────────
@@ -181,26 +206,56 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     set({ userId: id });
   },
 
+  // ── loadUserContext ────────────────────────────────────────────────────────
+  loadUserContext: async () => {
+    const { getToken, savedPlaceCount, tasteProfileConfirmed, savedPlacesCountFromContext } = get();
+    const isFirstLoad = savedPlacesCountFromContext === null;
+    if (isFirstLoad) set({ contextLoading: true });
+    try {
+      const client = getUserContextClient(getToken ?? (async () => ''));
+      const ctx = await client.getUserContext();
+      const signalTier = ctx.signal_tier;
+      const phase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
+      set({
+        signalTier,
+        chips: ctx.chips,
+        savedPlacesCountFromContext: ctx.saved_places_count,
+        phase,
+        contextLoading: false,
+      });
+    } catch {
+      // Silently fall back — pickRestingPhase uses count-based when signalTier is null
+      set({ contextLoading: false });
+    }
+  },
+
   // ── submit ─────────────────────────────────────────────────────────────────
   submit: async (message, opts) => {
-    const { getToken, thread } = get();
+    const { getToken, thread, signalTier, savedPlaceCount, tasteProfileConfirmed } = get();
 
-    // Dismiss any visible assistant/clarification bubble before new dispatch
     get().dismissAssistantReply();
-
-    // Cancel any in-flight request
     get().abortController?.abort();
     const abortController = new AbortController();
 
-    // Classify intent (forceIntent overrides classification)
     const intent: ClientIntent = opts?.forceIntent ?? classifyIntent(message);
 
-    // Pre-route via intent — pick initial flow and phase
+    // Tier guard — block non-save intents when onboarding isn't complete
+    if ((signalTier === 'cold' || signalTier === 'chip_selection') && intent !== 'save') {
+      const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
+      const entry: ThreadEntry = {
+        id: nextId(),
+        role: 'assistant',
+        type: 'clarification',
+        message: "Let's finish setup first before we explore recommendations.",
+      };
+      set({ thread: [...get().thread, entry], phase: restingPhase, activeFlowId: null });
+      return;
+    }
+
     const preFlow = FLOW_BY_CLIENT_INTENT[intent];
     const initialFlowId: FlowId = preFlow?.id ?? 'consult';
     const initialPhase = preFlow?.phase ?? 'thinking';
 
-    // Build new thread: retry replaces last error entry; normal submit appends user message
     let newThread: ThreadEntry[];
     if (opts?.isRetry) {
       const last = thread[thread.length - 1];
@@ -228,21 +283,17 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       abortController,
     });
 
-    // Fire fetch
     try {
-      const client = getToken
-        ? getChatClient(getToken)
-        : getChatClient(async () => '');
-
+      const client = getToken ? getChatClient(getToken) : getChatClient(async () => '');
       const res = await client.chat({
         message,
         signal: abortController.signal,
+        signalTier: get().signalTier,
       });
 
-      // Clarification — push to thread, reset to resting phase
       if (res.type === 'clarification') {
-        const { savedPlaceCount, tasteProfileConfirmed } = get();
-        const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
+        const { savedPlaceCount: spc, tasteProfileConfirmed: tpc, signalTier: st } = get();
+        const restingPhase = pickRestingPhase(spc, tpc, st);
         const entry: ThreadEntry = { id: nextId(), role: 'assistant', type: 'clarification', message: res.message };
         set({
           thread: [...get().thread, entry],
@@ -257,10 +308,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
         return;
       }
 
-      // Resolve final flow from response type
       const finalFlow = FLOW_BY_RESPONSE_TYPE[res.type];
-
-      // Validate response shape
       const parsed = finalFlow.schema.safeParse(res.data);
       if (!parsed.success) {
         const errorObj = { message: 'Invalid response shape', category: 'generic' as const };
@@ -269,7 +317,6 @@ export const useHomeStore = create<HomeState>((set, get) => ({
         return;
       }
 
-      // Store reasoning steps and message if present (consult flow populates these)
       if (res.type === 'consult' && res.data && typeof res.data === 'object' && 'reasoning_steps' in res.data) {
         set({
           reasoningSteps: (res.data as ConsultResponseData).reasoning_steps ?? [],
@@ -277,7 +324,6 @@ export const useHomeStore = create<HomeState>((set, get) => ({
         });
       }
 
-      // Delegate to flow's onResponse — flow sets pendingResult and calls tryRevealResult
       set({ fetchComplete: true });
       finalFlow.onResponse(res, get());
     } catch (err) {
@@ -300,13 +346,11 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   },
 
   // ── tryRevealResult ────────────────────────────────────────────────────────
-  // Only fires when both animation AND fetch are complete.
-  // Pushes the result/error to the thread and resets to resting phase.
   tryRevealResult: () => {
-    const { animationComplete, fetchComplete, pendingResult, pendingError, savedPlaceCount, tasteProfileConfirmed } = get();
+    const { animationComplete, fetchComplete, pendingResult, pendingError, savedPlaceCount, tasteProfileConfirmed, signalTier } = get();
     if (!animationComplete || !fetchComplete) return;
 
-    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
+    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
 
     if (pendingError) {
       const { activeFlowId } = get();
@@ -359,8 +403,8 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
   // ── reset ──────────────────────────────────────────────────────────────────
   reset: () => {
-    const { savedPlaceCount, tasteProfileConfirmed } = get();
-    const phase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
+    const { savedPlaceCount, tasteProfileConfirmed, signalTier } = get();
+    const phase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
     set({
       phase,
       activeFlowId: null,
@@ -374,75 +418,56 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       pendingError: null,
       abortController: null,
       clarificationMessage: null,
-      // thread is intentionally preserved — conversation history persists
     });
   },
 
-  // ── submitRecall ──────────────────────────────────────────────────────────
+  // ── submitRecall ───────────────────────────────────────────────────────────
   submitRecall: async (message) => {
     const { getToken } = get();
+    set({ recallQuery: message, phase: 'recall', recallResults: null, recallBreadcrumb: false });
 
-    set({
-      recallQuery: message,
-      phase: 'recall',
-      recallResults: null,
-      recallBreadcrumb: false,
-    });
-
-    // Start 600ms breadcrumb timer
     let breadcrumbTimer: ReturnType<typeof setTimeout> | null = null;
-    const startBreadcrumbTimer = () => {
-      breadcrumbTimer = setTimeout(() => {
-        if (get().phase === 'recall') {
-          set({ recallBreadcrumb: true });
-        }
-      }, 600);
-    };
-    startBreadcrumbTimer();
+    breadcrumbTimer = setTimeout(() => {
+      if (get().phase === 'recall') set({ recallBreadcrumb: true });
+    }, 600);
 
     try {
       const client = getToken ? getChatClient(getToken) : getChatClient(async () => '');
-      const res = await client.chat({
-        message,
-      });
+      const res = await client.chat({ message, signalTier: get().signalTier });
 
-      // Cancel timer and update state with results
       if (breadcrumbTimer) clearTimeout(breadcrumbTimer);
 
       if (res.type === 'recall' && res.data) {
-        const data = res.data as { results: RecallItem[]; has_more: boolean };
+        const data = res.data as RecallResponseData;
         set({
           recallResults: data.results,
-          recallHasMore: data.has_more,
+          recallTotalCount: data.total_count,
           recallBreadcrumb: false,
         });
       }
-    } catch (_err) {
-      // Cancel timer on error
+    } catch {
       if (breadcrumbTimer) clearTimeout(breadcrumbTimer);
       set({ recallBreadcrumb: false });
     }
   },
 
   // ── setRecallResults ───────────────────────────────────────────────────────
-  setRecallResults: (results, hasMore) => {
-    set({ recallResults: results, recallHasMore: hasMore });
+  setRecallResults: (results, totalCount) => {
+    set({ recallResults: results, recallTotalCount: totalCount });
   },
 
-
-  // ── openSaveSheet ─────────────────────────────────────────────────────────
-  openSaveSheet: (message, places) => {
+  // ── openSaveSheet ──────────────────────────────────────────────────────────
+  openSaveSheet: (message, places, sourceUrl) => {
     const { phase, activeFlowId } = get();
-    // Save the pre-save phase only if we're not already in a save phase
     const preSavePhase = phase !== 'save-sheet' && phase !== 'save-snackbar' ? phase : null;
     set({
       preSavePhase,
       saveSheetMessage: message,
       saveSheetPlaces: places,
+      saveSheetSourceUrl: sourceUrl,
       saveSheetSelectedIndex: 0,
       saveSheetStatus: 'pending',
       phase: 'save-sheet',
-      // Ensure SaveFlow component is shown regardless of initial intent classification
       activeFlowId: activeFlowId !== 'save' ? 'save' : activeFlowId,
     });
   },
@@ -454,74 +479,40 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
   // ── confirmSave ────────────────────────────────────────────────────────────
   confirmSave: async () => {
-    const { getToken, saveSheetMessage, saveSheetSelectedIndex } = get();
-
+    // Legacy action — kept for compatibility; new flow uses openSaveSheet + saveIndividualFromSheet
     set({ saveSheetStatus: 'saving' });
-
     try {
-      const client = getToken ? getChatClient(getToken) : getChatClient(async () => '');
-      const res = await client.chat({
-        message: saveSheetMessage || '',
-      });
-
-      if (res.type === 'extract-place' && res.data) {
-        const data = res.data as ExtractPlaceData;
-        const selectedPlace = data.places[saveSheetSelectedIndex] || data.places[0];
-
-        if (selectedPlace.status === 'duplicate') {
-          // Duplicate save — show duplicate state
-          set({
-            phase: 'save-duplicate',
-            saveSheetStatus: 'duplicate',
-            saveSheetOriginalSavedAt: selectedPlace.original_saved_at || null,
-          });
-        } else if (selectedPlace.status === 'resolved') {
-          // Resolved save — increment count and show snackbar
-          const place: SavedPlaceStub = {
-            place_id: selectedPlace.place_id || '',
-            place_name: selectedPlace.place_name || '',
-            address: selectedPlace.address || '',
-            saved_at: new Date().toISOString(),
-            source_url: data.source_url,
-            thumbnail_url: selectedPlace.thumbnail_url,
-          };
-          get().incrementSavedCount(place);
-          set({ phase: 'save-snackbar', saveSheetStatus: 'pending' });
-        } else {
-          // Unresolved — keep sheet in pending state
-          set({ saveSheetStatus: 'pending' });
-        }
-      }
-    } catch (_err) {
+      const { savedPlaceCount, tasteProfileConfirmed, signalTier } = get();
+      const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
+      set({ phase: restingPhase, saveSheetStatus: 'pending' });
+    } catch {
       set({ saveSheetStatus: 'error' });
     }
   },
 
-  // ── confirmPlaceSelection ─────────────────────────────────────────────────────
+  // ── confirmPlaceSelection ──────────────────────────────────────────────────
   confirmPlaceSelection: () => {
-    const { saveSheetPlaces, saveSheetSelectedIndex } = get();
-    const selectedPlace = saveSheetPlaces[saveSheetSelectedIndex];
+    const { saveSheetPlaces, saveSheetSelectedIndex, saveSheetSourceUrl } = get();
+    const selectedItem = saveSheetPlaces[saveSheetSelectedIndex];
+    if (!selectedItem?.place) return;
 
-    if (!selectedPlace) return;
-
-    // Save the selected place (even if uncertain/unresolved)
-    const place: SavedPlaceStub = {
-      place_id: selectedPlace.place_id || `temp-${Date.now()}`,
-      place_name: selectedPlace.place_name || 'Unknown place',
-      address: selectedPlace.address || '',
+    const stub: SavedPlaceStub = {
+      place_id: selectedItem.place.place_id,
+      place_name: selectedItem.place.place_name,
+      address: selectedItem.place.address ?? '',
       saved_at: new Date().toISOString(),
-      source_url: null,
-      thumbnail_url: selectedPlace.thumbnail_url,
+      source_url: saveSheetSourceUrl,
+      thumbnail_url: selectedItem.place.photo_url ?? undefined,
     };
-    get().incrementSavedCount(place);
-    const { savedPlaceCount, tasteProfileConfirmed, thread } = get();
-    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
+    get().incrementSavedCount(stub);
+    const { savedPlaceCount, tasteProfileConfirmed, signalTier, thread } = get();
+    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
     const entry: ThreadEntry = {
       id: nextId(),
       role: 'assistant',
       type: 'save',
-      place: selectedPlace,
-      sourceUrl: null,
+      item: selectedItem,
+      sourceUrl: saveSheetSourceUrl,
     };
     set({
       thread: [...thread, entry],
@@ -535,51 +526,52 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   },
 
   // ── saveIndividualFromSheet ────────────────────────────────────────────────
-  // Saves one place inline — sheet stays open, no phase change.
-  saveIndividualFromSheet: (place) => {
+  saveIndividualFromSheet: (item) => {
+    if (!item.place) return;
     const stub: SavedPlaceStub = {
-      place_id: place.place_id || `temp-${Date.now()}`,
-      place_name: place.place_name || 'Unknown place',
-      address: place.address || '',
+      place_id: item.place.place_id,
+      place_name: item.place.place_name,
+      address: item.place.address ?? '',
       saved_at: new Date().toISOString(),
-      source_url: null,
-      thumbnail_url: place.thumbnail_url,
+      source_url: get().saveSheetSourceUrl,
+      thumbnail_url: item.place.photo_url ?? undefined,
     };
     get().incrementSavedCount(stub);
   },
 
   // ── closeSaveSheetWithResults ──────────────────────────────────────────────
-  // Called when the user dismisses the sheet. Pushes one thread entry per saved place.
-  closeSaveSheetWithResults: (savedPlaces) => {
-    const { savedPlaceCount, tasteProfileConfirmed, thread } = get();
-    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
-    const newEntries: ThreadEntry[] = savedPlaces.map((place) => ({
+  closeSaveSheetWithResults: (savedItems) => {
+    const { savedPlaceCount, tasteProfileConfirmed, signalTier, thread, saveSheetSourceUrl } = get();
+    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
+    const newEntries: ThreadEntry[] = savedItems.map((item) => ({
       id: nextId(),
       role: 'assistant' as const,
       type: 'save' as const,
-      place,
-      sourceUrl: null,
+      item,
+      sourceUrl: saveSheetSourceUrl,
     }));
     set({
       thread: [...thread, ...newEntries],
       phase: restingPhase,
       activeFlowId: null,
       saveSheetPlaces: [],
+      saveSheetSourceUrl: null,
       saveSheetSelectedIndex: 0,
       saveSheetMessage: null,
       saveSheetStatus: 'pending',
     });
+    void get().loadUserContext();
   },
 
   // ── dismissSaveSheet ───────────────────────────────────────────────────────
   dismissSaveSheet: () => {
-    const { preSavePhase, savedPlaceCount, tasteProfileConfirmed } = get();
-    const restorePhase = preSavePhase ?? pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
+    const { preSavePhase, savedPlaceCount, tasteProfileConfirmed, signalTier } = get();
+    const restorePhase = preSavePhase ?? pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
     set({
       phase: restorePhase,
       preSavePhase: null,
-      saveSheetPlace: null,
       saveSheetPlaces: [],
+      saveSheetSourceUrl: null,
       saveSheetSelectedIndex: 0,
       saveSheetMessage: null,
       saveSheetStatus: 'pending',
@@ -598,8 +590,6 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   dismissAssistantReply: () => {
     const { thread } = get();
     let found = false;
-
-    // Find last undismissed assistant/clarification entry and mark it dismissed
     for (let i = thread.length - 1; i >= 0 && !found; i--) {
       const entry = thread[i];
       if (
@@ -607,9 +597,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
         (entry.type === 'assistant' || entry.type === 'clarification') &&
         !entry.dismissed
       ) {
-        const newThread = thread.map((e, idx) =>
-          idx === i ? { ...e, dismissed: true } : e
-        );
+        const newThread = thread.map((e, idx) => idx === i ? { ...e, dismissed: true } : e);
         set({ thread: newThread });
         found = true;
       }
@@ -617,19 +605,20 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   },
 
   // ── autoSavePlace ──────────────────────────────────────────────────────────
-  autoSavePlace: (place, sourceUrl) => {
-    const savedPlace: SavedPlaceStub = {
-      place_id: place.place_id || '',
-      place_name: place.place_name || '',
-      address: place.address || '',
+  autoSavePlace: (item, sourceUrl) => {
+    if (!item.place) return;
+    const stub: SavedPlaceStub = {
+      place_id: item.place.place_id,
+      place_name: item.place.place_name,
+      address: item.place.address ?? '',
       saved_at: new Date().toISOString(),
       source_url: sourceUrl,
-      thumbnail_url: place.thumbnail_url,
+      thumbnail_url: item.place.photo_url ?? undefined,
     };
-    get().incrementSavedCount(savedPlace);
-    const { savedPlaceCount, tasteProfileConfirmed, thread } = get();
-    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
-    const entry: ThreadEntry = { id: nextId(), role: 'assistant', type: 'save', place, sourceUrl };
+    get().incrementSavedCount(stub);
+    const { savedPlaceCount, tasteProfileConfirmed, signalTier, thread } = get();
+    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
+    const entry: ThreadEntry = { id: nextId(), role: 'assistant', type: 'save', item, sourceUrl };
     set({
       thread: [...thread, entry],
       phase: restingPhase,
@@ -639,12 +628,10 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     });
   },
 
-
   // ── pushMessage ────────────────────────────────────────────────────────────
-  // Pushes a plain assistant message to the thread and resets to resting phase.
   pushMessage: (message) => {
-    const { savedPlaceCount, tasteProfileConfirmed, thread } = get();
-    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
+    const { savedPlaceCount, tasteProfileConfirmed, signalTier, thread } = get();
+    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
     const entry: ThreadEntry = { id: nextId(), role: 'assistant', type: 'assistant', message };
     set({
       thread: [...thread, entry],
@@ -657,8 +644,8 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
   // ── pushRecallResults ──────────────────────────────────────────────────────
   pushRecallResults: (message, data) => {
-    const { savedPlaceCount, tasteProfileConfirmed, thread } = get();
-    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed);
+    const { savedPlaceCount, tasteProfileConfirmed, signalTier, thread } = get();
+    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
     const entry: ThreadEntry = { id: nextId(), role: 'assistant', type: 'recall', message, data };
     set({
       thread: [...thread, entry],
@@ -667,5 +654,39 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       animationComplete: false,
       fetchComplete: false,
     });
+  },
+
+  // ── acceptPlace ───────────────────────────────────────────────────────────
+  acceptPlace: async (recommendationId, placeId) => {
+    const { getToken } = get();
+    const client = getSignalClient(getToken ?? (async () => ''));
+    await client.acceptRecommendation(recommendationId, placeId);
+  },
+
+  // ── rejectPlace ───────────────────────────────────────────────────────────
+  rejectPlace: async (recommendationId, placeId) => {
+    const { getToken } = get();
+    const client = getSignalClient(getToken ?? (async () => ''));
+    await client.rejectRecommendation(recommendationId, placeId);
+  },
+
+  // ── confirmChips ──────────────────────────────────────────────────────────
+  confirmChips: async (decidedChips) => {
+    const { getToken } = get();
+    // Optimistic update
+    set((s) => ({
+      chips: s.chips.map((c) => {
+        const decided = decidedChips.find(
+          (d) => d.label === c.label && d.selection_round === c.selection_round,
+        );
+        return decided ?? c;
+      }),
+    }));
+    // Persist locally so chip-selection is never shown again after submission
+    setTasteProfileConfirmed();
+    set({ tasteProfileConfirmed: true });
+    const client = getSignalClient(getToken ?? (async () => ''));
+    await client.confirmChips(decidedChips);
+    await get().loadUserContext();
   },
 }));

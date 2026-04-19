@@ -23,7 +23,8 @@ export class ChatService {
     return this.aiClient.chat({
       user_id: userId,
       message: dto.message,
-      location: dto.location,
+      location: dto.location ?? null,
+      signal_tier: dto.signal_tier ?? null,
     });
   }
 }

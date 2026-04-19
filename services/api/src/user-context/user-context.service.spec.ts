@@ -39,7 +39,11 @@ describe('UserContextService', () => {
   });
 
   it('passes through a cold-start response', async () => {
-    const body: UserContextResponse = { saved_places_count: 0, signal_tier: 'cold', chips: [] };
+    const body: UserContextResponse = {
+      saved_places_count: 0,
+      signal_tier: 'cold',
+      chips: [],
+    };
     aiClient.getUserContext.mockResolvedValueOnce(body);
 
     const result = await service.get('user_new');

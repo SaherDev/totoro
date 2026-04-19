@@ -56,6 +56,61 @@ describe('SignalService', () => {
     );
   });
 
+  it('forwards chip_confirm with its full chips metadata (no outer round)', async () => {
+    aiClient.postSignal.mockResolvedValueOnce({ status: 'accepted' });
+
+    const dto: SignalRequestDto = {
+      signal_type: 'chip_confirm',
+      metadata: {
+        chips: [
+          {
+            label: 'Ramen lover',
+            source_field: 'attributes.cuisine',
+            source_value: 'ramen',
+            signal_count: 3,
+            status: 'confirmed',
+            selection_round: 'round_1',
+          },
+          {
+            label: 'Casual spots',
+            source_field: 'attributes.ambiance',
+            source_value: 'casual',
+            signal_count: 2,
+            status: 'rejected',
+            selection_round: 'round_1',
+          },
+        ],
+      },
+    };
+
+    await service.submit('user_clerk_789', dto);
+
+    expect(aiClient.postSignal).toHaveBeenCalledWith({
+      signal_type: 'chip_confirm',
+      user_id: 'user_clerk_789',
+      metadata: {
+        chips: [
+          {
+            label: 'Ramen lover',
+            source_field: 'attributes.cuisine',
+            source_value: 'ramen',
+            signal_count: 3,
+            status: 'confirmed',
+            selection_round: 'round_1',
+          },
+          {
+            label: 'Casual spots',
+            source_field: 'attributes.ambiance',
+            source_value: 'casual',
+            signal_count: 2,
+            status: 'rejected',
+            selection_round: 'round_1',
+          },
+        ],
+      },
+    });
+  });
+
   it('propagates upstream errors so the global filter can translate them', async () => {
     const upstream = new Error('Recommendation not found');
     aiClient.postSignal.mockRejectedValueOnce(upstream);

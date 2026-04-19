@@ -2,7 +2,7 @@
 
 import { AnimatePresence } from 'framer-motion';
 import type { HomeStoreApi } from '@/store/home-store';
-import type { SaveExtractPlace } from '@totoro/shared';
+import type { ExtractPlaceItem } from '@totoro/shared';
 import { SaveSheet } from './SaveSheet';
 
 interface SaveFlowProps {
@@ -18,10 +18,10 @@ export function SaveFlow({ store }: SaveFlowProps) {
         <SaveSheet
           key="sheet"
           places={saveSheetPlaces}
-          onSavePlace={(place: SaveExtractPlace) => store.saveIndividualFromSheet(place)}
-          onClose={(savedPlaces: SaveExtractPlace[]) => {
-            if (savedPlaces.length > 0) {
-              store.closeSaveSheetWithResults(savedPlaces);
+          onSavePlace={(item: ExtractPlaceItem) => store.saveIndividualFromSheet(item)}
+          onClose={(savedItems: ExtractPlaceItem[]) => {
+            if (savedItems.length > 0) {
+              store.closeSaveSheetWithResults(savedItems);
             } else {
               store.dismissSaveSheet();
             }

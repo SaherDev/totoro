@@ -1,7 +1,7 @@
 'use client';
 
 import { Capacitor } from '@capacitor/core';
-import type { ChatResponseDto } from '@totoro/shared';
+import type { ChatResponseDto, SignalTier } from '@totoro/shared';
 import { classifyIntent } from './classify-intent';
 import { recallFixture } from '../flows/recall/recall.fixtures';
 import { saveFixture } from '../flows/save/save.fixtures';
@@ -12,6 +12,7 @@ import { FetchClient } from '../api/transports/fetch.transport';
 export interface ChatClientOptions {
   message: string;
   signal?: AbortSignal;
+  signalTier?: SignalTier | null;
 }
 
 export interface ChatClient {
@@ -38,9 +39,13 @@ function makeRealChatClient(getToken: () => Promise<string>): ChatClient {
   const http = new FetchClient(apiBase, getToken);
 
   return {
-    async chat({ message, signal }) {
+    async chat({ message, signal, signalTier }) {
       try {
-        return await http.post<ChatResponseDto>('/api/v1/chat', { message }, signal);
+        return await http.post<ChatResponseDto>(
+          '/api/v1/chat',
+          { message, ...(signalTier != null ? { signal_tier: signalTier } : {}) },
+          signal,
+        );
       } catch (err) {
         const category = categorizeError(err);
         if (err instanceof Error && 'status' in err) {

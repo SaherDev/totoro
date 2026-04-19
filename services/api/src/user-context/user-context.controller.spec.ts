@@ -12,7 +12,11 @@ describe('UserContextController', () => {
   });
 
   it('is a facade — one service call with the authed userId, return value forwarded', async () => {
-    const body: UserContextResponse = { saved_places_count: 0, signal_tier: 'cold', chips: [] };
+    const body: UserContextResponse = {
+      saved_places_count: 0,
+      signal_tier: 'cold',
+      chips: [],
+    };
     service.get.mockResolvedValueOnce(body);
 
     const result = await controller.get('user_clerk_123');

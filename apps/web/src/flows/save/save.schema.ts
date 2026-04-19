@@ -1,10 +1,15 @@
 import { z } from 'zod';
+import type { ExtractPlaceItem, ExtractPlaceData } from '@totoro/shared';
+import { PlaceObjectSchema } from '../../lib/place-schema';
 
-// Loose schema — only validates that places is an array; onResponse does normalization
-export const SaveExtractPlaceSchema = z.record(z.string(), z.unknown());
+export const ExtractPlaceItemSchema = z.object({
+  place: PlaceObjectSchema.nullable(),
+  confidence: z.number().nullable(),
+  status: z.enum(['saved', 'needs_review', 'duplicate', 'pending', 'failed']),
+}) satisfies z.ZodType<ExtractPlaceItem>;
 
 export const ExtractPlaceDataSchema = z.object({
-  places: z.array(SaveExtractPlaceSchema),
-}).passthrough();
-
-export type ExtractPlaceDataType = z.infer<typeof ExtractPlaceDataSchema>;
+  results: z.array(ExtractPlaceItemSchema),
+  source_url: z.string().nullable(),
+  request_id: z.string().nullable(),
+}) satisfies z.ZodType<ExtractPlaceData>;

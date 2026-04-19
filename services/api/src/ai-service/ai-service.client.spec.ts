@@ -120,7 +120,11 @@ describe('AiServiceClient', () => {
     });
 
     it('passes through a cold-start response unchanged', async () => {
-      const body: UserContextResponse = { saved_places_count: 0, signal_tier: 'cold', chips: [] };
+      const body: UserContextResponse = {
+        saved_places_count: 0,
+        signal_tier: 'cold',
+        chips: [],
+      };
       const response = { data: body } as AxiosResponse<UserContextResponse>;
       httpService.get.mockReturnValueOnce(of(response));
 
