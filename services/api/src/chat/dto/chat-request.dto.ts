@@ -1,5 +1,8 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber, ValidateNested } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, IsIn, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
+import type { SignalTier } from '@totoro/shared';
+
+const ALLOWED_SIGNAL_TIERS: SignalTier[] = ['cold', 'warming', 'chip_selection', 'active'];
 
 export class LocationDto {
   @IsNumber()
@@ -18,4 +21,8 @@ export class ChatRequestBodyDto {
   @ValidateNested()
   @Type(() => LocationDto)
   location?: LocationDto;
+
+  @IsOptional()
+  @IsIn(ALLOWED_SIGNAL_TIERS)
+  signal_tier?: SignalTier;
 }

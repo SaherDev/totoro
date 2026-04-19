@@ -3,15 +3,19 @@
 import { useTranslations } from 'next-intl';
 import { Illustration } from '@/components/illustrations/Illustration';
 import { CONSULT_SUGGESTIONS } from '@/constants/home-suggestions';
+import type { ChipItem } from '@totoro/shared';
 
 interface HomeIdleProps {
   onSuggestionClick: (text: string) => void;
   firstName?: string | null;
   savedCount?: number;
+  chips?: ChipItem[];
 }
 
-export function HomeIdle({ onSuggestionClick, firstName, savedCount }: HomeIdleProps) {
+export function HomeIdle({ onSuggestionClick, firstName, savedCount, chips }: HomeIdleProps) {
   const t = useTranslations('home.idle');
+
+  const visibleChips = chips?.filter((c) => c.status !== 'rejected') ?? [];
 
   return (
     <div className="flex flex-col items-center gap-6 py-8">
@@ -32,6 +36,24 @@ export function HomeIdle({ onSuggestionClick, firstName, savedCount }: HomeIdleP
       <div className="h-32 w-32">
         <Illustration id="idle-welcoming" />
       </div>
+
+      {/* Taste chips — inline below illustration */}
+      {visibleChips.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-1.5">
+          {visibleChips.map((chip) => (
+            <span
+              key={chip.label}
+              className={
+                chip.status === 'confirmed'
+                  ? 'rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground'
+                  : 'rounded-full border border-border px-3 py-1 text-xs text-foreground'
+              }
+            >
+              {chip.label}
+            </span>
+          ))}
+        </div>
+      )}
 
       <h2 className="text-center text-xl font-semibold text-foreground">
         {t('headline')}

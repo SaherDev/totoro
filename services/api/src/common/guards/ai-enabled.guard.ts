@@ -8,13 +8,13 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
-import { ClerkUser } from '../middleware/clerk.middleware';
+import { AuthUser } from '@totoro/shared';
 
 /**
  * @RequiresAi() guard validates that the user can access AI-powered endpoints.
  *
  * Checks:
- * 1. If ai.global_kill_switch is true → throw ServiceUnavailableException (503)
+ * 1. If AI_GLOBAL_KILL_SWITCH=true env var → throw ServiceUnavailableException (503)
  * 2. If user.ai_enabled is false → throw ForbiddenException (403)
  * 3. Otherwise → allow access (return true)
  *
@@ -35,10 +35,10 @@ export class AiEnabledGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
-    const user = request.user as ClerkUser | undefined;
+    const user = request.user as AuthUser | undefined;
 
-    // Check global kill switch
-    const globalKillSwitch = this.configService.get<boolean>('ai.global_kill_switch', false);
+    // Check global kill switch (Railway env var: AI_GLOBAL_KILL_SWITCH=true)
+    const globalKillSwitch = this.configService.get<string>('AI_GLOBAL_KILL_SWITCH') === 'true';
     if (globalKillSwitch) {
       this.logger.warn('AI service is unavailable due to global kill switch');
       throw new ServiceUnavailableException('AI service is temporarily unavailable');

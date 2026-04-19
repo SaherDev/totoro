@@ -1,7 +1,7 @@
 'use client';
 
 import { Capacitor } from '@capacitor/core';
-import type { ChatResponseDto } from '@totoro/shared';
+import type { ChatResponseDto, SignalTier } from '@totoro/shared';
 import { classifyIntent } from './classify-intent';
 import { recallFixture } from '../flows/recall/recall.fixtures';
 import { saveFixture } from '../flows/save/save.fixtures';
@@ -12,13 +12,19 @@ import { FetchClient } from '../api/transports/fetch.transport';
 export interface ChatClientOptions {
   message: string;
   signal?: AbortSignal;
+  signalTier?: SignalTier | null;
 }
 
 export interface ChatClient {
   chat(opts: ChatClientOptions): Promise<ChatResponseDto>;
 }
 
-function categorizeError(err: unknown): 'offline' | 'timeout' | 'server' | 'generic' {
+export interface RateLimitInfo {
+  limit: 'turns_per_session' | 'sessions_per_day' | 'tool_calls_per_day';
+  limit_value: number;
+}
+
+function categorizeError(err: unknown): 'offline' | 'timeout' | 'server' | 'rate_limit' | 'generic' {
   if (typeof navigator !== 'undefined' && !navigator.onLine) return 'offline';
   if (err instanceof Error && err.name === 'AbortError') return 'timeout';
   return 'generic';
@@ -38,13 +44,24 @@ function makeRealChatClient(getToken: () => Promise<string>): ChatClient {
   const http = new FetchClient(apiBase, getToken);
 
   return {
-    async chat({ message, signal }) {
+    async chat({ message, signal, signalTier }) {
       try {
-        return await http.post<ChatResponseDto>('/api/v1/chat', { message }, signal);
+        return await http.post<ChatResponseDto>(
+          '/api/v1/chat',
+          { message, ...(signalTier != null ? { signal_tier: signalTier } : {}) },
+          signal,
+        );
       } catch (err) {
         const category = categorizeError(err);
         if (err instanceof Error && 'status' in err) {
           const status = (err as Error & { status: number }).status;
+          const body = (err as Error & { body?: Record<string, unknown> }).body;
+          if (status === 429 && body?.error === 'rate_limit_exceeded') {
+            throw Object.assign(new Error('rate_limit_exceeded'), {
+              category: 'rate_limit' as const,
+              rateLimitInfo: { limit: body.limit, limit_value: body.limit_value } as RateLimitInfo,
+            });
+          }
           throw Object.assign(new Error(`HTTP ${status}`), {
             category: status >= 500 ? 'server' : 'generic',
           });

@@ -2,29 +2,18 @@ import { Injectable, NestMiddleware, UnauthorizedException, Logger } from '@nest
 import { Request, Response, NextFunction } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { verifyToken } from '@clerk/backend';
+import { AuthUser, PlanTier } from '@totoro/shared';
 
-/**
- * Clerk public metadata schema. Clerk returns this in JWT public_metadata field.
- * Users can have custom metadata like ai_enabled set via Clerk API or webhook.
- */
 interface ClerkPublicMetadata {
   ai_enabled?: boolean;
-}
-
-/**
- * User context attached to Express Request by ClerkMiddleware.
- * This interface is merged with Express.Request.user for type safety.
- */
-export interface ClerkUser {
-  id: string;
-  ai_enabled: boolean;
+  plan?: PlanTier;
 }
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
-      user?: ClerkUser;
+      user?: AuthUser;
     }
   }
 }
@@ -61,7 +50,7 @@ export class ClerkMiddleware implements NestMiddleware {
     const bypassUserId = this.configService.get<string>('DEV_BYPASS_USER_ID');
     if (!isProd && bypassEnabled && bypassToken && token === bypassToken && bypassUserId) {
       const aiEnabledDefault = this.configService.get<boolean>('ai.enabled_default', true);
-      req.user = { id: bypassUserId, ai_enabled: aiEnabledDefault };
+      req.user = { id: bypassUserId, ai_enabled: aiEnabledDefault } satisfies AuthUser;
       this.logger.warn(`Dev bypass auth used for user ${bypassUserId} — never enable in production`);
       return next();
     }
@@ -87,11 +76,12 @@ export class ClerkMiddleware implements NestMiddleware {
       const aiEnabledDefault = this.configService.get<boolean>('ai.enabled_default', true);
       const publicMetadata = (verifiedSession.public_metadata ?? {}) as ClerkPublicMetadata;
       const ai_enabled = publicMetadata.ai_enabled ?? aiEnabledDefault;
+      const plan = publicMetadata.plan;
 
-      // Attach user to request
       req.user = {
         id: userId,
         ai_enabled,
+        ...(plan !== undefined && { plan }),
       };
 
       next();

@@ -4,6 +4,7 @@ import { BadRequestException } from '@nestjs/common';
 import { Request } from 'express';
 import { Webhook } from 'svix';
 import { ClerkWebhookController } from './clerk.webhook';
+import { RateLimitService } from '../rate-limit/rate-limit.service';
 
 // Mock svix Webhook class
 jest.mock('svix', () => {
@@ -15,9 +16,10 @@ jest.mock('svix', () => {
 });
 
 const mockUpdateUser = jest.fn().mockResolvedValue({});
+const mockGetUser = jest.fn().mockResolvedValue({ publicMetadata: { plan: 'homebody', ai_enabled: true } });
 jest.mock('@clerk/backend', () => ({
   createClerkClient: jest.fn(() => ({
-    users: { updateUser: mockUpdateUser },
+    users: { getUser: mockGetUser, updateUser: mockUpdateUser },
   })),
 }));
 
@@ -34,7 +36,10 @@ describe('ClerkWebhookController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ClerkWebhookController],
-      providers: [{ provide: ConfigService, useValue: mockConfigService }],
+      providers: [
+        { provide: ConfigService, useValue: mockConfigService },
+        { provide: RateLimitService, useValue: { resetTurns: jest.fn() } },
+      ],
     }).compile();
 
     controller = module.get<ClerkWebhookController>(ClerkWebhookController);

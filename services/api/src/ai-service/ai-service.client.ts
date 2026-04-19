@@ -2,8 +2,16 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { ChatRequestDto, ChatResponseDto } from '@totoro/shared';
+import {
+  ChatRequestDto,
+  ChatResponseDto,
+  SignalRequestWithUser,
+  SignalResponse,
+  UserContextResponse,
+} from '@totoro/shared';
 import { IAiServiceClient } from './ai-service-client.interface';
+
+const AI_SERVICE_TIMEOUT_MS = 30000;
 
 /**
  * HTTP client for communicating with the AI service (totoro-ai)
@@ -41,7 +49,28 @@ export class AiServiceClient implements IAiServiceClient {
       this.httpService.post<ChatResponseDto>(
         `${this.baseUrl}/v1/chat`,
         payload,
-        { timeout: 30000 }
+        { timeout: AI_SERVICE_TIMEOUT_MS }
+      )
+    );
+    return response.data;
+  }
+
+  async postSignal(payload: SignalRequestWithUser): Promise<SignalResponse> {
+    const response = await firstValueFrom(
+      this.httpService.post<SignalResponse>(
+        `${this.baseUrl}/v1/signal`,
+        payload,
+        { timeout: AI_SERVICE_TIMEOUT_MS }
+      )
+    );
+    return response.data;
+  }
+
+  async getUserContext(userId: string): Promise<UserContextResponse> {
+    const response = await firstValueFrom(
+      this.httpService.get<UserContextResponse>(
+        `${this.baseUrl}/v1/user/context`,
+        { params: { user_id: userId }, timeout: AI_SERVICE_TIMEOUT_MS }
       )
     );
     return response.data;

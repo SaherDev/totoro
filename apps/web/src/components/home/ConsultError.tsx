@@ -2,17 +2,22 @@
 
 import { useTranslations } from 'next-intl';
 import { Illustration } from '@/components/illustrations/Illustration';
+import type { RateLimitInfo } from '@/lib/chat-client';
 
-type ErrorCategory = 'offline' | 'timeout' | 'server' | 'generic';
+type ErrorCategory = 'offline' | 'timeout' | 'server' | 'rate_limit' | 'generic';
 
 interface ConsultErrorProps {
-  error: { message: string; category: ErrorCategory } | null;
+  error: { message: string; category: ErrorCategory; rateLimitInfo?: RateLimitInfo } | null;
   onTryAgain: () => void;
 }
 
 export function ConsultError({ error, onTryAgain }: ConsultErrorProps) {
   const t = useTranslations('consult.error');
   const category: ErrorCategory = error?.category ?? 'generic';
+
+  const body = category === 'rate_limit' && error?.rateLimitInfo
+    ? t(`rate_limit.${error.rateLimitInfo.limit}` as Parameters<typeof t>[0], { limit_value: error.rateLimitInfo.limit_value })
+    : t(`${category}.body` as Parameters<typeof t>[0]);
 
   return (
     <div className="flex flex-col items-center gap-6 py-8">
@@ -25,7 +30,7 @@ export function ConsultError({ error, onTryAgain }: ConsultErrorProps) {
           {t(`${category}.headline` as Parameters<typeof t>[0])}
         </h2>
         <p className="text-sm text-muted-foreground">
-          {t(`${category}.body` as Parameters<typeof t>[0])}
+          {body}
         </p>
       </div>
 
