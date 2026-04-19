@@ -118,19 +118,36 @@ The system classifies intent, dispatches to the correct pipeline, and returns a 
 
 **Response:**
 
+New session (FastAPI creates a new Redis key):
 ```json
 {
   "type": "consult",
   "message": "Based on what I know about you, try Nara Eatery…",
-  "data": {}
+  "data": {},
+  "session_started": true,
+  "tool_calls_used": 2
 }
 ```
 
-| Field     | Type             | Notes                                                                               |
-| --------- | ---------------- | ----------------------------------------------------------------------------------- |
-| `type`    | `string`         | One of: `extract-place`, `consult`, `recall`, `assistant`, `clarification`, `error` |
-| `message` | `string`         | Human-readable response text                                                        |
-| `data`    | `object \| null` | Structured payload from downstream service; null for clarification/assistant/error  |
+Existing session:
+```json
+{
+  "type": "consult",
+  "message": "Based on what I know about you, try Nara Eatery…",
+  "data": {},
+  "tool_calls_used": 2
+}
+```
+
+| Field              | Type             | Notes                                                                                                         |
+| ------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------- |
+| `type`             | `string`         | One of: `extract-place`, `consult`, `recall`, `assistant`, `clarification`, `error`                           |
+| `message`          | `string`         | Human-readable response text                                                                                  |
+| `data`             | `object \| null` | Structured payload from downstream service; null for clarification/assistant/error                            |
+| `tool_calls_used`  | `number`         | Always present. Count of LangChain tool invocations in this turn; 0 when no tools were called                |
+| `session_started`  | `true`           | Present only when FastAPI creates a new Redis session key. Absent (not `false`) when an existing session continues |
+
+`session_started` and `tool_calls_used` apply to every intent type (consult, recall, extract-place, assistant, clarification, error) — they are at the chat-endpoint level, not the intent level.
 
 **Response Types by Intent:**
 
@@ -497,7 +514,7 @@ Always HTTP 200 — DB outages surface via `db: "disconnected"`, not a non-2xx s
 
 | Endpoint             | Purpose                                 | NestJS Sends                                                                                                                                                    | totoro-ai Returns                                                           |
 | -------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| POST /v1/chat        | Unified conversational entry point      | user_id, message, optional location                                                                                                                             | type, message, optional data payload                                        |
+| POST /v1/chat        | Unified conversational entry point      | user_id, message, optional location                                                                                                                             | type, message, optional data payload, `tool_calls_used` (always), `session_started?: true` (new session only) |
 | GET /v1/user/context | User taste context for product UI       | user_id (query param)                                                                                                                                           | saved_places_count, signal_tier, chips (each with status + selection_round) |
 | POST /v1/signal      | Recommendation feedback OR chip_confirm | Discriminated on `signal_type` — recommendation variant (recommendation_id + place_id) OR chip_confirm variant (metadata.chips[] with per-chip selection_round) | status (202)                                                                |
 | GET /v1/health       | Service health check                    | —                                                                                                                                                               | status, db connectivity                                                     |

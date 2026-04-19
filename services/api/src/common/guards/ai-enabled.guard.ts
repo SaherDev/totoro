@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
-import { ClerkUser } from '../middleware/clerk.middleware';
+import { AuthUser } from '@totoro/shared';
 
 /**
  * @RequiresAi() guard validates that the user can access AI-powered endpoints.
@@ -35,7 +35,7 @@ export class AiEnabledGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
-    const user = request.user as ClerkUser | undefined;
+    const user = request.user as AuthUser | undefined;
 
     // Check global kill switch
     const globalKillSwitch = this.configService.get<boolean>('ai.global_kill_switch', false);

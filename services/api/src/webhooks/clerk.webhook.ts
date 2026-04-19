@@ -10,6 +10,7 @@ import { ConfigService } from "@nestjs/config";
 import { createClerkClient } from "@clerk/backend";
 import { Request } from "express";
 import { Webhook } from "svix";
+import { RateLimitService } from "../rate-limit/rate-limit.service";
 
 interface ClerkWebhookEvent {
   type: string;
@@ -20,7 +21,10 @@ interface ClerkWebhookEvent {
 export class ClerkWebhookController {
   private readonly logger = new Logger(ClerkWebhookController.name);
 
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    private rateLimitService: RateLimitService,
+  ) {}
 
   @Post("clerk")
   // Public route (see auth.public_paths in config)
@@ -31,6 +35,12 @@ export class ClerkWebhookController {
 
     if (event.type === "user.created") {
       await this.onUserCreated(event.data.id as string);
+    } else if (event.type === "session.ended") {
+      const userId = event.data?.user_id as string;
+      if (userId) {
+        this.rateLimitService.resetTurns(userId);
+        this.logger.log(`Turns reset for user ${userId} on session.ended`);
+      }
     } else {
       this.logger.debug(`Unhandled Clerk event: ${event.type}`);
     }

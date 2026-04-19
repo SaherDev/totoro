@@ -1,9 +1,10 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { ChatResponseDto } from '@totoro/shared';
 import { ChatService } from './chat.service';
 import { ChatRequestBodyDto } from './dto/chat-request.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { RequiresAi } from '../common/decorators/requires-ai.decorator';
+import { RateLimitGuard } from '../common/guards/rate-limit.guard';
 
 /**
  * Controller for the unified chat endpoint
@@ -20,6 +21,7 @@ export class ChatController {
 
   @Post()
   @RequiresAi()
+  @UseGuards(RateLimitGuard)
   async chat(
     @CurrentUser() userId: string,
     @Body() dto: ChatRequestBodyDto

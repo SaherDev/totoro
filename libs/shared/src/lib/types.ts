@@ -190,6 +190,16 @@ export interface SaveSheetPlace {
   thumbnail_url?: string;
 }
 
+// ── Auth & plan types (016-gateway-rate-limit) ───────────────────────────────
+
+export type PlanTier = 'homebody' | 'explorer' | 'local_legend';
+
+export interface AuthUser {
+  id: string;
+  ai_enabled: boolean;
+  plan?: PlanTier;
+}
+
 /**
  * Chat response DTO for unified AI gateway
  * Type discriminates between different response kinds
@@ -198,6 +208,8 @@ export interface ChatResponseDto {
   type: ChatResponseType;
   message: string;
   data: ConsultResponseData | RecallResponseData | ExtractPlaceData | Record<string, unknown> | null;
+  tool_calls_used: number;
+  session_started?: true;
 }
 
 // Signal types
