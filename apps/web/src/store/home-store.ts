@@ -29,7 +29,7 @@ export type ThreadEntry =
   | { id: string; role: 'assistant'; type: 'consult'; message: string; data: ConsultResponseData }
   | { id: string; role: 'assistant'; type: 'save'; item: ExtractPlaceItem; sourceUrl: string | null }
   | { id: string; role: 'assistant'; type: 'recall'; message: string; data: RecallResponseData }
-  | { id: string; role: 'assistant'; type: 'error'; category: 'offline' | 'timeout' | 'generic' | 'server'; flowId?: FlowId };
+  | { id: string; role: 'assistant'; type: 'error'; category: 'offline' | 'timeout' | 'generic' | 'server' | 'rate_limit'; rateLimitInfo?: import('@/lib/chat-client').RateLimitInfo; flowId?: FlowId };
 
 interface HomeState {
   // Phase
@@ -44,7 +44,7 @@ interface HomeState {
   query: string | null;
   result: ConsultResponseData | null;
   reasoningSteps: ReasoningStep[];
-  error: { message: string; category: 'offline' | 'timeout' | 'generic' | 'server' } | null;
+  error: { message: string; category: 'offline' | 'timeout' | 'generic' | 'server' | 'rate_limit'; rateLimitInfo?: import('@/lib/chat-client').RateLimitInfo } | null;
 
   // Hydration
   hydrated: boolean;
@@ -56,7 +56,7 @@ interface HomeState {
   fetchComplete: boolean;
   pendingResult: ConsultResponseData | null;
   pendingMessage: string | null;
-  pendingError: { message: string; category: 'offline' | 'timeout' | 'generic' | 'server' } | null;
+  pendingError: { message: string; category: 'offline' | 'timeout' | 'generic' | 'server' | 'rate_limit'; rateLimitInfo?: import('@/lib/chat-client').RateLimitInfo } | null;
   abortController: AbortController | null;
 
   // Chat thread
@@ -134,12 +134,13 @@ function pickRestingPhase(
   return 'idle';
 }
 
-function categorizeError(err: unknown): 'offline' | 'timeout' | 'server' | 'generic' {
+function categorizeError(err: unknown): 'offline' | 'timeout' | 'server' | 'rate_limit' | 'generic' {
   if (typeof navigator !== 'undefined' && !navigator.onLine) return 'offline';
   if (err instanceof Error && err.name === 'AbortError') return 'timeout';
   if (err instanceof Error && 'category' in err) {
     const cat = (err as Error & { category: string }).category;
     if (cat === 'server') return 'server';
+    if (cat === 'rate_limit') return 'rate_limit';
   }
   return 'generic';
 }
@@ -328,7 +329,10 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       finalFlow.onResponse(res, get());
     } catch (err) {
       const category = categorizeError(err);
-      const errorObj = { message: String(err), category };
+      const rateLimitInfo = (err instanceof Error && 'rateLimitInfo' in err)
+        ? (err as Error & { rateLimitInfo: import('@/lib/chat-client').RateLimitInfo }).rateLimitInfo
+        : undefined;
+      const errorObj = { message: String(err), category, ...(rateLimitInfo && { rateLimitInfo }) };
       set({ fetchComplete: true, pendingError: errorObj });
       get().tryRevealResult();
     }
@@ -359,6 +363,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
         role: 'assistant',
         type: 'error',
         category: pendingError.category,
+        ...(pendingError.rateLimitInfo && { rateLimitInfo: pendingError.rateLimitInfo }),
         ...(activeFlowId && { flowId: activeFlowId }),
       };
       set({

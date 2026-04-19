@@ -89,6 +89,12 @@
       "generic": {
         "headline": "Couldn't get a recommendation",
         "body": "Something unexpected happened. Try again."
+      },
+      "rate_limit": {
+        "headline": "You've hit your limit",
+        "turns_per_session": "You've used all {limit_value} messages in this session. Start a new session to continue.",
+        "sessions_per_day": "You've used all {limit_value} sessions for today. Come back tomorrow.",
+        "tool_calls_per_day": "You've used all {limit_value} AI actions for today. Come back tomorrow."
       }
     }
   },

@@ -200,7 +200,7 @@ export default function HomePage() {
                 return (
                   <ErrorComponent
                     key={entry.id}
-                    error={{ message: entry.category, category: entry.category }}
+                    error={{ message: entry.category, category: entry.category, ...('rateLimitInfo' in entry && entry.rateLimitInfo ? { rateLimitInfo: entry.rateLimitInfo } : {}) }}
                     onTryAgain={() => store.submit(store.query ?? '', { isRetry: true })}
                   />
                 );

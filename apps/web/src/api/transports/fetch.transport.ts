@@ -9,6 +9,7 @@ export class HttpError extends Error {
   constructor(
     public readonly status: number,
     public readonly statusText: string,
+    public readonly body?: Record<string, unknown>,
   ) {
     super(`API error: ${status} ${statusText}`)
     this.name = 'HttpError'
@@ -65,7 +66,13 @@ export class FetchClient implements HttpClient {
     const res = await this.fetch(path, options)
 
     if (!res.ok) {
-      throw new HttpError(res.status, res.statusText)
+      let body: Record<string, unknown> | undefined
+      try {
+        body = await res.json()
+      } catch {
+        // non-JSON error body — leave body undefined
+      }
+      throw new HttpError(res.status, res.statusText, body)
     }
 
     return res.json()
