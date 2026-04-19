@@ -196,12 +196,21 @@ export default function HomePage() {
             {/* Thread */}
             {store.thread.map((entry) => {
               if (entry.role === 'assistant' && entry.type === 'error') {
-                const ErrorComponent = entry.flowId === 'save' ? SaveError : ConsultError;
+                const retry = () => store.submit(store.query ?? '', { isRetry: true });
+                if (entry.flowId === 'save') {
+                  return (
+                    <SaveError
+                      key={entry.id}
+                      error={{ message: entry.category, category: entry.category as 'offline' | 'timeout' | 'server' | 'generic' }}
+                      onTryAgain={retry}
+                    />
+                  );
+                }
                 return (
-                  <ErrorComponent
+                  <ConsultError
                     key={entry.id}
                     error={{ message: entry.category, category: entry.category, ...('rateLimitInfo' in entry && entry.rateLimitInfo ? { rateLimitInfo: entry.rateLimitInfo } : {}) }}
-                    onTryAgain={() => store.submit(store.query ?? '', { isRetry: true })}
+                    onTryAgain={retry}
                   />
                 );
               }
