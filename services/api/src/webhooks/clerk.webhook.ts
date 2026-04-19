@@ -77,14 +77,17 @@ export class ClerkWebhookController {
   private async onUserCreated(userId: string): Promise<void> {
     this.logger.log(`New user created: ${userId}`);
     const secretKey = this.configService.get<string>("CLERK_SECRET_KEY");
-    const aiEnabled = this.configService.get<boolean>(
-      "ai.enabled_default",
-      true,
-    );
+    const aiEnabled = this.configService.get<boolean>("ai.enabled_default", true);
+    const defaultPlan = this.configService.get<string>("rate_limits.default_plan", "homebody");
     const clerk = createClerkClient({ secretKey });
+    const user = await clerk.users.getUser(userId);
     await clerk.users.updateUser(userId, {
-      publicMetadata: { ai_enabled: aiEnabled },
+      publicMetadata: {
+        ...user.publicMetadata,
+        ai_enabled: aiEnabled,
+        plan: defaultPlan,
+      },
     });
-    this.logger.log(`Set ai_enabled=${aiEnabled} for user ${userId}`);
+    this.logger.log(`Set ai_enabled=${aiEnabled} plan=${defaultPlan} for user ${userId}`);
   }
 }

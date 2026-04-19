@@ -16,9 +16,10 @@ jest.mock('svix', () => {
 });
 
 const mockUpdateUser = jest.fn().mockResolvedValue({});
+const mockGetUser = jest.fn().mockResolvedValue({ publicMetadata: {} });
 jest.mock('@clerk/backend', () => ({
   createClerkClient: jest.fn(() => ({
-    users: { updateUser: mockUpdateUser },
+    users: { getUser: mockGetUser, updateUser: mockUpdateUser },
   })),
 }));
 

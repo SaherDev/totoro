@@ -308,7 +308,8 @@ Returned when intent classification confidence is below 0.7. `data` is always `n
 {
   "type": "error",
   "message": "Something went wrong, try again",
-  "data": { "detail": "..." }
+  "data": { "detail": "..." },
+  "tool_calls_used": 0
 }
 ```
 

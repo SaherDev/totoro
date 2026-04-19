@@ -10,7 +10,6 @@ auth:
 
 ai:
   enabled_default: true
-  global_kill_switch: false
 
 rate_limits:
   default_plan: homebody

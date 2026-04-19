@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { ForbiddenException, ServiceUnavailableException, ExecutionContext } from '@nestjs/common';
 import { AiEnabledGuard } from './ai-enabled.guard';
-import { ClerkUser } from '../middleware/clerk.middleware';
 
 describe('AiEnabledGuard', () => {
   let guard: AiEnabledGuard;
@@ -17,7 +16,6 @@ describe('AiEnabledGuard', () => {
           useValue: {
             get: jest.fn((key: string, defaultValue?: any) => {
               const config: Record<string, any> = {
-                'ai.global_kill_switch': false,
                 'ai.enabled_default': true,
               };
               return config[key] ?? defaultValue;
@@ -38,7 +36,7 @@ describe('AiEnabledGuard', () => {
   describe('global kill switch', () => {
     it('should throw ServiceUnavailableException when global_kill_switch is true', () => {
       (configService.get as jest.Mock).mockImplementation((key: string, defaultValue?: any) => {
-        if (key === 'ai.global_kill_switch') return true;
+        if (key === 'AI_GLOBAL_KILL_SWITCH') return 'true';
         return defaultValue;
       });
 
@@ -59,7 +57,7 @@ describe('AiEnabledGuard', () => {
 
     it('should not check user.ai_enabled if global_kill_switch is true (short circuit)', () => {
       (configService.get as jest.Mock).mockImplementation((key: string, defaultValue?: any) => {
-        if (key === 'ai.global_kill_switch') return true;
+        if (key === 'AI_GLOBAL_KILL_SWITCH') return 'true';
         return defaultValue;
       });
 
@@ -163,7 +161,7 @@ describe('AiEnabledGuard', () => {
 
     it('should prioritize kill switch over user ai_enabled status', () => {
       (configService.get as jest.Mock).mockImplementation((key: string, defaultValue?: any) => {
-        if (key === 'ai.global_kill_switch') return true;
+        if (key === 'AI_GLOBAL_KILL_SWITCH') return 'true';
         return defaultValue;
       });
 
