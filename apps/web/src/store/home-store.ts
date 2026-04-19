@@ -81,6 +81,7 @@ interface HomeState {
   signalTier: SignalTier | null;
   chips: ChipItem[];
   savedPlacesCountFromContext: number | null;
+  contextLoading: boolean;
 
   // Actions
   hydrate: () => void;
@@ -123,8 +124,9 @@ function pickRestingPhase(
   signalTier: SignalTier | null,
 ): HomePhase {
   if (signalTier === 'cold') return 'cold-0';
-  if (signalTier === 'chip_selection') return 'chip-selection';
-  if (signalTier === 'warming' || signalTier === 'active') return 'idle';
+  // Skip chip-selection if user already confirmed chips locally — server may lag
+  if (signalTier === 'chip_selection' && !tasteProfileConfirmed) return 'chip-selection';
+  if (signalTier === 'warming' || signalTier === 'active' || (signalTier === 'chip_selection' && tasteProfileConfirmed)) return 'idle';
   // null fallback — count-based
   if (savedPlaceCount === 0) return 'cold-0';
   if (savedPlaceCount < 5) return 'cold-1-4';
@@ -183,6 +185,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   signalTier: null,
   chips: [],
   savedPlacesCountFromContext: null,
+  contextLoading: false,
 
   // ── hydrate ────────────────────────────────────────────────────────────────
   hydrate: () => {
@@ -205,9 +208,11 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
   // ── loadUserContext ────────────────────────────────────────────────────────
   loadUserContext: async () => {
-    const { userId, getToken, savedPlaceCount, tasteProfileConfirmed } = get();
+    const { getToken, savedPlaceCount, tasteProfileConfirmed, savedPlacesCountFromContext } = get();
+    const isFirstLoad = savedPlacesCountFromContext === null;
+    if (isFirstLoad) set({ contextLoading: true });
     try {
-      const client = getUserContextClient(userId ?? '', getToken ?? (async () => ''));
+      const client = getUserContextClient(getToken ?? (async () => ''));
       const ctx = await client.getUserContext();
       const signalTier = ctx.signal_tier;
       const phase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
@@ -216,9 +221,11 @@ export const useHomeStore = create<HomeState>((set, get) => ({
         chips: ctx.chips,
         savedPlacesCountFromContext: ctx.saved_places_count,
         phase,
+        contextLoading: false,
       });
     } catch {
       // Silently fall back — pickRestingPhase uses count-based when signalTier is null
+      set({ contextLoading: false });
     }
   },
 
@@ -651,21 +658,21 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
   // ── acceptPlace ───────────────────────────────────────────────────────────
   acceptPlace: async (recommendationId, placeId) => {
-    const { userId, getToken } = get();
-    const client = getSignalClient(userId ?? '', getToken ?? (async () => ''));
+    const { getToken } = get();
+    const client = getSignalClient(getToken ?? (async () => ''));
     await client.acceptRecommendation(recommendationId, placeId);
   },
 
   // ── rejectPlace ───────────────────────────────────────────────────────────
   rejectPlace: async (recommendationId, placeId) => {
-    const { userId, getToken } = get();
-    const client = getSignalClient(userId ?? '', getToken ?? (async () => ''));
+    const { getToken } = get();
+    const client = getSignalClient(getToken ?? (async () => ''));
     await client.rejectRecommendation(recommendationId, placeId);
   },
 
   // ── confirmChips ──────────────────────────────────────────────────────────
   confirmChips: async (decidedChips) => {
-    const { userId, getToken } = get();
+    const { getToken } = get();
     // Optimistic update
     set((s) => ({
       chips: s.chips.map((c) => {
@@ -675,7 +682,10 @@ export const useHomeStore = create<HomeState>((set, get) => ({
         return decided ?? c;
       }),
     }));
-    const client = getSignalClient(userId ?? '', getToken ?? (async () => ''));
+    // Persist locally so chip-selection is never shown again after submission
+    setTasteProfileConfirmed();
+    set({ tasteProfileConfirmed: true });
+    const client = getSignalClient(getToken ?? (async () => ''));
     await client.confirmChips(decidedChips);
     await get().loadUserContext();
   },

@@ -21,7 +21,8 @@ export const saveFlow: FlowDefinition<any> = {
       }
       const data = parsed.data;
       if (data.results.length > 0) {
-        store.openSaveSheet(store.query || '', data.results, data.source_url);
+        store.pushMessage(res.message);
+        store.openSaveSheet(res.message, data.results, data.source_url);
       }
     }
   },

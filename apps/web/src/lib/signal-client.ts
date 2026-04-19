@@ -8,7 +8,7 @@ export interface SignalClient {
   confirmChips(chips: ChipItem[]): Promise<void>;
 }
 
-function makeRealSignalClient(userId: string, getToken: () => Promise<string>): SignalClient {
+function makeRealSignalClient(getToken: () => Promise<string>): SignalClient {
   const apiBase = Capacitor.isNativePlatform()
     ? (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/api\/v1\/?$/, '')
     : '';
@@ -16,7 +16,7 @@ function makeRealSignalClient(userId: string, getToken: () => Promise<string>): 
 
   async function post(body: Record<string, unknown>): Promise<void> {
     try {
-      await http.post('/api/v1/signal', { ...body, user_id: userId });
+      await http.post('/api/v1/signal', body);
     } catch (err) {
       const status = (err as { status?: number }).status;
       if (status === 404) {
@@ -43,7 +43,7 @@ const fixtureSignalClient: SignalClient = {
   confirmChips: async () => {},
 };
 
-export function getSignalClient(userId: string, getToken: () => Promise<string>): SignalClient {
+export function getSignalClient(getToken: () => Promise<string>): SignalClient {
   if (process.env.NEXT_PUBLIC_CHAT_FIXTURES === 'true') return fixtureSignalClient;
-  return makeRealSignalClient(userId, getToken);
+  return makeRealSignalClient(getToken);
 }

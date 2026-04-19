@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useUser } from '@clerk/nextjs';
 import { useTranslations } from 'next-intl';
@@ -10,21 +10,66 @@ import { ChatInput } from '@/components/ChatInput';
 import { HomeIdle } from '@/components/home/HomeIdle';
 import { TasteProfileCelebration } from '@/components/home/TasteProfileCelebration';
 import { ChipSelectionBoard } from '@/components/home/ChipSelectionBoard';
-import { TasteChipsSidebar } from '@/components/home/TasteChipsSidebar';
 import { SavedProgressNudge } from '@/components/home/SavedProgressNudge';
 import { ColdStartZero } from '@/flows/cold-start-zero/ColdStartZero';
 import { ColdStartOneFour } from '@/flows/cold-start-1-4/ColdStartOneFour';
 import { UserBubble } from '@/components/home/UserBubble';
 import { AssistantBubble } from '@/components/home/AssistantBubble';
-import { SaveResultBubble } from '@/components/home/SaveResultBubble';
 import { RecallResultBubble } from '@/components/home/RecallResultBubble';
+import { PlaceCard } from '@/components/PlaceCard';
 import { ConsultError } from '@/components/home/ConsultError';
 import { SaveError } from '@/components/home/SaveError';
 import { ConsultResult } from '@/flows/consult/ConsultResult';
 import { TASTE_CHIP_BANK } from '@/constants/home-suggestions';
+import { Illustration } from '@/components/illustrations/Illustration';
 import { TotoroCard } from '@totoro/ui';
 import { useHomeStore, type ThreadEntry } from '@/store/home-store';
 import { FLOW_REGISTRY } from '@/flows/registry';
+
+const LOADING_LINES = [
+  'Sniffing out your taste…',
+  'Consulting the forest spirits…',
+  'Reading your food memories…',
+  'Counting your saves…',
+  'Building your taste map…',
+  'Almost there — Totoro is thinking…',
+];
+
+function TotoroLoadingScreen() {
+  const [lineIdx, setLineIdx] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setLineIdx((i) => (i + 1) % LOADING_LINES.length), 1800);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div className="flex h-dvh flex-col items-center bg-background px-8 animate-fade-in">
+      {/* Illustration sits in top portion */}
+      <div className="flex flex-1 items-end justify-center pb-10">
+        <Illustration
+          id="knowing"
+          className="h-52 w-52 [animation:bounce_1.6s_ease-in-out_infinite]"
+        />
+      </div>
+
+      {/* Text + dots anchored at center-bottom */}
+      <div className="flex flex-1 flex-col items-center gap-3 pt-10">
+        <p
+          key={lineIdx}
+          className="animate-fade-in text-center text-base font-medium text-foreground"
+        >
+          {LOADING_LINES[lineIdx]}
+        </p>
+        <div className="flex gap-1.5">
+          <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:0ms]" />
+          <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:150ms]" />
+          <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:300ms]" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
   if (entry.role === 'user') {
@@ -34,13 +79,27 @@ function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
     return <AssistantBubble message={entry.message} type={entry.type} />;
   }
   if (entry.type === 'consult') {
-    return <ConsultResult message={entry.message} result={entry.data} />;
+    return (
+      <div className="flex flex-col gap-4">
+        <AssistantBubble message={entry.message} type="assistant" />
+        <ConsultResult result={entry.data} />
+      </div>
+    );
   }
   if (entry.type === 'save') {
-    return <SaveResultBubble item={entry.item} sourceUrl={entry.sourceUrl} />;
+    if (!entry.item.place) return null;
+    const badge = entry.item.status === 'duplicate'
+      ? <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-900 dark:bg-amber-950 dark:text-amber-100">Duplicate</span>
+      : <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-950 dark:text-green-300">Saved ✓</span>;
+    return <PlaceCard place={entry.item.place} badge={badge} />;
   }
   if (entry.type === 'recall') {
-    return <RecallResultBubble message={entry.message} data={entry.data} />;
+    return (
+      <div className="flex flex-col gap-3">
+        <AssistantBubble message={entry.message} type="assistant" />
+        <RecallResultBubble message={entry.message} data={entry.data} />
+      </div>
+    );
   }
   if (entry.type === 'error') {
     return null;
@@ -76,19 +135,12 @@ export default function HomePage() {
 
   if (!store.hydrated) return null;
 
-  // Chip selection takes over the full screen
-  if (store.phase === 'chip-selection') {
-    return (
-      <ChipSelectionBoard
-        chips={store.chips}
-        onConfirm={(chips) => void store.confirmChips(chips)}
-        onSkip={() => store.reset()}
-      />
-    );
+  if (store.contextLoading) {
+    return <TotoroLoadingScreen />;
   }
 
   return (
-    <div className="flex h-dvh flex-col bg-background">
+    <div className="flex h-dvh flex-col bg-background animate-fade-in">
       <NavBar>
         <NavBarLogo />
         <NavBarActions>
@@ -109,15 +161,25 @@ export default function HomePage() {
               />
             )}
 
-            {/* Empty state */}
-            {!hasThread && !store.activeFlowId && (() => {
+            {/* Chip selection — always shown when in this phase, regardless of thread */}
+            {store.phase === 'chip-selection' && (
+              <ChipSelectionBoard
+                chips={store.chips}
+                onConfirm={(chips) => void store.confirmChips(chips)}
+                onSkip={() => store.reset()}
+              />
+            )}
+
+            {/* Empty state — only when no thread and no active flow */}
+            {store.phase !== 'chip-selection' && !hasThread && !store.activeFlowId && (() => {
               switch (store.phase) {
                 case 'idle':
                   return (
                     <HomeIdle
                       onSuggestionClick={store.submit}
                       firstName={user?.firstName}
-                      savedCount={store.savedPlaceCount}
+                      savedCount={store.savedPlacesCountFromContext ?? store.savedPlaceCount}
+                      chips={store.chips.length > 0 ? store.chips : undefined}
                     />
                   );
                 case 'taste-profile':
@@ -169,10 +231,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Taste chips sidebar — desktop right rail */}
-        {(store.signalTier === 'warming' || store.signalTier === 'active') && (
-          <TasteChipsSidebar chips={store.chips} tier={store.signalTier} />
-        )}
       </div>
 
       {/* Input bar */}
@@ -182,7 +240,7 @@ export default function HomePage() {
             <div className="p-2">
               <ChatInput
                 onSubmit={store.submit}
-                disabled={store.phase === 'thinking'}
+                disabled={store.phase === 'thinking' || store.phase === 'chip-selection'}
                 placeholder={t(placeholderKey as Parameters<typeof t>[0])}
               />
             </div>

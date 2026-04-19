@@ -326,12 +326,8 @@ Returns taste profile context for the product UI (ADR-060).
 **Request:**
 
 ```
-GET /v1/user/context?user_id=<user_id>
+GET /v1/user/context
 ```
-
-| Param     | Type     | Required | Notes                                                                                 |
-| --------- | -------- | -------- | ------------------------------------------------------------------------------------- |
-| `user_id` | `string` | Yes      | Query parameter. Used only to load the user's taste model; not echoed in the response |
 
 **Response (200):**
 

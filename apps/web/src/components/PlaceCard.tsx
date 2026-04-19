@@ -1,31 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useCallback } from 'react';
 import { MapPin, Star, Phone, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { PlaceObject } from '@totoro/shared';
 import { PlaceAvatar } from '@/components/PlaceAvatar';
 import { cn } from '@totoro/ui';
-
-// ── Price dots ────────────────────────────────────────────────────────────────
-
-function PriceDots({ hint }: { hint: string | null }) {
-  if (!hint) return null;
-  const count = hint.length;
-  return (
-    <div className="flex gap-0.5">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <span
-          key={i}
-          className={cn('text-[10px] font-bold', i < count ? 'text-white/90' : 'text-white/30')}
-        >
-          $
-        </span>
-      ))}
-    </div>
-  );
-}
 
 // ── Tag pill ──────────────────────────────────────────────────────────────────
 
@@ -89,6 +69,8 @@ export function PlaceCard({
 
   const isControlled = controlledExpanded !== undefined;
   const expanded = isControlled ? controlledExpanded : internalExpanded;
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const handleImgLoad = useCallback(() => setImgLoaded(true), []);
 
   function toggle() {
     const next = !expanded;
@@ -116,70 +98,68 @@ export function PlaceCard({
   const todayHours = place.hours?.[todayKey] ?? null;
 
   return (
-    <motion.article
-      layout
-      className={cn('overflow-hidden rounded-2xl border border-border bg-card shadow-sm', className)}
-    >
-      {/* Collapsed header — always visible */}
+    <article className={cn('overflow-hidden rounded-2xl border border-border bg-card shadow-sm', className)}>
+      {/* Collapsed header — always visible, minimal text row */}
       <button
-        className="relative h-40 w-full overflow-hidden bg-muted focus:outline-none"
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 focus:outline-none"
         onClick={toggle}
         aria-expanded={expanded}
         aria-label={expanded ? t('collapse') : t('expand')}
       >
-        {place.photo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={place.photo_url}
-            alt={place.place_name}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-muted">
-            <PlaceAvatar name={place.place_name} size={128} />
-          </div>
-        )}
-
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-
-        {/* Badge slot — top-end */}
-        {badge && <div className="absolute end-3 top-3">{badge}</div>}
-
-        {/* Bottom info row */}
-        <div className="absolute bottom-0 start-0 end-0 flex items-end justify-between p-3">
-          <div className="flex flex-col gap-0.5">
-            <h3 className="text-sm font-bold leading-tight text-white">{place.place_name}</h3>
-            {(place.subcategory ?? place.attributes.cuisine) && (
-              <p className="text-[11px] text-white/70">
-                {place.subcategory ?? place.attributes.cuisine}
-              </p>
+        <div className="flex min-w-0 flex-col gap-0.5 text-start">
+          <h3 className="truncate text-sm font-semibold text-foreground">{place.place_name}</h3>
+          {(place.subcategory ?? place.attributes.cuisine) && (
+            <p className="truncate text-[11px] text-muted-foreground">
+              {[place.subcategory ?? place.attributes.cuisine, place.attributes.price_hint]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {badge}
+          <div className="rounded-full border border-border p-1">
+            {expanded ? (
+              <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
             )}
-          </div>
-          <div className="flex flex-col items-end gap-1">
-            <PriceDots hint={place.attributes.price_hint} />
-            <div className="rounded-full bg-black/30 p-1">
-              {expanded ? (
-                <ChevronUp className="h-3.5 w-3.5 text-white/80" />
-              ) : (
-                <ChevronDown className="h-3.5 w-3.5 text-white/80" />
-              )}
-            </div>
           </div>
         </div>
       </button>
 
-      {/* Expanded body */}
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            key="body"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="overflow-hidden"
-          >
+      {/* Expanded body — CSS grid trick: 0fr→1fr is the smoothest height animation */}
+      <div
+        className="grid transition-[grid-template-rows] duration-300 ease-out"
+        style={{ gridTemplateRows: expanded ? '1fr' : '0fr' }}
+      >
+        <div className="overflow-hidden">
+            {/* Photo / avatar — only shown when expanded */}
+            {place.photo_url ? (
+              <div className="relative h-40 w-full overflow-hidden bg-muted/40">
+                {/* Skeleton shown until image loads */}
+                {!imgLoaded && (
+                  <div className="absolute inset-0 animate-pulse bg-muted/60" />
+                )}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={place.photo_url}
+                  alt={place.place_name}
+                  loading="lazy"
+                  decoding="async"
+                  onLoad={handleImgLoad}
+                  className={cn(
+                    'h-40 w-full object-cover transition-opacity duration-300',
+                    imgLoaded ? 'opacity-100' : 'opacity-0',
+                  )}
+                />
+              </div>
+            ) : (
+              <div className="flex h-32 w-full items-center justify-center bg-muted/50">
+                <PlaceAvatar name={place.place_name} size={96} />
+              </div>
+            )}
+
             <div className="flex flex-col gap-3 p-4">
               {/* Tags */}
               {place.tags.length > 0 && (
@@ -289,9 +269,8 @@ export function PlaceCard({
                 </div>
               )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.article>
+        </div>
+      </div>
+    </article>
   );
 }

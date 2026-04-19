@@ -33,8 +33,6 @@ export function RecallResultBubble({ message, data }: RecallResultBubbleProps) {
       className="flex flex-col gap-3 transition-opacity duration-200"
       style={{ opacity: visible ? 1 : 0 }}
     >
-      <p className="px-1 text-sm font-medium text-foreground">{message}</p>
-
       <div className="flex flex-col gap-3">
         {data.results.map((item, i) => (
           <motion.div

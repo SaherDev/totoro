@@ -3,8 +3,6 @@
 import type { ConsultResponseData } from '@totoro/shared';
 import { useTranslations } from 'next-intl';
 import { PlaceCard } from '../../components/PlaceCard';
-import { TasteMatchArc } from './TasteMatchArc';
-import { CommunityProofLine } from './CommunityProofLine';
 import { useHomeStore } from '../../store/home-store';
 import { cn } from '@totoro/ui';
 
@@ -54,26 +52,12 @@ function AcceptRejectActions({ recommendationId, placeId }: AcceptRejectProps) {
   );
 }
 
-export function ConsultResult({
-  message,
-  result,
-}: {
-  message: string;
-  result: ConsultResponseData;
-}) {
+export function ConsultResult({ result }: { result: ConsultResponseData }) {
   const t = useTranslations('consult.result');
   const [primary, ...alternatives] = result.results;
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Result header */}
-      <div className="flex items-center gap-2">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ color: '#c8890a' }}>
-          <path d="M2 8l4 4 8-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <span className="text-sm font-semibold text-foreground">{message}</span>
-      </div>
-
       {/* Primary PlaceCard — expanded by default */}
       {primary && (
         <>
@@ -88,8 +72,6 @@ export function ConsultResult({
               />
             }
           />
-          <TasteMatchArc />
-          <CommunityProofLine />
         </>
       )}
 

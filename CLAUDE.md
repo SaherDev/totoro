@@ -91,6 +91,8 @@ See `.claude/workflows.md` for the complete 5-step token-efficient workflow (ADR
 - None added. The iOS app reuses the web app's existing in-memory and `localStorage` patterns (Zustand home store, Clerk session cookie in WKHTTPCookieStore). (013-capacitor-ios-shell)
 - TypeScript 5.x / Node 20 LTS + NestJS 11 (`@nestjs/common`, `@nestjs/axios`, `@nestjs/config`), `class-validator`, `class-transformer`, `@clerk/backend`, `rxjs` (014-signal-context-endpoints)
 - N/A — this feature is a stateless gateway pass-through. No TypeORM entity, migration, or DB query changes. Constitution §V preserved. (014-signal-context-endpoints)
+- TypeScript 5.x / Node 20 LTS + Next.js 16, React 19, Zustand, Zod, Tailwind v3, shadcn/ui, framer-motion v11 (installed), next-intl, Clerk v5 (015-ui-align-placeobject)
+- localStorage only (`totoro.savedCount`, `totoro.savedPlaces`) (015-ui-align-placeobject)
 
 - TypeScript 5.x / Node 20 LTS + Next.js 16, Tailwind v3, shadcn/ui, next-intl, next-themes, tailwindcss-animate (already installed), framer-motion (pending approval), next/font/google (001-migrate-lovable-design)
 - N/A (frontend-only migration) (001-migrate-lovable-design)
