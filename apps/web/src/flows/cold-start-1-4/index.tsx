@@ -8,7 +8,7 @@ export const coldStartOneFourFlow: FlowDefinition = {
   phase: 'cold-1-4',
   inputPlaceholderKey: 'coldStartOneFour.pasteHint',
   schema: z.unknown(),
-  fixture: async () => ({ type: 'clarification', message: '', data: null }),
+  fixture: async () => ({ type: 'clarification', message: '', data: null, tool_calls_used: 0 }),
   onResponse: () => {
     // Cold-start flows are not triggered by responses; they're phase-based
   },
