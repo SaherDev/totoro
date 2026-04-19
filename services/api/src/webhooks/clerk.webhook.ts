@@ -77,38 +77,30 @@ export class ClerkWebhookController {
     }
   }
 
+  private async onUserCreated(userId: string): Promise<void> {
+    this.logger.log(`New user created: ${userId}`);
+    await this.ensureUserMetadata(userId, true);
+  }
+
   private async backfillMissingMetadata(userId: string): Promise<void> {
+    await this.ensureUserMetadata(userId, false);
+  }
+
+  private async ensureUserMetadata(userId: string, force: boolean): Promise<void> {
     const secretKey = this.configService.get<string>("CLERK_SECRET_KEY");
     const clerk = createClerkClient({ secretKey });
     const user = await clerk.users.getUser(userId);
     const meta = user.publicMetadata as Record<string, unknown>;
-    if (meta.plan !== undefined) return;
+    if (!force && meta.plan !== undefined) return;
     const defaultPlan = this.configService.get<string>("rate_limits.default_plan", "homebody");
     const aiEnabled = this.configService.get<boolean>("ai.enabled_default", true);
     await clerk.users.updateUser(userId, {
       publicMetadata: {
         ...meta,
         ai_enabled: meta.ai_enabled ?? aiEnabled,
-        plan: defaultPlan,
+        plan: meta.plan ?? defaultPlan,
       },
     });
-    this.logger.log(`Backfilled plan=${defaultPlan} for existing user ${userId}`);
-  }
-
-  private async onUserCreated(userId: string): Promise<void> {
-    this.logger.log(`New user created: ${userId}`);
-    const secretKey = this.configService.get<string>("CLERK_SECRET_KEY");
-    const aiEnabled = this.configService.get<boolean>("ai.enabled_default", true);
-    const defaultPlan = this.configService.get<string>("rate_limits.default_plan", "homebody");
-    const clerk = createClerkClient({ secretKey });
-    const user = await clerk.users.getUser(userId);
-    await clerk.users.updateUser(userId, {
-      publicMetadata: {
-        ...user.publicMetadata,
-        ai_enabled: aiEnabled,
-        plan: defaultPlan,
-      },
-    });
-    this.logger.log(`Set ai_enabled=${aiEnabled} plan=${defaultPlan} for user ${userId}`);
+    this.logger.log(`Ensured metadata for user ${userId}: plan=${meta.plan ?? defaultPlan}`);
   }
 }
