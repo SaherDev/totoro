@@ -12,7 +12,7 @@ function stubFlow(id: FlowId, responseType: ChatResponseType, clientIntent?: Cli
     phase: 'thinking',
     inputPlaceholderKey: 'chat.placeholder',
     schema: z.unknown(),
-    fixture: async () => ({ type: responseType, message: '', data: null }),
+    fixture: async () => ({ type: responseType, message: '', data: null, tool_calls_used: 0 }),
     onResponse: (res, store) => {
       // Generic fallback: push the message to the thread if the API returned one
       if (res.message) store.pushMessage(res.message);
