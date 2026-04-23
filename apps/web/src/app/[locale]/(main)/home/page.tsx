@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useUser } from '@clerk/nextjs';
 import { useTranslations } from 'next-intl';
+import { X } from 'lucide-react';
 import { NavBar, NavBarLogo, NavBarActions } from '@/components/NavBar';
 import { ProfileMenu } from '@/components/profile-menu';
 import { ChatInput } from '@/components/ChatInput';
@@ -158,6 +159,17 @@ export default function HomePage() {
         {/* Scrollable message area */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-2xl px-4 py-6 flex flex-col gap-4">
+
+            {/* Clear thread button */}
+            {hasThread && (
+              <button
+                onClick={() => { stopStreamRef.current?.(); store.clearThread(); }}
+                className="self-start p-1 text-muted-foreground/50 hover:text-foreground transition-colors"
+                aria-label="Clear conversation"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
 
             {/* Warming nudge */}
             {store.signalTier === 'warming' && (

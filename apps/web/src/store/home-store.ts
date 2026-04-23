@@ -92,6 +92,7 @@ interface HomeState {
   loadUserContext: () => Promise<void>;
   submit: (message: string, opts?: { forceIntent?: ClientIntent; isRetry?: boolean }) => void;
   clearStream: () => void;
+  clearThread: () => void;
   confirmTasteProfile: () => void;
   reset: () => void;
 
@@ -397,6 +398,26 @@ export const useHomeStore = create<HomeState>()(
       activeFlowId: null,
       query: null,
       streamingMessage: null,
+      result: null,
+      reasoningSteps: [],
+      error: null,
+      abortController: null,
+      clarificationMessage: null,
+    });
+  },
+
+  // ── clearThread ────────────────────────────────────────────────────────────
+  clearThread: () => {
+    get().abortController?.abort();
+    useChatStreamStore.getState().reset();
+    const { savedPlaceCount, tasteProfileConfirmed, signalTier } = get();
+    const phase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
+    set({
+      thread: [],
+      streamingMessage: null,
+      phase,
+      activeFlowId: null,
+      query: null,
       result: null,
       reasoningSteps: [],
       error: null,
