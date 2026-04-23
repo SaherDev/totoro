@@ -216,10 +216,10 @@ Operational note: status payloads are cached in Redis under the `extraction:v2:{
 
 `ConsultResult` shape:
 
-| Field    | Type                      | Notes                                                                                 |
-| -------- | ------------------------- | ------------------------------------------------------------------------------------- |
-| `place`  | `PlaceObject`             | Always fully enriched (`enriched=true`, Tier 2 + Tier 3 populated)                    |
-| `source` | `"saved" \| "discovered"` | `"saved"` = from user's recall set; `"discovered"` = from Google Places Nearby Search |
+| Field    | Type                                     | Notes                                                                                                                                       |
+| -------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `place`  | `PlaceObject`                            | Always fully enriched (`enriched=true`, Tier 2 + Tier 3 populated)                                                                          |
+| `source` | `"saved" \| "discovered" \| "suggested"` | `"saved"` = from user's recall set; `"discovered"` = from keyword search; `"suggested"` = agent-supplied name validated via places provider |
 
 `ReasoningStep` shape:
 
