@@ -61,7 +61,12 @@ export class ChatService {
       if (!res.headersSent) {
         res.status(503).end();
       } else {
-        res.destroy();
+        // Write a structured SSE error frame so the client can parse the failure
+        // rather than seeing a raw socket ECONNRESET.
+        res.write(
+          `event: error\ndata: ${JSON.stringify({ detail: 'AI service error' })}\n\n`,
+        );
+        res.end();
       }
     });
 
