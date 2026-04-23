@@ -16,10 +16,10 @@ import type { FlowId, HomePhase } from '../flows/flow-definition';
 import { getSavedPlaceCount, appendSavedPlace, incrementSavedPlaceCount } from '../storage/saved-places-storage';
 import { getTasteProfileConfirmed, setTasteProfileConfirmed } from '../storage/taste-profile-storage';
 import { classifyIntent } from '../lib/classify-intent';
-import { getChatClient } from '../lib/chat-client';
 import { getSignalClient } from '../lib/signal-client';
 import { getUserContextClient } from '../lib/user-context-client';
-import { FLOW_BY_CLIENT_INTENT, FLOW_BY_RESPONSE_TYPE } from '../flows/registry';
+import { FLOW_BY_CLIENT_INTENT } from '../flows/registry';
+import { useChatStreamStore } from './chat-stream.store';
 
 // ── Thread entry types ─────────────────────────────────────────────────────────
 export type ThreadEntry =
@@ -29,7 +29,13 @@ export type ThreadEntry =
   | { id: string; role: 'assistant'; type: 'consult'; message: string; data: ConsultResponseData }
   | { id: string; role: 'assistant'; type: 'save'; item: ExtractPlaceItem; sourceUrl: string | null }
   | { id: string; role: 'assistant'; type: 'recall'; message: string; data: RecallResponseData }
-  | { id: string; role: 'assistant'; type: 'error'; category: 'offline' | 'timeout' | 'generic' | 'server' | 'rate_limit'; rateLimitInfo?: import('@/lib/chat-client').RateLimitInfo; flowId?: FlowId };
+  | { id: string; role: 'assistant'; type: 'reasoning'; steps: import('@totoro/shared').SseReasoningStep[] }
+  | { id: string; role: 'assistant'; type: 'error'; category: 'offline' | 'timeout' | 'generic' | 'server' | 'rate_limit'; rateLimitInfo?: RateLimitInfo; flowId?: FlowId };
+
+export interface RateLimitInfo {
+  limit: 'turns_per_session' | 'sessions_per_day' | 'tool_calls_per_day';
+  limit_value: number;
+}
 
 interface HomeState {
   // Phase
@@ -42,21 +48,16 @@ interface HomeState {
 
   // Query state
   query: string | null;
+  streamingMessage: string | null;
   result: ConsultResponseData | null;
   reasoningSteps: ReasoningStep[];
-  error: { message: string; category: 'offline' | 'timeout' | 'generic' | 'server' | 'rate_limit'; rateLimitInfo?: import('@/lib/chat-client').RateLimitInfo } | null;
+  error: { message: string; category: 'offline' | 'timeout' | 'generic' | 'server' | 'rate_limit'; rateLimitInfo?: RateLimitInfo } | null;
 
   // Hydration
   hydrated: boolean;
   tasteProfileConfirmed: boolean;
   savedPlaceCount: number;
 
-  // Animation-fetch race
-  animationComplete: boolean;
-  fetchComplete: boolean;
-  pendingResult: ConsultResponseData | null;
-  pendingMessage: string | null;
-  pendingError: { message: string; category: 'offline' | 'timeout' | 'generic' | 'server' | 'rate_limit'; rateLimitInfo?: import('@/lib/chat-client').RateLimitInfo } | null;
   abortController: AbortController | null;
 
   // Chat thread
@@ -88,14 +89,11 @@ interface HomeState {
   init: (opts: { userId: string | null; getToken: () => Promise<string> }) => void;
   setUserId: (id: string | null) => void;
   loadUserContext: () => Promise<void>;
-  submit: (message: string, opts?: { forceIntent?: ClientIntent; isRetry?: boolean }) => Promise<void>;
-  markAnimationComplete: () => void;
-  setPendingResult: (data: ConsultResponseData) => void;
-  tryRevealResult: () => void;
+  submit: (message: string, opts?: { forceIntent?: ClientIntent; isRetry?: boolean }) => void;
+  clearStream: () => void;
   confirmTasteProfile: () => void;
   reset: () => void;
 
-  submitRecall: (message: string) => Promise<void>;
   setRecallResults: (results: RecallResult[], totalCount: number) => void;
   openSaveSheet: (message: string, places: ExtractPlaceItem[], sourceUrl: string | null) => void;
   setSaveSheetSelectedIndex: (index: number) => void;
@@ -134,17 +132,6 @@ function pickRestingPhase(
   return 'idle';
 }
 
-function categorizeError(err: unknown): 'offline' | 'timeout' | 'server' | 'rate_limit' | 'generic' {
-  if (typeof navigator !== 'undefined' && !navigator.onLine) return 'offline';
-  if (err instanceof Error && err.name === 'AbortError') return 'timeout';
-  if (err instanceof Error && 'category' in err) {
-    const cat = (err as Error & { category: string }).category;
-    if (cat === 'server') return 'server';
-    if (cat === 'rate_limit') return 'rate_limit';
-  }
-  return 'generic';
-}
-
 let entryCounter = 0;
 function nextId() {
   return `e-${Date.now()}-${++entryCounter}`;
@@ -157,17 +144,13 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   userId: null,
   getToken: null,
   query: null,
+  streamingMessage: null,
   result: null,
   reasoningSteps: [],
   error: null,
   hydrated: false,
   tasteProfileConfirmed: false,
   savedPlaceCount: 0,
-  animationComplete: false,
-  fetchComplete: false,
-  pendingResult: null,
-  pendingMessage: null,
-  pendingError: null,
   abortController: null,
   thread: [],
   recallResults: null,
@@ -216,7 +199,11 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       const client = getUserContextClient(getToken ?? (async () => ''));
       const ctx = await client.getUserContext();
       const signalTier = ctx.signal_tier;
-      const phase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
+      const hasPendingChips = ctx.chips.some((c) => c.status === 'pending');
+      // Force chip-selection when server sends new pending chips, even if user confirmed a previous round
+      const phase = (signalTier === 'chip_selection' && hasPendingChips)
+        ? 'chip-selection'
+        : pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
       set({
         signalTier,
         chips: ctx.chips,
@@ -231,8 +218,8 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   },
 
   // ── submit ─────────────────────────────────────────────────────────────────
-  submit: async (message, opts) => {
-    const { getToken, thread, signalTier, savedPlaceCount, tasteProfileConfirmed } = get();
+  submit: (message, opts) => {
+    const { thread, signalTier, savedPlaceCount, tasteProfileConfirmed } = get();
 
     get().dismissAssistantReply();
     get().abortController?.abort();
@@ -240,8 +227,12 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
     const intent: ClientIntent = opts?.forceIntent ?? classifyIntent(message);
 
-    // Tier guard — block non-save intents when onboarding isn't complete
-    if ((signalTier === 'cold' || signalTier === 'chip_selection') && intent !== 'save') {
+    // Tier guard — block non-save intents when onboarding isn't complete.
+    // chip_selection + tasteProfileConfirmed means the user already decided locally — let them through.
+    const onboardingIncomplete =
+      signalTier === 'cold' ||
+      (signalTier === 'chip_selection' && !tasteProfileConfirmed);
+    if (onboardingIncomplete && intent !== 'save') {
       const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
       const entry: ThreadEntry = {
         id: nextId(),
@@ -273,131 +264,100 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       phase: initialPhase,
       activeFlowId: initialFlowId,
       query: message,
+      streamingMessage: message,
       result: null,
       reasoningSteps: [],
       error: null,
-      animationComplete: false,
-      fetchComplete: false,
-      pendingResult: null,
-      pendingError: null,
       clarificationMessage: null,
       abortController,
     });
+  },
 
-    try {
-      const client = getToken ? getChatClient(getToken) : getChatClient(async () => '');
-      const res = await client.chat({
-        message,
-        signal: abortController.signal,
-        signalTier: get().signalTier,
-      });
+  // ── clearStream ────────────────────────────────────────────────────────────
+  clearStream: () => {
+    const { savedPlaceCount, tasteProfileConfirmed, signalTier, thread } = get();
+    const { events, error: streamError } = useChatStreamStore.getState();
 
-      if (res.type === 'clarification') {
-        const { savedPlaceCount: spc, tasteProfileConfirmed: tpc, signalTier: st } = get();
-        const restingPhase = pickRestingPhase(spc, tpc, st);
-        const entry: ThreadEntry = { id: nextId(), role: 'assistant', type: 'clarification', message: res.message };
-        set({
-          thread: [...get().thread, entry],
-          phase: restingPhase,
-          activeFlowId: null,
-          animationComplete: false,
-          fetchComplete: false,
-          pendingResult: null,
-          pendingError: null,
-          clarificationMessage: null,
+    // Convert SSE events into persistent thread entries
+    const newEntries: ThreadEntry[] = [];
+    const messageEvent = events.find((e) => e.type === 'message');
+    const messageText = messageEvent?.type === 'message' ? messageEvent.data.content : '';
+    const toolResults = events.filter((e) => e.type === 'tool_result');
+    const errorEvent = events.find((e) => e.type === 'error');
+    const reasoningSteps = events
+      .filter((e) => e.type === 'reasoning_step')
+      .map((e) => (e.type === 'reasoning_step' ? e.data : null))
+      .filter(Boolean)
+      .filter((s) => s!.step !== 'agent.tool_decision') as import('@totoro/shared').SseReasoningStep[];
+
+    if (reasoningSteps.length > 0) {
+      newEntries.push({ id: nextId(), role: 'assistant', type: 'reasoning', steps: reasoningSteps });
+    }
+
+    // HTTP-level error (e.g. rate limit) — streamError set but no SSE error event
+    const isRateLimit = streamError?.startsWith('rate_limit_exceeded');
+    const isHttpError = streamError && !errorEvent;
+
+    if (errorEvent && errorEvent.type === 'error') {
+      newEntries.push({ id: nextId(), role: 'assistant', type: 'error', category: 'server' });
+    } else if (isHttpError) {
+      if (isRateLimit) {
+        const parts = streamError.split(':');
+        newEntries.push({
+          id: nextId(), role: 'assistant', type: 'error', category: 'rate_limit',
+          rateLimitInfo: { limit: (parts[1] ?? 'turns_per_session') as RateLimitInfo['limit'], limit_value: Number(parts[2] ?? 10) },
         });
-        return;
+      } else {
+        newEntries.push({ id: nextId(), role: 'assistant', type: 'error', category: 'server' });
       }
+    } else {
+      const consultResult = toolResults.find((e) => e.type === 'tool_result' && e.data.tool === 'consult');
+      const recallResult = toolResults.find((e) => e.type === 'tool_result' && e.data.tool === 'recall');
+      const saveResult = toolResults.find((e) => e.type === 'tool_result' && e.data.tool === 'save');
 
-      const finalFlow = FLOW_BY_RESPONSE_TYPE[res.type];
-      const parsed = finalFlow.schema.safeParse(res.data);
-      if (!parsed.success) {
-        const errorObj = { message: 'Invalid response shape', category: 'generic' as const };
-        set({ fetchComplete: true, pendingError: errorObj });
-        get().tryRevealResult();
-        return;
-      }
-
-      if (res.type === 'consult' && res.data && typeof res.data === 'object' && 'reasoning_steps' in res.data) {
-        set({
-          reasoningSteps: (res.data as ConsultResponseData).reasoning_steps ?? [],
-          pendingMessage: res.message ?? null,
+      if (consultResult && consultResult.type === 'tool_result' && consultResult.data.payload) {
+        newEntries.push({
+          id: nextId(),
+          role: 'assistant',
+          type: 'consult',
+          message: messageText,
+          data: consultResult.data.payload as unknown as ConsultResponseData,
         });
+      } else if (recallResult && recallResult.type === 'tool_result' && recallResult.data.payload) {
+        newEntries.push({
+          id: nextId(),
+          role: 'assistant',
+          type: 'recall',
+          message: messageText,
+          data: recallResult.data.payload as unknown as RecallResponseData,
+        });
+      } else if (saveResult && saveResult.type === 'tool_result' && saveResult.data.payload) {
+        const payload = saveResult.data.payload as unknown as { results?: ExtractPlaceItem[]; raw_input?: string };
+        const items = payload.results ?? [];
+        for (const item of items) {
+          newEntries.push({
+            id: nextId(),
+            role: 'assistant',
+            type: 'save',
+            item,
+            sourceUrl: payload.raw_input ?? null,
+          });
+        }
+        if (messageText) {
+          newEntries.push({ id: nextId(), role: 'assistant', type: 'assistant', message: messageText });
+        }
+      } else if (messageText) {
+        newEntries.push({ id: nextId(), role: 'assistant', type: 'assistant', message: messageText });
       }
-
-      set({ fetchComplete: true });
-      finalFlow.onResponse(res, get());
-    } catch (err) {
-      const category = categorizeError(err);
-      const rateLimitInfo = (err instanceof Error && 'rateLimitInfo' in err)
-        ? (err as Error & { rateLimitInfo: import('@/lib/chat-client').RateLimitInfo }).rateLimitInfo
-        : undefined;
-      const errorObj = { message: String(err), category, ...(rateLimitInfo && { rateLimitInfo }) };
-      set({ fetchComplete: true, pendingError: errorObj });
-      get().tryRevealResult();
-    }
-  },
-
-  // ── markAnimationComplete ──────────────────────────────────────────────────
-  markAnimationComplete: () => {
-    set({ animationComplete: true });
-    get().tryRevealResult();
-  },
-
-  // ── setPendingResult ───────────────────────────────────────────────────────
-  setPendingResult: (data) => {
-    set({ pendingResult: data });
-  },
-
-  // ── tryRevealResult ────────────────────────────────────────────────────────
-  tryRevealResult: () => {
-    const { animationComplete, fetchComplete, pendingResult, pendingError, savedPlaceCount, tasteProfileConfirmed, signalTier } = get();
-    if (!animationComplete || !fetchComplete) return;
-
-    const restingPhase = pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier);
-
-    if (pendingError) {
-      const { activeFlowId } = get();
-      const entry: ThreadEntry = {
-        id: nextId(),
-        role: 'assistant',
-        type: 'error',
-        category: pendingError.category,
-        ...(pendingError.rateLimitInfo && { rateLimitInfo: pendingError.rateLimitInfo }),
-        ...(activeFlowId && { flowId: activeFlowId }),
-      };
-      set({
-        thread: [...get().thread, entry],
-        phase: restingPhase,
-        activeFlowId: null,
-        error: null,
-        pendingError: null,
-        animationComplete: false,
-        fetchComplete: false,
-      });
-      return;
     }
 
-    if (pendingResult) {
-      const { pendingMessage } = get();
-      const entry: ThreadEntry = {
-        id: nextId(),
-        role: 'assistant',
-        type: 'consult',
-        message: pendingMessage ?? "Here's your pick",
-        data: pendingResult,
-      };
-      set({
-        thread: [...get().thread, entry],
-        phase: restingPhase,
-        activeFlowId: null,
-        result: pendingResult,
-        pendingResult: null,
-        pendingMessage: null,
-        animationComplete: false,
-        fetchComplete: false,
-      });
-    }
+    useChatStreamStore.getState().reset();
+    set({
+      streamingMessage: null,
+      phase: pickRestingPhase(savedPlaceCount, tasteProfileConfirmed, signalTier),
+      activeFlowId: null,
+      thread: newEntries.length > 0 ? [...thread, ...newEntries] : thread,
+    });
   },
 
   // ── confirmTasteProfile ────────────────────────────────────────────────────
@@ -414,46 +374,13 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       phase,
       activeFlowId: null,
       query: null,
+      streamingMessage: null,
       result: null,
       reasoningSteps: [],
       error: null,
-      animationComplete: false,
-      fetchComplete: false,
-      pendingResult: null,
-      pendingError: null,
       abortController: null,
       clarificationMessage: null,
     });
-  },
-
-  // ── submitRecall ───────────────────────────────────────────────────────────
-  submitRecall: async (message) => {
-    const { getToken } = get();
-    set({ recallQuery: message, phase: 'recall', recallResults: null, recallBreadcrumb: false });
-
-    let breadcrumbTimer: ReturnType<typeof setTimeout> | null = null;
-    breadcrumbTimer = setTimeout(() => {
-      if (get().phase === 'recall') set({ recallBreadcrumb: true });
-    }, 600);
-
-    try {
-      const client = getToken ? getChatClient(getToken) : getChatClient(async () => '');
-      const res = await client.chat({ message, signalTier: get().signalTier });
-
-      if (breadcrumbTimer) clearTimeout(breadcrumbTimer);
-
-      if (res.type === 'recall' && res.data) {
-        const data = res.data as RecallResponseData;
-        set({
-          recallResults: data.results,
-          recallTotalCount: data.total_count,
-          recallBreadcrumb: false,
-        });
-      }
-    } catch {
-      if (breadcrumbTimer) clearTimeout(breadcrumbTimer);
-      set({ recallBreadcrumb: false });
-    }
   },
 
   // ── setRecallResults ───────────────────────────────────────────────────────
@@ -628,8 +555,6 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       thread: [...thread, entry],
       phase: restingPhase,
       activeFlowId: null,
-      animationComplete: false,
-      fetchComplete: false,
     });
   },
 
@@ -642,8 +567,6 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       thread: [...thread, entry],
       phase: restingPhase,
       activeFlowId: null,
-      animationComplete: false,
-      fetchComplete: false,
     });
   },
 
@@ -656,8 +579,6 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       thread: [...thread, entry],
       phase: restingPhase,
       activeFlowId: null,
-      animationComplete: false,
-      fetchComplete: false,
     });
   },
 
@@ -666,6 +587,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     const { getToken } = get();
     const client = getSignalClient(getToken ?? (async () => ''));
     await client.acceptRecommendation(recommendationId, placeId);
+    void get().loadUserContext();
   },
 
   // ── rejectPlace ───────────────────────────────────────────────────────────
@@ -673,6 +595,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     const { getToken } = get();
     const client = getSignalClient(getToken ?? (async () => ''));
     await client.rejectRecommendation(recommendationId, placeId);
+    void get().loadUserContext();
   },
 
   // ── confirmChips ──────────────────────────────────────────────────────────

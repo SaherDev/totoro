@@ -11,12 +11,18 @@ function SourceBadge({ source }: { source: 'saved' | 'discovered' }) {
   return (
     <span
       className={cn(
-        'rounded-full px-2 py-0.5 text-[10px] font-semibold',
+        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold',
         source === 'saved'
-          ? 'bg-accent text-accent-foreground'
-          : 'bg-muted/80 text-muted-foreground',
+          ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300'
+          : 'bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300',
       )}
     >
+      <span
+        className={cn(
+          'h-1.5 w-1.5 rounded-full',
+          source === 'saved' ? 'bg-green-500' : 'bg-orange-400',
+        )}
+      />
       {t(source)}
     </span>
   );

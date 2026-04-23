@@ -24,7 +24,8 @@ import { TASTE_CHIP_BANK } from '@/constants/home-suggestions';
 import { Illustration } from '@/components/illustrations/Illustration';
 import { TotoroCard } from '@totoro/ui';
 import { useHomeStore, type ThreadEntry } from '@/store/home-store';
-import { FLOW_REGISTRY } from '@/flows/registry';
+import { ChatStream } from '@/components/chat/chat-stream';
+import { ReasoningCard } from '@/components/chat/renderers/reasoning-step-renderer';
 
 const LOADING_LINES = [
   'Sniffing out your taste…',
@@ -71,6 +72,10 @@ function TotoroLoadingScreen() {
   );
 }
 
+function ReasoningThreadEntry({ steps }: { steps: import('@totoro/shared').SseReasoningStep[] }) {
+  return <ReasoningCard steps={steps} isStreaming={false} />;
+}
+
 function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
   if (entry.role === 'user') {
     return <UserBubble content={entry.content} />;
@@ -89,8 +94,8 @@ function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
   if (entry.type === 'save') {
     if (!entry.item.place) return null;
     const badge = entry.item.status === 'duplicate'
-      ? <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-900 dark:bg-amber-950 dark:text-amber-100">Duplicate</span>
-      : <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-950 dark:text-green-300">Saved ✓</span>;
+      ? <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold text-amber-900 dark:bg-amber-950 dark:text-amber-100"><span className="h-1.5 w-1.5 rounded-full bg-amber-400" />Duplicate</span>
+      : <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-950 dark:text-green-300"><span className="h-1.5 w-1.5 rounded-full bg-green-500" />Saved</span>;
     return <PlaceCard place={entry.item.place} badge={badge} />;
   }
   if (entry.type === 'recall') {
@@ -101,13 +106,15 @@ function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
       </div>
     );
   }
+  if (entry.type === 'reasoning') {
+    return <ReasoningThreadEntry steps={entry.steps} />;
+  }
   if (entry.type === 'error') {
     return null;
   }
   return null;
 }
 
-const RESTING_PHASES = new Set(['idle', 'cold-0', 'cold-1-4', 'taste-profile', 'chip-selection']);
 
 export default function HomePage() {
   const { userId, getToken } = useAuth();
@@ -115,6 +122,7 @@ export default function HomePage() {
   const t = useTranslations();
   const store = useHomeStore();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const stopStreamRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     store.hydrate();
@@ -127,9 +135,7 @@ export default function HomePage() {
     }
   }, [store.thread.length, store.activeFlowId]);
 
-  const placeholderKey = (store.activeFlowId && RESTING_PHASES.has(store.phase))
-    ? FLOW_REGISTRY[store.activeFlowId].inputPlaceholderKey
-    : 'chat.placeholder';
+  const placeholderKey = 'chat.placeholder';
 
   const hasThread = store.thread.length > 0;
 
@@ -217,25 +223,14 @@ export default function HomePage() {
               return <ThreadEntryView key={entry.id} entry={entry} />;
             })}
 
-            {/* Thinking indicator */}
-            {store.phase === 'thinking' && store.activeFlowId !== 'consult' && (
-              <div className="flex items-center gap-2 py-1 text-xs text-muted-foreground">
-                <div className="flex gap-1">
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:0ms]" />
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:150ms]" />
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:300ms]" />
-                </div>
-                <span className="max-w-[220px] truncate text-muted-foreground/70">
-                  {store.activeFlowId === 'save' ? 'Looking up your place…' : 'Working on it…'}
-                </span>
-              </div>
-            )}
-
-            {/* Active flow */}
-            {store.activeFlowId && (() => {
-              const FlowComponent = FLOW_REGISTRY[store.activeFlowId].Component;
-              return <FlowComponent store={store} />;
-            })()}
+            {/* Active SSE stream */}
+            <ChatStream
+              streamingMessage={store.streamingMessage}
+              signalTier={store.signalTier}
+              onComplete={() => store.clearStream()}
+              onStop={() => store.clearStream()}
+              stopRef={stopStreamRef}
+            />
 
           </div>
         </div>
@@ -249,7 +244,9 @@ export default function HomePage() {
             <div className="p-2">
               <ChatInput
                 onSubmit={store.submit}
-                disabled={store.phase === 'thinking' || store.phase === 'chip-selection'}
+                onStop={() => { stopStreamRef.current?.(); store.clearStream(); }}
+                isStreaming={store.streamingMessage !== null}
+                disabled={store.phase === 'chip-selection'}
                 placeholder={t(placeholderKey as Parameters<typeof t>[0])}
               />
             </div>

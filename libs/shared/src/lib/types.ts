@@ -22,19 +22,16 @@ export interface ChatRequestDto {
   signal_tier?: SignalTier | null;
 }
 
-export type ChatResponseType =
-  | 'consult'
-  | 'recall'
-  | 'extract-place'
-  | 'assistant'
-  | 'clarification'
-  | 'error';
-
 export type ClientIntent = 'consult' | 'recall' | 'save' | 'assistant';
 
 export interface ReasoningStep {
   step: string;
   summary: string;
+  source?: 'tool' | 'agent' | 'fallback';
+  tool_name?: 'recall' | 'save' | 'consult' | null;
+  visibility?: 'user' | 'debug';
+  duration_ms?: number;
+  timestamp?: string;
 }
 
 // ── Unified place shape (ADR-054) ────────────────────────────────────────────
@@ -200,18 +197,6 @@ export interface AuthUser {
   plan?: PlanTier;
 }
 
-/**
- * Chat response DTO for unified AI gateway
- * Type discriminates between different response kinds
- */
-export interface ChatResponseDto {
-  type: ChatResponseType;
-  message: string;
-  data: ConsultResponseData | RecallResponseData | ExtractPlaceData | Record<string, unknown> | null;
-  tool_calls_used: number;
-  session_started?: true;
-}
-
 // Signal types
 export type SignalType =
   | 'recommendation_accepted'
@@ -226,6 +211,7 @@ export interface ChipItem {
   source_field: string;
   source_value: string;
   signal_count: number;
+  query?: string;
   status: ChipStatus;
   selection_round: string | null;
 }

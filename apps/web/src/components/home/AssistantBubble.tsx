@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 type AssistantBubbleType = 'clarification' | 'assistant';
 
@@ -29,7 +30,25 @@ export function AssistantBubble({ message, type = 'assistant', onDismiss }: Assi
       style={{ opacity: visible ? 1 : 0 }}
     >
       <div className={`max-w-[80%] rounded-2xl rounded-bl-sm ${bgColor} px-4 py-3 flex-1`}>
-        <p className={`text-sm ${textColor} leading-relaxed`}>{message}</p>
+        <div className={`text-sm ${textColor} leading-relaxed`}>
+          <ReactMarkdown
+            components={{
+              p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
+              strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+              em: ({ children }) => <em className="italic">{children}</em>,
+              ul: ({ children }) => <ul className="my-1 list-disc ps-4 flex flex-col gap-0.5">{children}</ul>,
+              ol: ({ children }) => <ol className="my-1 list-decimal ps-4 flex flex-col gap-0.5">{children}</ol>,
+              li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+              a: ({ href, children }) => (
+                <a href={href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 opacity-80 hover:opacity-100">
+                  {children}
+                </a>
+              ),
+            }}
+          >
+            {message}
+          </ReactMarkdown>
+        </div>
       </div>
       {onDismiss && (
         <button
