@@ -37,7 +37,8 @@ export function ChatStream({ streamingMessage, signalTier, onComplete, onStop, s
   const reasoningSteps = events
     .filter((e) => e.type === 'reasoning_step')
     .map((e) => (e.type === 'reasoning_step' ? e.data : null))
-    .filter((s) => s!.visibility !== 'debug') as SseReasoningStep[];
+    .filter((s) => s!.visibility !== 'debug')
+    .filter((s) => s!.step !== 'agent.tool_decision') as SseReasoningStep[];
 
   const nonReasoningEvents = events.filter((e) => e.type !== 'reasoning_step');
 
