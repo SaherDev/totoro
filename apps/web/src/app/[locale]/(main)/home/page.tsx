@@ -155,21 +155,23 @@ export default function HomePage() {
         </NavBarActions>
       </NavBar>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Sticky clear button — sits above the scroll area */}
+        {hasThread && (
+          <div className="absolute top-3 start-1/2 -translate-x-1/2 z-10 w-full max-w-2xl px-4 pointer-events-none">
+            <button
+              onClick={() => { stopStreamRef.current?.(); store.clearThread(); }}
+              className="pointer-events-auto p-1 text-muted-foreground/40 hover:text-foreground transition-colors"
+              aria-label="Clear conversation"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
         {/* Scrollable message area */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-2xl px-4 py-6 flex flex-col gap-4">
-
-            {/* Clear thread button */}
-            {hasThread && (
-              <button
-                onClick={() => { stopStreamRef.current?.(); store.clearThread(); }}
-                className="self-start p-1 text-muted-foreground/50 hover:text-foreground transition-colors"
-                aria-label="Clear conversation"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            )}
+          <div className={`mx-auto w-full max-w-2xl px-4 flex flex-col gap-4 ${hasThread ? 'pt-10 pb-6' : 'py-6'}`}>
 
             {/* Warming nudge */}
             {store.signalTier === 'warming' && (
