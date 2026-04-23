@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { X, Copy, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 type AssistantBubbleType = 'clarification' | 'assistant';
@@ -14,11 +14,19 @@ interface AssistantBubbleProps {
 
 export function AssistantBubble({ message, type = 'assistant', onDismiss }: AssistantBubbleProps) {
   const [visible, setVisible] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 80);
     return () => clearTimeout(timer);
   }, []);
+
+  const copy = useCallback(() => {
+    void navigator.clipboard.writeText(message).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }, [message]);
 
   const isClarification = type === 'clarification';
   const bgColor = isClarification ? 'bg-amber-50 dark:bg-amber-950' : 'bg-muted';
@@ -26,7 +34,7 @@ export function AssistantBubble({ message, type = 'assistant', onDismiss }: Assi
 
   return (
     <div
-      className="flex gap-2 transition-opacity duration-200"
+      className="group flex gap-2 transition-opacity duration-200"
       style={{ opacity: visible ? 1 : 0 }}
     >
       <div className={`max-w-[80%] rounded-2xl rounded-bl-sm ${bgColor} px-4 py-3 flex-1`}>
@@ -50,14 +58,23 @@ export function AssistantBubble({ message, type = 'assistant', onDismiss }: Assi
           </ReactMarkdown>
         </div>
       </div>
-      {onDismiss && (
+      <div className="flex flex-col gap-1 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
-          onClick={onDismiss}
-          className="flex-shrink-0 mt-1 text-muted-foreground hover:text-foreground transition-colors"
+          onClick={copy}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Copy"
         >
-          <X className="h-4 w-4" />
+          {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
         </button>
-      )}
+        {onDismiss && (
+          <button
+            onClick={onDismiss}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
