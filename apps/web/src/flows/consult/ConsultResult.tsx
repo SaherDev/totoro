@@ -85,6 +85,7 @@ export function ConsultResult({ result }: { result: ConsultResponseData }) {
               <PlaceCard
                 key={alt.place.place_id}
                 place={alt.place}
+                defaultExpanded
                 badge={<SourceBadge source={alt.source} />}
                 action={
                   <AcceptRejectActions
