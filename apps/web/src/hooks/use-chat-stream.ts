@@ -1,19 +1,20 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useCallback } from 'react';
-import { useAuth } from '@clerk/nextjs';
-import { Capacitor } from '@capacitor/core';
 import type {
   SignalTier,
-  SseEvent,
-  SseReasoningStep,
-  SseToolResult,
-  SseMessage,
   SseDone,
   SseError,
-} from '@totoro/shared';
-import { FetchClient } from '../api/transports/fetch.transport';
-import { useChatStreamStore } from '../store/chat-stream.store';
+  SseEvent,
+  SseMessage,
+  SseReasoningStep,
+  SseToolResult,
+} from "@totoro/shared";
+import { useCallback, useEffect, useRef } from "react";
+
+import { Capacitor } from "@capacitor/core";
+import { FetchClient } from "../api/transports/fetch.transport";
+import { useAuth } from "@clerk/nextjs";
+import { useChatStreamStore } from "../store/chat-stream.store";
 
 interface UseChatStreamOptions {
   signalTier?: SignalTier | null;
@@ -28,7 +29,9 @@ export function useChatStream(
 ): { stop: () => void } {
   const { getToken } = useAuth();
   const store = useChatStreamStore();
-  const readerRef = useRef<ReadableStreamDefaultReader<Uint8Array> | null>(null);
+  const readerRef = useRef<ReadableStreamDefaultReader<Uint8Array> | null>(
+    null,
+  );
   const optionsRef = useRef(options);
   optionsRef.current = options;
 
@@ -48,20 +51,17 @@ export function useChatStream(
       store.startStream();
 
       const apiBase = Capacitor.isNativePlatform()
-        ? (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/api\/v1\/?$/, '')
-        : '';
+        ? (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/api\/v1\/?$/, "")
+        : "";
       const client = new FetchClient(apiBase, async () => {
         const token = await getToken();
-        return token ?? '';
+        return token ?? "";
       });
 
       let response: Response;
       try {
-        response = await client.postStream('/api/v1/chat', {
+        response = await client.postStream("/api/v1/chat", {
           message,
-          ...(optionsRef.current.signalTier != null
-            ? { signal_tier: optionsRef.current.signalTier }
-            : {}),
         });
       } catch (err) {
         if (cancelled) return;
@@ -75,13 +75,15 @@ export function useChatStream(
         if (cancelled) return;
         let msg = `HTTP ${response.status}`;
         try {
-          const body = await response.json() as Record<string, unknown>;
-          if (body.error === 'rate_limit_exceeded') {
-            msg = `rate_limit_exceeded:${body.limit ?? ''}:${body.limit_value ?? ''}`;
-          } else if (typeof body.error === 'string') {
+          const body = (await response.json()) as Record<string, unknown>;
+          if (body.error === "rate_limit_exceeded") {
+            msg = `rate_limit_exceeded:${body.limit ?? ""}:${body.limit_value ?? ""}`;
+          } else if (typeof body.error === "string") {
             msg = body.error;
           }
-        } catch { /* ignore parse errors */ }
+        } catch {
+          /* ignore parse errors */
+        }
         store.fail(msg);
         optionsRef.current.onError?.(msg);
         return;
@@ -89,16 +91,16 @@ export function useChatStream(
 
       if (!response.body) {
         if (cancelled) return;
-        store.fail('No response body');
-        optionsRef.current.onError?.('No response body');
+        store.fail("No response body");
+        optionsRef.current.onError?.("No response body");
         return;
       }
 
       const reader = response.body.getReader();
       readerRef.current = reader;
       const decoder = new TextDecoder();
-      let buffer = '';
-      let currentEventName = 'message';
+      let buffer = "";
+      let currentEventName = "message";
 
       try {
         while (true) {
@@ -108,13 +110,13 @@ export function useChatStream(
           buffer += decoder.decode(value, { stream: true });
 
           // SSE lines are separated by '\n'. A blank line ends an event.
-          const lines = buffer.split('\n');
-          buffer = lines.pop() ?? '';
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
 
           for (const line of lines) {
-            if (line.startsWith('event:')) {
+            if (line.startsWith("event:")) {
               currentEventName = line.slice(6).trim();
-            } else if (line.startsWith('data:')) {
+            } else if (line.startsWith("data:")) {
               const dataStr = line.slice(5).trim();
               let parsed: unknown;
               try {
@@ -126,16 +128,16 @@ export function useChatStream(
               const event = buildEvent(currentEventName, parsed);
               if (event) {
                 store.pushEvent(event);
-                if (event.type === 'done') {
+                if (event.type === "done") {
                   store.complete();
                   optionsRef.current.onComplete?.();
-                } else if (event.type === 'error') {
+                } else if (event.type === "error") {
                   store.fail(event.data.detail);
                   optionsRef.current.onError?.(event.data.detail);
                 }
               }
               // Reset event name after data line
-              currentEventName = 'message';
+              currentEventName = "message";
             }
           }
         }
@@ -162,20 +164,20 @@ export function useChatStream(
 }
 
 function buildEvent(eventName: string, data: unknown): SseEvent | null {
-  if (!data || typeof data !== 'object') return null;
+  if (!data || typeof data !== "object") return null;
   const d = data as Record<string, unknown>;
 
   switch (eventName) {
-    case 'reasoning_step':
-      return { type: 'reasoning_step', data: d as unknown as SseReasoningStep };
-    case 'tool_result':
-      return { type: 'tool_result', data: d as unknown as SseToolResult };
-    case 'message':
-      return { type: 'message', data: d as unknown as SseMessage };
-    case 'done':
-      return { type: 'done', data: d as unknown as SseDone };
-    case 'error':
-      return { type: 'error', data: d as unknown as SseError };
+    case "reasoning_step":
+      return { type: "reasoning_step", data: d as unknown as SseReasoningStep };
+    case "tool_result":
+      return { type: "tool_result", data: d as unknown as SseToolResult };
+    case "message":
+      return { type: "message", data: d as unknown as SseMessage };
+    case "done":
+      return { type: "done", data: d as unknown as SseDone };
+    case "error":
+      return { type: "error", data: d as unknown as SseError };
     default:
       return null;
   }
