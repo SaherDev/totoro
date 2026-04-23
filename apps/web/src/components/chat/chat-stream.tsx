@@ -34,10 +34,11 @@ export function ChatStream({ streamingMessage, signalTier, onComplete, onStop, s
   if (!streamingMessage && phase === 'idle') return null;
 
   const isStreaming = phase === 'streaming' || phase === 'idle';
+  // During streaming: show all steps (including debug) for real-time progress.
+  // agent.tool_decision filtered because it duplicates the final message.
   const reasoningSteps = events
     .filter((e) => e.type === 'reasoning_step')
     .map((e) => (e.type === 'reasoning_step' ? e.data : null))
-    .filter((s) => s!.visibility !== 'debug')
     .filter((s) => s!.step !== 'agent.tool_decision') as SseReasoningStep[];
 
   const hasMessage = events.some((e) => e.type === 'message');

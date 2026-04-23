@@ -66,7 +66,11 @@ export function ReasoningCard({
           {steps.map((step, i) => (
             <p
               key={i}
-              className="text-sm italic leading-relaxed text-foreground/60 break-words animate-fade-in"
+              className={`italic leading-relaxed break-words animate-fade-in ${
+                step.visibility === 'debug'
+                  ? 'text-xs text-foreground/30'
+                  : 'text-sm text-foreground/60'
+              }`}
             >
               {step.summary}
             </p>
