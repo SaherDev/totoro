@@ -6,24 +6,19 @@ import { PlaceCard } from '../../components/PlaceCard';
 import { useHomeStore } from '../../store/home-store';
 import { cn } from '@totoro/ui';
 
-function SourceBadge({ source }: { source: 'saved' | 'discovered' }) {
+const SOURCE_BADGE_STYLES: Record<string, { bg: string; dot: string }> = {
+  saved:      { bg: 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300',   dot: 'bg-green-500' },
+  discovered: { bg: 'bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300', dot: 'bg-orange-400' },
+  suggested:  { bg: 'bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-300', dot: 'bg-violet-400' },
+};
+
+function SourceBadge({ source }: { source: string }) {
   const t = useTranslations('consult.result.source');
+  const style = SOURCE_BADGE_STYLES[source] ?? SOURCE_BADGE_STYLES['discovered'];
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold',
-        source === 'saved'
-          ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300'
-          : 'bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300',
-      )}
-    >
-      <span
-        className={cn(
-          'h-1.5 w-1.5 rounded-full',
-          source === 'saved' ? 'bg-green-500' : 'bg-orange-400',
-        )}
-      />
-      {t(source)}
+    <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold', style.bg)}>
+      <span className={cn('h-1.5 w-1.5 rounded-full', style.dot)} />
+      {t(source as Parameters<typeof t>[0])}
     </span>
   );
 }

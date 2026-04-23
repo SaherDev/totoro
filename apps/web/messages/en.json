@@ -62,7 +62,8 @@
       "communityProof": "{count} people visited this week",
       "source": {
         "saved": "From your saves",
-        "discovered": "Newly discovered"
+        "discovered": "Newly discovered",
+        "suggested": "Suggested"
       },
       "actions": {
         "directions": "Directions",

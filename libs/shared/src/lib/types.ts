@@ -112,7 +112,7 @@ export interface PlaceObject {
 
 // ── Consult (POST /v1/chat, type="consult") ──────────────────────────────────
 
-export type ConsultResultSource = 'saved' | 'discovered';
+export type ConsultResultSource = 'saved' | 'discovered' | 'suggested';
 
 export interface ConsultResult {
   place: PlaceObject;
