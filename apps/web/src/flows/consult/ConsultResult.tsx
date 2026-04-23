@@ -91,6 +91,12 @@ export function ConsultResult({ result }: { result: ConsultResponseData }) {
                 key={alt.place.place_id}
                 place={alt.place}
                 badge={<SourceBadge source={alt.source} />}
+                action={
+                  <AcceptRejectActions
+                    recommendationId={result.recommendation_id}
+                    placeId={alt.place.place_id}
+                  />
+                }
               />
             ))}
           </div>
