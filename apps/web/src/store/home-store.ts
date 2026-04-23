@@ -1,6 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type {
   ClientIntent,
   ConsultResponseData,
@@ -137,7 +138,17 @@ function nextId() {
   return `e-${Date.now()}-${++entryCounter}`;
 }
 
-export const useHomeStore = create<HomeState>((set, get) => ({
+const THREAD_STORAGE_KEY = 'totoro.thread';
+
+export function clearPersistedThread() {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(THREAD_STORAGE_KEY);
+  }
+}
+
+export const useHomeStore = create<HomeState>()(
+  persist(
+    (set, get) => ({
   // ── Initial state ──────────────────────────────────────────────────────────
   phase: 'hydrating',
   activeFlowId: null,
@@ -181,7 +192,13 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
   // ── init ───────────────────────────────────────────────────────────────────
   init: ({ userId, getToken }) => {
-    set({ userId, getToken });
+    const prevUserId = get().userId;
+    if (userId && prevUserId && userId !== prevUserId) {
+      // Different user — clear the persisted thread
+      set({ thread: [], userId, getToken });
+    } else {
+      set({ userId, getToken });
+    }
     void get().loadUserContext();
   },
 
@@ -618,4 +635,11 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     await client.confirmChips(decidedChips);
     await get().loadUserContext();
   },
-}));
+}),
+    {
+      name: THREAD_STORAGE_KEY,
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ thread: state.thread, userId: state.userId }),
+    },
+  ),
+);
