@@ -40,16 +40,17 @@ export class AiServiceClient implements IAiServiceClient {
   }
 
   /**
-   * Open a raw SSE stream to the AI service.
+   * Open a raw SSE stream to the AI service at /v1/chat/stream.
    * Uses responseType: 'stream' so Axios returns the body as a Node.js Readable
-   * without buffering or parsing. Lets AxiosError propagate raw to callers.
+   * without buffering or parsing. Passing signal aborts the upstream connection
+   * when the client disconnects. Lets AxiosError propagate raw to callers.
    */
-  async chatStream(payload: ChatRequestDto): Promise<Readable> {
+  async chatStream(payload: ChatRequestDto, signal?: AbortSignal): Promise<Readable> {
     const response = await firstValueFrom(
       this.httpService.post<Readable>(
-        `${this.baseUrl}/v1/chat`,
+        `${this.baseUrl}/v1/chat/stream`,
         payload,
-        { responseType: 'stream', timeout: AI_SERVICE_TIMEOUT_MS }
+        { responseType: 'stream', timeout: AI_SERVICE_TIMEOUT_MS, signal }
       )
     );
     return response.data;

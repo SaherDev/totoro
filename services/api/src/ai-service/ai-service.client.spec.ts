@@ -59,7 +59,7 @@ describe('AiServiceClient', () => {
       signal_tier: null,
     };
 
-    it('calls POST /v1/chat with responseType: stream and returns the body stream', async () => {
+    it('calls POST /v1/chat/stream with responseType: stream and returns the body stream', async () => {
       const fakeStream = new PassThrough();
       const response = { data: fakeStream } as unknown as AxiosResponse;
       httpService.post.mockReturnValueOnce(of(response));
@@ -67,11 +67,26 @@ describe('AiServiceClient', () => {
       const result = await client.chatStream(payload);
 
       expect(httpService.post).toHaveBeenCalledWith(
-        'http://localhost:8000/v1/chat',
+        'http://localhost:8000/v1/chat/stream',
         payload,
-        { responseType: 'stream', timeout: 30000 }
+        { responseType: 'stream', timeout: 30000, signal: undefined }
       );
       expect(result).toBe(fakeStream);
+    });
+
+    it('forwards AbortSignal to axios so the upstream connection is cancelled on abort', async () => {
+      const fakeStream = new PassThrough();
+      const response = { data: fakeStream } as unknown as AxiosResponse;
+      httpService.post.mockReturnValueOnce(of(response));
+
+      const controller = new AbortController();
+      await client.chatStream(payload, controller.signal);
+
+      expect(httpService.post).toHaveBeenCalledWith(
+        'http://localhost:8000/v1/chat/stream',
+        payload,
+        { responseType: 'stream', timeout: 30000, signal: controller.signal }
+      );
     });
 
     it('propagates upstream errors raw so AllExceptionsFilter can translate them', async () => {

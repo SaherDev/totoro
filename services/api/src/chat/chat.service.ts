@@ -1,4 +1,5 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
+import { IncomingMessage } from 'http';
 import { Response } from 'express';
 import {
   IAiServiceClient,
@@ -26,24 +27,36 @@ export class ChatService {
   async pipeStream(
     userId: string,
     dto: ChatRequestBodyDto,
+    req: IncomingMessage,
     res: Response,
   ): Promise<void> {
     this.rateLimitService.incrementTurns(userId);
 
-    const stream = await this.aiClient.chatStream({
-      user_id: userId,
-      message: dto.message,
-      location: dto.location ?? null,
-      signal_tier: dto.signal_tier ?? null,
-    });
+    const controller = new AbortController();
+
+    const stream = await this.aiClient.chatStream(
+      {
+        user_id: userId,
+        message: dto.message,
+        location: dto.location ?? null,
+        signal_tier: dto.signal_tier ?? null,
+      },
+      controller.signal,
+    );
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
-    res.on('close', () => stream.destroy());
+    // Abort the upstream FastAPI connection when the client disconnects.
+    req.on('close', () => controller.abort());
+
     stream.on('error', (err) => {
+      // Abort errors are expected when the client disconnects — suppress them.
+      if (controller.signal.aborted) {
+        return;
+      }
       this.logger.error('AI service stream error', err);
       if (!res.headersSent) {
         res.status(503).end();

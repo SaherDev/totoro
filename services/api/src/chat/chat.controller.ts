@@ -1,4 +1,5 @@
-import { Controller, Post, Body, Res, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, UseGuards } from '@nestjs/common';
+import { IncomingMessage } from 'http';
 import { Response } from 'express';
 import { ChatService } from './chat.service';
 import { ChatRequestBodyDto } from './dto/chat-request.dto';
@@ -25,8 +26,9 @@ export class ChatController {
   async chat(
     @CurrentUser() userId: string,
     @Body() dto: ChatRequestBodyDto,
+    @Req() req: IncomingMessage,
     @Res() res: Response,
   ): Promise<void> {
-    await this.chatService.pipeStream(userId, dto, res);
+    await this.chatService.pipeStream(userId, dto, req, res);
   }
 }

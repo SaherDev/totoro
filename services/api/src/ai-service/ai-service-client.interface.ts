@@ -20,8 +20,10 @@ export interface IAiServiceClient {
    * Open a raw SSE stream to the AI service for a user message.
    * NestJS pipes the stream straight through to the client — no parsing,
    * no transformation. The frontend handles all SSE frame types directly.
+   *
+   * @param signal - AbortSignal to cancel the upstream request on client disconnect
    */
-  chatStream(payload: ChatRequestDto): Promise<Readable>;
+  chatStream(payload: ChatRequestDto, signal?: AbortSignal): Promise<Readable>;
 
   /**
    * Forward a user feedback signal to the AI service.
