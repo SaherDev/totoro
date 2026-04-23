@@ -2,6 +2,7 @@
 
 import type { ConsultResponseData } from '@totoro/shared';
 import { useTranslations } from 'next-intl';
+import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { PlaceCard } from '../../components/PlaceCard';
 import { useHomeStore } from '../../store/home-store';
 import { cn } from '@totoro/ui';
@@ -39,15 +40,17 @@ function AcceptRejectActions({ recommendationId, placeId }: AcceptRejectProps) {
     <div className="flex gap-2">
       <button
         onClick={() => void acceptPlace(recommendationId, placeId)}
-        className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+        className="flex items-center justify-center h-8 w-8 rounded-full border border-primary/30 bg-primary/5 text-primary transition-colors hover:bg-primary/15 active:scale-95"
+        aria-label={t('accept')}
       >
-        {t('accept')}
+        <ThumbsUp className="h-3.5 w-3.5" />
       </button>
       <button
         onClick={() => void rejectPlace(recommendationId, placeId)}
-        className="rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/80"
+        className="flex items-center justify-center h-8 w-8 rounded-full border border-border bg-muted text-muted-foreground transition-colors hover:bg-muted/80 active:scale-95"
+        aria-label={t('reject')}
       >
-        {t('reject')}
+        <ThumbsDown className="h-3.5 w-3.5" />
       </button>
     </div>
   );
