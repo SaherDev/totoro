@@ -1,20 +1,65 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { MapPin, Star, Phone, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
+import {
+  MapPin, Star, Phone, Clock, ChevronDown, ChevronUp,
+  Utensils, Ticket, ShoppingBag, Wrench, BedDouble,
+  Music2, Camera, Youtube, Link2, PenLine, Sparkles,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { PlaceObject } from '@totoro/shared';
-import { PlaceAvatar } from '@/components/PlaceAvatar';
 import { cn } from '@totoro/ui';
 
-// ── Tag pill ──────────────────────────────────────────────────────────────────
+// ── Letter avatar ─────────────────────────────────────────────────────────────
 
-function TagPill({ label }: { label: string }) {
+function LetterAvatar({ name }: { name: string }) {
   return (
-    <span className="rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-accent-foreground">
-      {label}
-    </span>
+    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-muted/70">
+      <span className="text-xl font-semibold text-muted-foreground/70 select-none">
+        {name.charAt(0).toUpperCase()}
+      </span>
+    </div>
   );
+}
+
+// ── Place-type icon ───────────────────────────────────────────────────────────
+
+const PLACE_TYPE_ICON: Record<string, React.ElementType> = {
+  food_and_drink: Utensils,
+  things_to_do: Ticket,
+  shopping: ShoppingBag,
+  services: Wrench,
+  accommodation: BedDouble,
+};
+
+// ── Source icon ───────────────────────────────────────────────────────────────
+
+const SOURCE_ICON: Record<string, React.ElementType> = {
+  tiktok: Music2,
+  instagram: Camera,
+  youtube: Youtube,
+  link: Link2,
+  manual: PenLine,
+  consult: Sparkles,
+};
+
+// ── Null-string guard ─────────────────────────────────────────────────────────
+
+function val(v: string | null | undefined): string | null {
+  if (!v || v === 'null' || v === 'undefined') return null;
+  return v;
+}
+
+// ── Price display ─────────────────────────────────────────────────────────────
+
+function priceLabel(hint: string | null | undefined): string | null {
+  if (!hint) return null;
+  switch (hint.toLowerCase()) {
+    case 'cheap': return '$';
+    case 'moderate': return '$$';
+    case 'expensive': return '$$$';
+    default: return hint; // already formatted
+  }
 }
 
 // ── Rating stars ──────────────────────────────────────────────────────────────
@@ -27,10 +72,7 @@ function RatingStars({ rating }: { rating: number }) {
         {Array.from({ length: 5 }).map((_, i) => (
           <Star
             key={i}
-            className={cn(
-              'h-3 w-3',
-              i < full ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30',
-            )}
+            className={cn('h-3 w-3', i < full ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30')}
           />
         ))}
       </div>
@@ -43,14 +85,10 @@ function RatingStars({ rating }: { rating: number }) {
 
 export interface PlaceCardProps {
   place: PlaceObject;
-  /** Controlled expanded state */
   expanded?: boolean;
-  /** Uncontrolled default */
   defaultExpanded?: boolean;
   onToggle?: (next: boolean) => void;
-  /** Top-end corner badge (source, confidence, match-reason, etc.) */
   badge?: React.ReactNode;
-  /** Bottom action row (accept/reject, confirm, etc.) */
   action?: React.ReactNode;
   className?: string;
 }
@@ -66,22 +104,16 @@ export function PlaceCard({
 }: PlaceCardProps) {
   const t = useTranslations('placeCard');
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
-
   const isControlled = controlledExpanded !== undefined;
   const expanded = isControlled ? controlledExpanded : internalExpanded;
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const handleImgLoad = useCallback(() => setImgLoaded(true), []);
-
   function toggle() {
     const next = !expanded;
     if (!isControlled) setInternalExpanded(next);
     onToggle?.(next);
   }
 
-  const showTier2 = place.geo_fresh || place.lat != null;
   const showTier3 = place.enriched;
 
-  // Strip provider namespace prefix: "google:ChIJ..." → "ChIJ..."
   const mapsUrl = place.provider_id
     ? (() => {
         const rawId = place.provider_id.includes(':')
@@ -91,184 +123,149 @@ export function PlaceCard({
       })()
     : null;
 
-  // Resolve today's hours
   const todayKey = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][
     new Date().getDay()
   ] as keyof typeof place.hours;
   const todayHours = place.hours?.[todayKey] ?? null;
 
+  // Metadata chips: type · price · neighborhood
+  const metaParts = [
+    val(place.subcategory) ?? val(place.attributes.cuisine),
+    priceLabel(val(place.attributes.price_hint)),
+    val(place.attributes.location_context?.neighborhood) ?? val(place.attributes.location_context?.city),
+  ].filter(Boolean) as string[];
+
   return (
-    <article className={cn('overflow-hidden rounded-2xl border border-border bg-card shadow-sm', className)}>
-      {/* Collapsed header — always visible, minimal text row */}
+    <article className={cn('overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm', className)}>
+      {/* ── Collapsed header ─────────────────────────────────────────────── */}
       <button
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 focus:outline-none"
+        className="flex w-full items-start gap-3 px-4 py-4 text-start focus:outline-none"
         onClick={toggle}
         aria-expanded={expanded}
-        aria-label={expanded ? t('collapse') : t('expand')}
       >
-        <div className="flex min-w-0 flex-col gap-0.5 text-start">
-          <h3 className="truncate text-sm font-semibold text-foreground">{place.place_name}</h3>
-          {(place.subcategory ?? place.attributes.cuisine) && (
-            <p className="truncate text-[11px] text-muted-foreground">
-              {[place.subcategory ?? place.attributes.cuisine, place.attributes.price_hint]
-                .filter(Boolean)
-                .join(' · ')}
-            </p>
+        <LetterAvatar name={place.place_name} />
+
+        <div className="flex-1 min-w-0 pt-0.5">
+          {/* Name */}
+          <h3 className="text-base font-bold text-foreground leading-tight">{place.place_name}</h3>
+
+          {/* Badges */}
+          {badge && (
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {badge}
+            </div>
           )}
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {badge}
-          <div className="rounded-full border border-border p-1">
-            {expanded ? (
-              <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
-            ) : (
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+
+          {/* Metadata row + icons */}
+          <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+            {place.place_type && (() => {
+              const Icon = PLACE_TYPE_ICON[place.place_type];
+              return Icon ? <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" /> : null;
+            })()}
+            {metaParts.length > 0 && (
+              <p className="text-sm text-muted-foreground">{metaParts.join(' · ')}</p>
             )}
+            {place.source && (() => {
+              const Icon = SOURCE_ICON[place.source];
+              return Icon ? <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" /> : null;
+            })()}
           </div>
+        </div>
+
+        <div className="shrink-0 pt-1">
+          {expanded
+            ? <ChevronUp className="h-4 w-4 text-muted-foreground/60" />
+            : <ChevronDown className="h-4 w-4 text-muted-foreground/60" />}
         </div>
       </button>
 
-      {/* Expanded body — CSS grid trick: 0fr→1fr is the smoothest height animation */}
+      {/* ── Expanded body ────────────────────────────────────────────────── */}
       <div
         className="grid transition-[grid-template-rows] duration-300 ease-out"
         style={{ gridTemplateRows: expanded ? '1fr' : '0fr' }}
       >
         <div className="overflow-hidden">
-            {/* Photo / avatar — only shown when expanded */}
-            {place.photo_url ? (
-              <div className="relative h-40 w-full overflow-hidden bg-muted/40">
-                {/* Skeleton shown until image loads */}
-                {!imgLoaded && (
-                  <div className="absolute inset-0 animate-pulse bg-muted/60" />
-                )}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={place.photo_url}
-                  alt={place.place_name}
-                  loading="lazy"
-                  decoding="async"
-                  onLoad={handleImgLoad}
-                  className={cn(
-                    'h-40 w-full object-cover transition-opacity duration-300',
-                    imgLoaded ? 'opacity-100' : 'opacity-0',
-                  )}
-                />
-              </div>
-            ) : (
-              <div className="flex h-32 w-full items-center justify-center bg-muted/50">
-                <PlaceAvatar name={place.place_name} size={96} />
+          <div className="flex flex-col gap-3 border-t border-border/30 px-4 py-4">
+
+{/* Tags */}
+            {place.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {place.tags.map((tag) => (
+                  <span key={tag} className="rounded-full bg-accent/60 px-2 py-0.5 text-[11px] font-medium text-accent-foreground">
+                    {tag}
+                  </span>
+                ))}
               </div>
             )}
 
-            <div className="flex flex-col gap-3 p-4">
-              {/* Tags */}
-              {place.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {place.tags.map((tag) => (
-                    <TagPill key={tag} label={tag} />
-                  ))}
-                </div>
-              )}
+            {/* Address */}
+            {val(place.address) && (
+              <p className="text-sm text-muted-foreground">{val(place.address)}</p>
+            )}
 
-              {/* Tier 1 attributes */}
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                {place.attributes.cuisine && (
-                  <p className="text-muted-foreground">
-                    Cuisine{' '}
-                    <span className="font-medium text-foreground">{place.attributes.cuisine}</span>
-                  </p>
-                )}
-                {place.attributes.ambiance && (
-                  <p className="text-muted-foreground">
-                    Vibe{' '}
-                    <span className="font-medium text-foreground">{place.attributes.ambiance}</span>
-                  </p>
+            {/* Phone — always shown if available */}
+            {val(place.phone) && (
+              <a href={`tel:${val(place.phone)}`} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors w-fit">
+                <Phone className="h-3.5 w-3.5" />
+                <span>{val(place.phone)}</span>
+              </a>
+            )}
+
+            {/* Attributes */}
+            {(val(place.attributes.ambiance) || place.attributes.dietary.length > 0 || place.attributes.good_for.length > 0) && (
+              <div className="flex flex-col gap-1 text-sm">
+                {val(place.attributes.ambiance) && (
+                  <p className="text-muted-foreground">Vibe <span className="font-medium text-foreground">{val(place.attributes.ambiance)}</span></p>
                 )}
                 {place.attributes.dietary.length > 0 && (
-                  <p className="col-span-2 text-muted-foreground">
-                    Dietary{' '}
-                    <span className="font-medium text-foreground">
-                      {place.attributes.dietary.join(', ')}
-                    </span>
-                  </p>
+                  <p className="text-muted-foreground">Dietary <span className="font-medium text-foreground">{place.attributes.dietary.join(', ')}</span></p>
                 )}
                 {place.attributes.good_for.length > 0 && (
-                  <p className="col-span-2 text-muted-foreground">
-                    Good for{' '}
-                    <span className="font-medium text-foreground">
-                      {place.attributes.good_for.join(', ')}
-                    </span>
-                  </p>
-                )}
-                {place.attributes.location_context && (
-                  <p className="col-span-2 text-muted-foreground">
-                    {[
-                      place.attributes.location_context.neighborhood,
-                      place.attributes.location_context.city,
-                    ]
-                      .filter(Boolean)
-                      .join(', ')}
-                  </p>
+                  <p className="text-muted-foreground">Good for <span className="font-medium text-foreground">{place.attributes.good_for.join(', ')}</span></p>
                 )}
               </div>
+            )}
 
-              {/* Tier 2 — address */}
-              {showTier2 && place.address && (
-                <p className="text-sm text-muted-foreground">{place.address}</p>
-              )}
-
-              {/* Tier 3 — enrichment */}
-              {showTier3 && (
-                <div className="flex flex-col gap-2 rounded-xl bg-muted/50 p-3">
-                  {place.rating != null && <RatingStars rating={place.rating} />}
-                  {todayHours && (
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Clock className="h-3.5 w-3.5" />
-                      <span>{todayHours}</span>
+            {/* Tier 3 enrichment */}
+            {showTier3 && (
+              <div className="flex flex-col gap-2 rounded-xl bg-muted/40 p-3">
+                {place.rating != null && <RatingStars rating={place.rating} />}
+                {todayHours && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>{todayHours}</span>
+                  </div>
+                )}
+{place.popularity != null && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>Popularity</span>
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div className="h-full rounded-full bg-primary" style={{ width: `${Math.round(place.popularity * 100)}%` }} />
                     </div>
-                  )}
-                  {place.phone && (
-                    <a
-                      href={`tel:${place.phone}`}
-                      className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"
-                    >
-                      <Phone className="h-3.5 w-3.5" />
-                      <span>{place.phone}</span>
-                    </a>
-                  )}
-                  {place.popularity != null && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>Popularity</span>
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-primary"
-                          style={{ width: `${Math.round(place.popularity * 100)}%` }}
-                        />
-                      </div>
-                      <span>{Math.round(place.popularity * 100)}%</span>
-                    </div>
-                  )}
-                </div>
-              )}
+                    <span>{Math.round(place.popularity * 100)}%</span>
+                  </div>
+                )}
+              </div>
+            )}
 
-              {/* Map button + action slot */}
-              {(mapsUrl || action) && (
-                <div className="flex flex-wrap items-center gap-2">
-                  {mapsUrl && (
-                    <a
-                      href={mapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
-                    >
-                      <MapPin className="h-3.5 w-3.5" />
-                      {t('openMap')}
-                    </a>
-                  )}
-                  {action}
-                </div>
-              )}
-            </div>
+            {/* Map + action */}
+            {(mapsUrl || action) && (
+              <div className="flex flex-wrap items-center gap-2">
+                {mapsUrl && (
+                  <a
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+                  >
+                    <MapPin className="h-3.5 w-3.5" />
+                    {t('openMap')}
+                  </a>
+                )}
+                {action}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </article>

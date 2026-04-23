@@ -214,6 +214,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t('auth.emailPlaceholder')}
               className="w-full h-14 rounded-2xl border border-border bg-card px-5 font-body text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+              suppressHydrationWarning
             />
             <button
               suppressHydrationWarning

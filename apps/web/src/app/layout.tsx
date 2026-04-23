@@ -34,7 +34,7 @@ export default function RootLayout({
 }) {
   return (
     <html suppressHydrationWarning className={`${dmSerif.variable} ${dmSans.variable}`}>
-      <body>
+      <body suppressHydrationWarning>
         {children}
       </body>
     </html>

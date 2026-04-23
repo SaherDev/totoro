@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Illustration } from '@/components/illustrations/Illustration';
-import type { RateLimitInfo } from '@/lib/chat-client';
+import type { RateLimitInfo } from '@/store/home-store';
 
 type ErrorCategory = 'offline' | 'timeout' | 'server' | 'rate_limit' | 'generic';
 

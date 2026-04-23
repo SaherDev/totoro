@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useUser, useClerk } from '@clerk/nextjs';
 import { useLocale } from 'next-intl';
 import { cn } from '@totoro/ui';
+import { clearPersistedThread } from '@/store/home-store';
 import {
   Settings,
   MessageSquare,
@@ -46,6 +47,7 @@ export function ProfileMenu() {
   ];
 
   const handleLogout = async () => {
+    clearPersistedThread();
     await signOut({ redirectUrl: `/${locale}/login` });
   };
 

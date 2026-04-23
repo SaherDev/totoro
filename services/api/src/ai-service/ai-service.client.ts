@@ -2,9 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { Readable } from 'stream';
 import {
   ChatRequestDto,
-  ChatResponseDto,
   SignalRequestWithUser,
   SignalResponse,
   UserContextResponse,
@@ -16,8 +16,8 @@ const AI_SERVICE_TIMEOUT_MS = 30000;
 /**
  * HTTP client for communicating with the AI service (totoro-ai)
  *
- * ADR-036: Single chat() method replacing the previous three-method contract.
- * Calls POST /v1/chat with a 30-second timeout.
+ * ADR-036: Single chatStream() method — pipes raw SSE from FastAPI straight through.
+ * No parsing, no transformation. responseType: 'stream' keeps Axios out of the data path.
  * Lets AxiosError propagate raw; AllExceptionsFilter handles translation to HTTP errors.
  *
  * ADR-033: Injected via IAiServiceClient interface, not this class directly
@@ -40,16 +40,17 @@ export class AiServiceClient implements IAiServiceClient {
   }
 
   /**
-   * Forward a user message to the AI service.
-   * Uses 30-second timeout per ADR-036 (unified timeout for all intent types).
-   * Lets AxiosError propagate raw to callers.
+   * Open a raw SSE stream to the AI service at /v1/chat/stream.
+   * Uses responseType: 'stream' so Axios returns the body as a Node.js Readable
+   * without buffering or parsing. Passing signal aborts the upstream connection
+   * when the client disconnects. Lets AxiosError propagate raw to callers.
    */
-  async chat(payload: ChatRequestDto): Promise<ChatResponseDto> {
+  async chatStream(payload: ChatRequestDto, signal?: AbortSignal): Promise<Readable> {
     const response = await firstValueFrom(
-      this.httpService.post<ChatResponseDto>(
-        `${this.baseUrl}/v1/chat`,
+      this.httpService.post<Readable>(
+        `${this.baseUrl}/v1/chat/stream`,
         payload,
-        { timeout: AI_SERVICE_TIMEOUT_MS }
+        { responseType: 'stream', timeout: AI_SERVICE_TIMEOUT_MS, signal }
       )
     );
     return response.data;

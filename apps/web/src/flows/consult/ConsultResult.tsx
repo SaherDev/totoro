@@ -2,22 +2,24 @@
 
 import type { ConsultResponseData } from '@totoro/shared';
 import { useTranslations } from 'next-intl';
+import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { PlaceCard } from '../../components/PlaceCard';
 import { useHomeStore } from '../../store/home-store';
 import { cn } from '@totoro/ui';
 
-function SourceBadge({ source }: { source: 'saved' | 'discovered' }) {
+const SOURCE_BADGE_STYLES: Record<string, { bg: string; dot: string }> = {
+  saved:      { bg: 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300',   dot: 'bg-green-500' },
+  discovered: { bg: 'bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300', dot: 'bg-orange-400' },
+  suggested:  { bg: 'bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-300', dot: 'bg-violet-400' },
+};
+
+function SourceBadge({ source }: { source: string }) {
   const t = useTranslations('consult.result.source');
+  const style = SOURCE_BADGE_STYLES[source] ?? SOURCE_BADGE_STYLES['discovered'];
   return (
-    <span
-      className={cn(
-        'rounded-full px-2 py-0.5 text-[10px] font-semibold',
-        source === 'saved'
-          ? 'bg-accent text-accent-foreground'
-          : 'bg-muted/80 text-muted-foreground',
-      )}
-    >
-      {t(source)}
+    <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold', style.bg)}>
+      <span className={cn('h-1.5 w-1.5 rounded-full', style.dot)} />
+      {t(source as Parameters<typeof t>[0])}
     </span>
   );
 }
@@ -38,15 +40,17 @@ function AcceptRejectActions({ recommendationId, placeId }: AcceptRejectProps) {
     <div className="flex gap-2">
       <button
         onClick={() => void acceptPlace(recommendationId, placeId)}
-        className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+        className="flex items-center justify-center h-8 w-8 rounded-full border border-primary/30 bg-primary/5 text-primary transition-colors hover:bg-primary/15 active:scale-95"
+        aria-label={t('accept')}
       >
-        {t('accept')}
+        <ThumbsUp className="h-3.5 w-3.5" />
       </button>
       <button
         onClick={() => void rejectPlace(recommendationId, placeId)}
-        className="rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/80"
+        className="flex items-center justify-center h-8 w-8 rounded-full border border-border bg-muted text-muted-foreground transition-colors hover:bg-muted/80 active:scale-95"
+        aria-label={t('reject')}
       >
-        {t('reject')}
+        <ThumbsDown className="h-3.5 w-3.5" />
       </button>
     </div>
   );
@@ -54,7 +58,7 @@ function AcceptRejectActions({ recommendationId, placeId }: AcceptRejectProps) {
 
 export function ConsultResult({ result }: { result: ConsultResponseData }) {
   const t = useTranslations('consult.result');
-  const [primary, ...alternatives] = result.results;
+  const [primary, ...alternatives] = result.results ?? [];
 
   return (
     <div className="flex flex-col gap-4">
@@ -84,7 +88,14 @@ export function ConsultResult({ result }: { result: ConsultResponseData }) {
               <PlaceCard
                 key={alt.place.place_id}
                 place={alt.place}
+                defaultExpanded
                 badge={<SourceBadge source={alt.source} />}
+                action={
+                  <AcceptRejectActions
+                    recommendationId={result.recommendation_id}
+                    placeId={alt.place.place_id}
+                  />
+                }
               />
             ))}
           </div>

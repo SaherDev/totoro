@@ -1,8 +1,10 @@
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { of } from 'rxjs';
+import { PassThrough } from 'stream';
 import type { AxiosResponse } from 'axios';
 import {
+  ChatRequestDto,
   SignalRequestWithUser,
   SignalResponse,
   UserContextResponse,
@@ -49,9 +51,52 @@ describe('AiServiceClient', () => {
     });
   });
 
-  describe('chat()', () => {
-    it('should have chat method that accepts ChatRequestDto', () => {
-      expect(typeof client.chat).toBe('function');
+  describe('chatStream()', () => {
+    const payload: ChatRequestDto = {
+      user_id: 'user_abc',
+      message: 'good ramen nearby',
+      location: null,
+      signal_tier: null,
+    };
+
+    it('calls POST /v1/chat/stream with responseType: stream and returns the body stream', async () => {
+      const fakeStream = new PassThrough();
+      const response = { data: fakeStream } as unknown as AxiosResponse;
+      httpService.post.mockReturnValueOnce(of(response));
+
+      const result = await client.chatStream(payload);
+
+      expect(httpService.post).toHaveBeenCalledWith(
+        'http://localhost:8000/v1/chat/stream',
+        payload,
+        { responseType: 'stream', timeout: 30000, signal: undefined }
+      );
+      expect(result).toBe(fakeStream);
+    });
+
+    it('forwards AbortSignal to axios so the upstream connection is cancelled on abort', async () => {
+      const fakeStream = new PassThrough();
+      const response = { data: fakeStream } as unknown as AxiosResponse;
+      httpService.post.mockReturnValueOnce(of(response));
+
+      const controller = new AbortController();
+      await client.chatStream(payload, controller.signal);
+
+      expect(httpService.post).toHaveBeenCalledWith(
+        'http://localhost:8000/v1/chat/stream',
+        payload,
+        { responseType: 'stream', timeout: 30000, signal: controller.signal }
+      );
+    });
+
+    it('propagates upstream errors raw so AllExceptionsFilter can translate them', async () => {
+      const upstream = Object.assign(new Error('upstream 503'), {
+        isAxiosError: true,
+        response: { status: 503 },
+      });
+      httpService.post.mockImplementationOnce(() => { throw upstream; });
+
+      await expect(client.chatStream(payload)).rejects.toBe(upstream);
     });
   });
 

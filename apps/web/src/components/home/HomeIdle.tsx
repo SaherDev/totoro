@@ -12,10 +12,28 @@ interface HomeIdleProps {
   chips?: ChipItem[];
 }
 
+function getSuggestions(chips: ChipItem[] | undefined): string[] {
+  const chipSuggestions = (chips ?? [])
+    .filter((c) => c.status === 'confirmed' && c.query && c.query.trim().length > 0)
+    .sort((a, b) => b.signal_count - a.signal_count)
+    .slice(0, 3)
+    .map((c) => c.query as string);
+
+  if (chipSuggestions.length === 0) return CONSULT_SUGGESTIONS;
+
+  // Pad with hardcoded if fewer than 3 chip suggestions
+  const fallback = CONSULT_SUGGESTIONS.filter((s) => !chipSuggestions.includes(s));
+  return [...chipSuggestions, ...fallback].slice(0, 3);
+}
+
 export function HomeIdle({ onSuggestionClick, firstName, savedCount, chips }: HomeIdleProps) {
   const t = useTranslations('home.idle');
 
-  const visibleChips = chips?.filter((c) => c.status !== 'rejected') ?? [];
+  const visibleChips = (chips ?? [])
+    .filter((c) => c.status === 'confirmed')
+    .sort((a, b) => b.signal_count - a.signal_count)
+    .slice(0, 6);
+  const suggestions = getSuggestions(chips);
 
   return (
     <div className="flex flex-col items-center gap-6 py-8">
@@ -37,21 +55,17 @@ export function HomeIdle({ onSuggestionClick, firstName, savedCount, chips }: Ho
         <Illustration id="idle-welcoming" />
       </div>
 
-      {/* Taste chips — inline below illustration */}
+      {/* Top confirmed chips — display only */}
       {visibleChips.length > 0 && (
         <div className="flex flex-wrap justify-center gap-1.5">
           {visibleChips.map((chip) => (
-            <span
-              key={chip.label}
-              className={
-                chip.status === 'confirmed'
-                  ? 'rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground'
-                  : 'rounded-full border border-border px-3 py-1 text-xs text-foreground'
-              }
-            >
-              {chip.label}
-            </span>
-          ))}
+              <span
+                key={chip.label}
+                className="rounded-full bg-foreground px-3 py-1 text-xs font-medium text-background"
+              >
+                {chip.label}
+              </span>
+            ))}
         </div>
       )}
 
@@ -60,7 +74,7 @@ export function HomeIdle({ onSuggestionClick, firstName, savedCount, chips }: Ho
       </h2>
 
       <div className="flex w-full flex-col gap-2">
-        {CONSULT_SUGGESTIONS.map((suggestion) => (
+        {suggestions.map((suggestion) => (
           <button
             key={suggestion}
             onClick={() => onSuggestionClick(suggestion)}

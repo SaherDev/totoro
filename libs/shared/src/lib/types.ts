@@ -1,4 +1,4 @@
-import type { Location } from '../schemas/location.js';
+import type { Location } from "../schemas/location.js";
 
 /**
  * Chat request DTO — matches POST /v1/chat wire body.
@@ -22,37 +22,34 @@ export interface ChatRequestDto {
   signal_tier?: SignalTier | null;
 }
 
-export type ChatResponseType =
-  | 'consult'
-  | 'recall'
-  | 'extract-place'
-  | 'assistant'
-  | 'clarification'
-  | 'error';
-
-export type ClientIntent = 'consult' | 'recall' | 'save' | 'assistant';
+export type ClientIntent = "consult" | "recall" | "save" | "assistant";
 
 export interface ReasoningStep {
   step: string;
   summary: string;
+  source?: "tool" | "agent" | "fallback";
+  tool_name?: "recall" | "save" | "consult" | null;
+  visibility?: "user" | "debug";
+  duration_ms?: number;
+  timestamp?: string;
 }
 
 // ── Unified place shape (ADR-054) ────────────────────────────────────────────
 
 export type PlaceType =
-  | 'food_and_drink'
-  | 'things_to_do'
-  | 'shopping'
-  | 'services'
-  | 'accommodation';
+  | "food_and_drink"
+  | "things_to_do"
+  | "shopping"
+  | "services"
+  | "accommodation";
 
 export type PlaceSource =
-  | 'tiktok'
-  | 'instagram'
-  | 'youtube'
-  | 'manual'
-  | 'link'
-  | 'consult';
+  | "tiktok"
+  | "instagram"
+  | "youtube"
+  | "manual"
+  | "link"
+  | "consult";
 
 export interface PlaceLocationContext {
   neighborhood: string | null;
@@ -115,7 +112,7 @@ export interface PlaceObject {
 
 // ── Consult (POST /v1/chat, type="consult") ──────────────────────────────────
 
-export type ConsultResultSource = 'saved' | 'discovered';
+export type ConsultResultSource = "saved" | "discovered" | "suggested";
 
 export interface ConsultResult {
   place: PlaceObject;
@@ -131,12 +128,12 @@ export interface ConsultResponseData {
 // ── Recall (POST /v1/chat, type="recall") ────────────────────────────────────
 
 export type RecallMatchReason =
-  | 'filter'
-  | 'semantic'
-  | 'keyword'
-  | 'semantic + keyword';
+  | "filter"
+  | "semantic"
+  | "keyword"
+  | "semantic + keyword";
 
-export type RecallScoreType = 'rrf' | 'ts_rank';
+export type RecallScoreType = "rrf" | "ts_rank";
 
 export interface RecallResult {
   place: PlaceObject;
@@ -154,11 +151,11 @@ export interface RecallResponseData {
 // ── Extract place (POST /v1/chat, type="extract-place") ──────────────────────
 
 export type ExtractPlaceStatus =
-  | 'saved'
-  | 'needs_review'
-  | 'duplicate'
-  | 'pending'
-  | 'failed';
+  | "saved"
+  | "needs_review"
+  | "duplicate"
+  | "pending"
+  | "failed";
 
 export interface ExtractPlaceItem {
   place: PlaceObject | null;
@@ -192,7 +189,7 @@ export interface SaveSheetPlace {
 
 // ── Auth & plan types (016-gateway-rate-limit) ───────────────────────────────
 
-export type PlanTier = 'homebody' | 'explorer' | 'local_legend';
+export type PlanTier = "homebody" | "explorer" | "local_legend";
 
 export interface AuthUser {
   id: string;
@@ -200,53 +197,42 @@ export interface AuthUser {
   plan?: PlanTier;
 }
 
-/**
- * Chat response DTO for unified AI gateway
- * Type discriminates between different response kinds
- */
-export interface ChatResponseDto {
-  type: ChatResponseType;
-  message: string;
-  data: ConsultResponseData | RecallResponseData | ExtractPlaceData | Record<string, unknown> | null;
-  tool_calls_used: number;
-  session_started?: true;
-}
-
 // Signal types
 export type SignalType =
-  | 'recommendation_accepted'
-  | 'recommendation_rejected'
-  | 'chip_confirm';
+  | "recommendation_accepted"
+  | "recommendation_rejected"
+  | "chip_confirm";
 
 // Chip types
-export type ChipStatus = 'pending' | 'confirmed' | 'rejected';
+export type ChipStatus = "pending" | "confirmed" | "rejected";
 
 export interface ChipItem {
   label: string;
   source_field: string;
   source_value: string;
   signal_count: number;
+  query?: string;
   status: ChipStatus;
   selection_round: string | null;
 }
 
 // Signal request variants
 export interface SignalRequestAccepted {
-  signal_type: 'recommendation_accepted';
+  signal_type: "recommendation_accepted";
   recommendation_id: string;
   place_id: string;
   metadata?: Record<string, unknown>;
 }
 
 export interface SignalRequestRejected {
-  signal_type: 'recommendation_rejected';
+  signal_type: "recommendation_rejected";
   recommendation_id: string;
   place_id: string;
   metadata?: Record<string, unknown>;
 }
 
 export interface SignalRequestChipConfirm {
-  signal_type: 'chip_confirm';
+  signal_type: "chip_confirm";
   metadata: {
     chips: ChipItem[];
   };
@@ -264,7 +250,7 @@ export interface SignalResponse {
 }
 
 // User context
-export type SignalTier = 'cold' | 'warming' | 'chip_selection' | 'active';
+export type SignalTier = "cold" | "warming" | "chip_selection" | "active";
 
 export interface UserContextResponse {
   saved_places_count: number;

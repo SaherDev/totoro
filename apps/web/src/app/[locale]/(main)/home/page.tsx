@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useUser } from '@clerk/nextjs';
 import { useTranslations } from 'next-intl';
+import { X } from 'lucide-react';
 import { NavBar, NavBarLogo, NavBarActions } from '@/components/NavBar';
 import { ProfileMenu } from '@/components/profile-menu';
 import { ChatInput } from '@/components/ChatInput';
@@ -24,7 +25,8 @@ import { TASTE_CHIP_BANK } from '@/constants/home-suggestions';
 import { Illustration } from '@/components/illustrations/Illustration';
 import { TotoroCard } from '@totoro/ui';
 import { useHomeStore, type ThreadEntry } from '@/store/home-store';
-import { FLOW_REGISTRY } from '@/flows/registry';
+import { ChatStream } from '@/components/chat/chat-stream';
+import { ReasoningCard } from '@/components/chat/renderers/reasoning-step-renderer';
 
 const LOADING_LINES = [
   'Sniffing out your taste…',
@@ -71,6 +73,21 @@ function TotoroLoadingScreen() {
   );
 }
 
+function ReasoningThreadEntry({ steps }: { steps: import('@totoro/shared').SseReasoningStep[] }) {
+  return <ReasoningCard steps={steps} isStreaming={false} />;
+}
+
+// Strip LLM-generated markdown lists/headings — keep only the intro sentence.
+function extractIntro(message: string): string {
+  const lines = message.split('\n');
+  const intro: string[] = [];
+  for (const line of lines) {
+    if (/^#{1,6}\s|^\d+\.\s|^[-*]\s|^!\[/.test(line)) break;
+    intro.push(line);
+  }
+  return intro.join('\n').trim();
+}
+
 function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
   if (entry.role === 'user') {
     return <UserBubble content={entry.content} />;
@@ -79,9 +96,10 @@ function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
     return <AssistantBubble message={entry.message} type={entry.type} />;
   }
   if (entry.type === 'consult') {
+    const intro = extractIntro(entry.message);
     return (
       <div className="flex flex-col gap-4">
-        <AssistantBubble message={entry.message} type="assistant" />
+        {intro && <AssistantBubble message={intro} type="assistant" />}
         <ConsultResult result={entry.data} />
       </div>
     );
@@ -89,17 +107,21 @@ function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
   if (entry.type === 'save') {
     if (!entry.item.place) return null;
     const badge = entry.item.status === 'duplicate'
-      ? <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-900 dark:bg-amber-950 dark:text-amber-100">Duplicate</span>
-      : <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-950 dark:text-green-300">Saved ✓</span>;
+      ? <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold text-amber-900 dark:bg-amber-950 dark:text-amber-100"><span className="h-1.5 w-1.5 rounded-full bg-amber-400" />Duplicate</span>
+      : <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-950 dark:text-green-300"><span className="h-1.5 w-1.5 rounded-full bg-green-500" />Saved</span>;
     return <PlaceCard place={entry.item.place} badge={badge} />;
   }
   if (entry.type === 'recall') {
+    const intro = extractIntro(entry.message);
     return (
       <div className="flex flex-col gap-3">
-        <AssistantBubble message={entry.message} type="assistant" />
+        {intro && <AssistantBubble message={intro} type="assistant" />}
         <RecallResultBubble message={entry.message} data={entry.data} />
       </div>
     );
+  }
+  if (entry.type === 'reasoning') {
+    return <ReasoningThreadEntry steps={entry.steps} />;
   }
   if (entry.type === 'error') {
     return null;
@@ -107,7 +129,6 @@ function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
   return null;
 }
 
-const RESTING_PHASES = new Set(['idle', 'cold-0', 'cold-1-4', 'taste-profile', 'chip-selection']);
 
 export default function HomePage() {
   const { userId, getToken } = useAuth();
@@ -115,6 +136,7 @@ export default function HomePage() {
   const t = useTranslations();
   const store = useHomeStore();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const stopStreamRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     store.hydrate();
@@ -127,9 +149,7 @@ export default function HomePage() {
     }
   }, [store.thread.length, store.activeFlowId]);
 
-  const placeholderKey = (store.activeFlowId && RESTING_PHASES.has(store.phase))
-    ? FLOW_REGISTRY[store.activeFlowId].inputPlaceholderKey
-    : 'chat.placeholder';
+  const placeholderKey = 'chat.placeholder';
 
   const hasThread = store.thread.length > 0;
 
@@ -148,10 +168,23 @@ export default function HomePage() {
         </NavBarActions>
       </NavBar>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Sticky clear button — sits above the scroll area */}
+        {hasThread && (
+          <div className="absolute top-3 start-1/2 -translate-x-1/2 z-10 w-full max-w-2xl px-4 pointer-events-none">
+            <button
+              onClick={() => { stopStreamRef.current?.(); store.clearThread(); }}
+              className="pointer-events-auto p-1 text-muted-foreground/40 hover:text-foreground transition-colors"
+              aria-label="Clear conversation"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
         {/* Scrollable message area */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-2xl px-4 py-6 flex flex-col gap-4">
+          <div className={`mx-auto w-full max-w-2xl px-4 flex flex-col gap-4 ${hasThread ? 'pt-10 pb-6' : 'py-6'}`}>
 
             {/* Warming nudge */}
             {store.signalTier === 'warming' && (
@@ -217,25 +250,14 @@ export default function HomePage() {
               return <ThreadEntryView key={entry.id} entry={entry} />;
             })}
 
-            {/* Thinking indicator */}
-            {store.phase === 'thinking' && store.activeFlowId !== 'consult' && (
-              <div className="flex items-center gap-2 py-1 text-xs text-muted-foreground">
-                <div className="flex gap-1">
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:0ms]" />
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:150ms]" />
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:300ms]" />
-                </div>
-                <span className="max-w-[220px] truncate text-muted-foreground/70">
-                  {store.activeFlowId === 'save' ? 'Looking up your place…' : 'Working on it…'}
-                </span>
-              </div>
-            )}
-
-            {/* Active flow */}
-            {store.activeFlowId && (() => {
-              const FlowComponent = FLOW_REGISTRY[store.activeFlowId].Component;
-              return <FlowComponent store={store} />;
-            })()}
+            {/* Active SSE stream */}
+            <ChatStream
+              streamingMessage={store.streamingMessage}
+              signalTier={store.signalTier}
+              onComplete={() => store.clearStream()}
+              onStop={() => store.clearStream()}
+              stopRef={stopStreamRef}
+            />
 
           </div>
         </div>
@@ -249,7 +271,9 @@ export default function HomePage() {
             <div className="p-2">
               <ChatInput
                 onSubmit={store.submit}
-                disabled={store.phase === 'thinking' || store.phase === 'chip-selection'}
+                onStop={() => { stopStreamRef.current?.(); store.clearStream(); }}
+                isStreaming={store.streamingMessage !== null}
+                disabled={store.phase === 'chip-selection'}
                 placeholder={t(placeholderKey as Parameters<typeof t>[0])}
               />
             </div>

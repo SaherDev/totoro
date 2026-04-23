@@ -61,8 +61,9 @@
       "divider": "You might also like",
       "communityProof": "{count} people visited this week",
       "source": {
-        "saved": "From your saves",
-        "discovered": "Newly discovered"
+        "saved": "In your saves",
+        "discovered": "Just found",
+        "suggested": "You might like"
       },
       "actions": {
         "directions": "Directions",

@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Paperclip, Plus, Send } from "lucide-react";
+import { Camera, Paperclip, Plus, Send, Square } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@totoro/ui";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@totoro/ui";
 import { useRef, useState, useEffect } from "react";
@@ -10,12 +10,14 @@ import { useTranslations } from "next-intl";
 
 interface ChatInputProps {
   onSubmit: (message: string) => void;
+  onStop?: () => void;
+  isStreaming?: boolean;
   disabled?: boolean;
   placeholder?: string;
   className?: string;
 }
 
-function ChatInput({ onSubmit, disabled, placeholder, className }: ChatInputProps) {
+function ChatInput({ onSubmit, onStop, isStreaming, disabled, placeholder, className }: ChatInputProps) {
   const t = useTranslations("chat");
   const [hasContent, setHasContent] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -114,29 +116,38 @@ function ChatInput({ onSubmit, disabled, placeholder, className }: ChatInputProp
 
           <div className="flex-1" />
 
-          {/* Send */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={handleSubmit}
-                disabled={disabled || !hasContent}
-                className={cn(
-                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition-all duration-200",
-                  hasContent
-                    ? "bg-primary text-primary-foreground shadow-totoro-sm hover:shadow-totoro-md active:scale-95"
-                    : "bg-muted text-muted-foreground",
-                )}
-              >
-                <Send className="h-4 w-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent
-              side="top"
-              className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5"
+          {/* Stop (during streaming) or Send */}
+          {isStreaming ? (
+            <button
+              onClick={onStop}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-foreground text-background shadow-totoro-sm hover:bg-foreground/80 active:scale-95 transition-all duration-200"
             >
-              {t("send")}
-            </TooltipContent>
-          </Tooltip>
+              <Square className="h-4 w-4 fill-current" />
+            </button>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleSubmit}
+                  disabled={disabled || !hasContent}
+                  className={cn(
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition-all duration-200",
+                    hasContent
+                      ? "bg-primary text-primary-foreground shadow-totoro-sm hover:shadow-totoro-md active:scale-95"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  <Send className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                className="rounded-lg bg-foreground text-background font-body text-xs px-3 py-1.5"
+              >
+                {t("send")}
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
       </div>
     </div>
