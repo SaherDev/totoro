@@ -273,7 +273,12 @@ export const useHomeStore = create<HomeState>()(
         : thread;
     } else {
       const userEntry: ThreadEntry = { id: nextId(), role: 'user', content: message };
-      newThread = [...thread, userEntry];
+      // Drop any trailing error entries so "Try again" disappears on new message
+      const trimmed = [...thread];
+      while (trimmed.length > 0 && trimmed[trimmed.length - 1].role === 'assistant' && (trimmed[trimmed.length - 1] as { type: string }).type === 'error') {
+        trimmed.pop();
+      }
+      newThread = [...trimmed, userEntry];
     }
 
     set({
