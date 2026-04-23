@@ -58,7 +58,7 @@ function AcceptRejectActions({ recommendationId, placeId }: AcceptRejectProps) {
 
 export function ConsultResult({ result }: { result: ConsultResponseData }) {
   const t = useTranslations('consult.result');
-  const [primary, ...alternatives] = result.results;
+  const [primary, ...alternatives] = result.results ?? [];
 
   return (
     <div className="flex flex-col gap-4">
