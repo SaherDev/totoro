@@ -38,9 +38,9 @@ function makeRealSignalClient(getToken: () => Promise<string>): SignalClient {
 }
 
 const fixtureSignalClient: SignalClient = {
-  acceptRecommendation: async () => {},
-  rejectRecommendation: async () => {},
-  confirmChips: async () => {},
+  acceptRecommendation: () => Promise.resolve(),
+  rejectRecommendation: () => Promise.resolve(),
+  confirmChips: () => Promise.resolve(),
 };
 
 export function getSignalClient(getToken: () => Promise<string>): SignalClient {

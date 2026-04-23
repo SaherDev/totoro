@@ -55,8 +55,7 @@ export function SaveSheet({ places, onSavePlace, onClose }: SaveSheetProps) {
     cardItems.forEach((item) => onSavePlace(item));
     const savedItems = cardItems.filter((item) => item.place);
     onClose(savedItems);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // intentional: run once on mount
 
   return (
     <div className="flex flex-col gap-3">
