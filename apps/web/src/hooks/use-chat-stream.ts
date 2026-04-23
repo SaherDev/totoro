@@ -62,6 +62,9 @@ export function useChatStream(
       try {
         response = await client.postStream("/api/v1/chat", {
           message,
+          ...(optionsRef.current.signalTier != null
+            ? { signal_tier: optionsRef.current.signalTier }
+            : {}),
         });
       } catch (err) {
         if (cancelled) return;

@@ -1,12 +1,15 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
-// Strip /api/v1 suffix to get the NestJS base URL
 const NESTJS_BASE =
   (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333/api/v1').replace(/\/api\/v1\/?$/, '');
 
 export async function POST(request: NextRequest) {
   const auth = request.headers.get('Authorization') ?? '';
   const body = await request.text();
+
+  // Abort the upstream fetch when the client disconnects
+  const abort = new AbortController();
+  request.signal.addEventListener('abort', () => abort.abort());
 
   let upstream: Response;
   try {
@@ -17,10 +20,14 @@ export async function POST(request: NextRequest) {
         'Authorization': auth,
       },
       body,
+      signal: abort.signal,
       // @ts-expect-error — Node 18 fetch supports duplex for streaming
       duplex: 'half',
     });
   } catch (err) {
+    if ((err as Error)?.name === 'AbortError') {
+      return new NextResponse(null, { status: 499 });
+    }
     return NextResponse.json({ error: String(err) }, { status: 502 });
   }
 
@@ -28,7 +35,6 @@ export async function POST(request: NextRequest) {
     return new NextResponse(await upstream.text(), { status: upstream.status });
   }
 
-  // Stream the SSE body back to the browser without buffering
   return new NextResponse(upstream.body, {
     status: 200,
     headers: {
