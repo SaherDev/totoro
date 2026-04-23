@@ -1,6 +1,6 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { IncomingMessage } from 'http';
-import { Response } from 'express';
+import type { Response } from 'express';
 import {
   IAiServiceClient,
   AI_SERVICE_CLIENT,

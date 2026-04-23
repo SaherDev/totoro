@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Res, Req, UseGuards } from '@nestjs/common';
 import { IncomingMessage } from 'http';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { ChatService } from './chat.service';
 import { ChatRequestBodyDto } from './dto/chat-request.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
