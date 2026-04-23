@@ -18,9 +18,11 @@ function useElapsed() {
 export function ReasoningCard({
   steps,
   isStreaming = false,
+  writingResponse = false,
 }: {
   steps: SseReasoningStep[];
   isStreaming?: boolean;
+  writingResponse?: boolean;
 }) {
   const [expanded, setExpanded] = useState(true);
   const elapsed = useElapsed();
@@ -69,6 +71,11 @@ export function ReasoningCard({
               {step.summary}
             </p>
           ))}
+          {writingResponse && (
+            <p className="text-sm italic leading-relaxed text-foreground/30 animate-pulse">
+              Writing response…
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -79,11 +86,12 @@ export function ReasoningCard({
 interface LiveReasoningProps {
   steps: SseReasoningStep[];
   isStreaming: boolean;
+  writingResponse?: boolean;
 }
 
-export function LiveReasoning({ steps, isStreaming }: LiveReasoningProps) {
+export function LiveReasoning({ steps, isStreaming, writingResponse }: LiveReasoningProps) {
   if (steps.length === 0) return null;
-  return <ReasoningCard steps={steps} isStreaming={isStreaming} />;
+  return <ReasoningCard steps={steps} isStreaming={isStreaming} writingResponse={writingResponse} />;
 }
 
 // Kept for backwards-compat with thread entries that use it directly

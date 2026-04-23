@@ -40,6 +40,7 @@ export function ChatStream({ streamingMessage, signalTier, onComplete, onStop, s
     .filter((s) => s!.visibility !== 'debug')
     .filter((s) => s!.step !== 'agent.tool_decision') as SseReasoningStep[];
 
+  const hasMessage = events.some((e) => e.type === 'message');
   const nonReasoningEvents = events.filter((e) => e.type !== 'reasoning_step');
 
   return (
@@ -52,7 +53,7 @@ export function ChatStream({ streamingMessage, signalTier, onComplete, onStop, s
         </div>
       )}
 
-      <LiveReasoning steps={reasoningSteps} isStreaming={isStreaming} />
+      <LiveReasoning steps={reasoningSteps} isStreaming={isStreaming} writingResponse={isStreaming && !hasMessage} />
 
       {nonReasoningEvents.map((event, i) => (
         <EventRenderer key={i} event={event} />
