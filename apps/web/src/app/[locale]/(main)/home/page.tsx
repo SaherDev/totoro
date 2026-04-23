@@ -77,6 +77,17 @@ function ReasoningThreadEntry({ steps }: { steps: import('@totoro/shared').SseRe
   return <ReasoningCard steps={steps} isStreaming={false} />;
 }
 
+// Strip LLM-generated markdown lists/headings — keep only the intro sentence.
+function extractIntro(message: string): string {
+  const lines = message.split('\n');
+  const intro: string[] = [];
+  for (const line of lines) {
+    if (/^#{1,6}\s|^\d+\.\s|^[-*]\s|^!\[/.test(line)) break;
+    intro.push(line);
+  }
+  return intro.join('\n').trim();
+}
+
 function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
   if (entry.role === 'user') {
     return <UserBubble content={entry.content} />;
@@ -85,9 +96,10 @@ function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
     return <AssistantBubble message={entry.message} type={entry.type} />;
   }
   if (entry.type === 'consult') {
+    const intro = extractIntro(entry.message);
     return (
       <div className="flex flex-col gap-4">
-        <AssistantBubble message={entry.message} type="assistant" />
+        {intro && <AssistantBubble message={intro} type="assistant" />}
         <ConsultResult result={entry.data} />
       </div>
     );
@@ -100,9 +112,10 @@ function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
     return <PlaceCard place={entry.item.place} badge={badge} />;
   }
   if (entry.type === 'recall') {
+    const intro = extractIntro(entry.message);
     return (
       <div className="flex flex-col gap-3">
-        <AssistantBubble message={entry.message} type="assistant" />
+        {intro && <AssistantBubble message={intro} type="assistant" />}
         <RecallResultBubble message={entry.message} data={entry.data} />
       </div>
     );
