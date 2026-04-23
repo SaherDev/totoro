@@ -42,16 +42,10 @@ export class FetchClient implements HttpClient {
   }
 
   async postStream(path: string, body: unknown): Promise<Response> {
-    const res = await this.fetch(path, {
+    return this.fetch(path, {
       method: 'POST',
       body: JSON.stringify(this.attachLocation(body)),
     })
-
-    if (!res.ok) {
-      throw new HttpError(res.status, res.statusText)
-    }
-
-    return res
   }
 
   private attachLocation(body: unknown): Record<string, unknown> {
