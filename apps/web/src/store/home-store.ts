@@ -598,6 +598,7 @@ export const useHomeStore = create<HomeState>()(
           abortController: null,
           clarificationMessage: null,
         });
+        void get().loadUserContext();
       },
 
       // ── setRecallResults ───────────────────────────────────────────────────────
