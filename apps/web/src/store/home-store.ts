@@ -305,8 +305,7 @@ export const useHomeStore = create<HomeState>()(
       .filter((e) => e.type === 'reasoning_step')
       .map((e) => (e.type === 'reasoning_step' ? e.data : null))
       .filter(Boolean)
-      .filter((s) => s!.step !== 'agent.tool_decision')
-      .filter((s) => s!.visibility !== 'debug') as import('@totoro/shared').SseReasoningStep[];
+      as import('@totoro/shared').SseReasoningStep[];
 
     if (reasoningSteps.length > 0) {
       newEntries.push({ id: nextId(), role: 'assistant', type: 'reasoning', steps: reasoningSteps });
