@@ -62,7 +62,7 @@
       "communityProof": "{count} people visited this week",
       "source": {
         "saved": "In your saves",
-        "discovered": "Near you",
+        "discovered": "Just found",
         "suggested": "You might like"
       },
       "actions": {
