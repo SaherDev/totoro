@@ -41,7 +41,7 @@ export function appendSavedPlace(place: SavedPlaceStub): void {
   try {
     const places = getSavedPlaces();
     places.push(place);
-    localStorage.setItem(PLACES_KEY, JSON.stringify(places));
+    localStorage.setItem(PLACES_KEY, JSON.stringify(places.slice(-30)));
   } catch {
     // localStorage unavailable — no-op
   }

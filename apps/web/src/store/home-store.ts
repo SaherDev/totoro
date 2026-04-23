@@ -639,7 +639,7 @@ export const useHomeStore = create<HomeState>()(
     {
       name: THREAD_STORAGE_KEY,
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ thread: state.thread, userId: state.userId }),
+      partialize: (state) => ({ thread: state.thread.slice(-30), userId: state.userId }),
     },
   ),
 );
