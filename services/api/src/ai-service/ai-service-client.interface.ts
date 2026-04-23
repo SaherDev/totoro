@@ -1,6 +1,6 @@
+import { Readable } from 'stream';
 import {
   ChatRequestDto,
-  ChatResponseDto,
   SignalRequestWithUser,
   SignalResponse,
   UserContextResponse,
@@ -17,12 +17,11 @@ import {
  */
 export interface IAiServiceClient {
   /**
-   * Forward a user message to the AI service.
-   * The AI service classifies intent and returns a typed ChatResponseDto.
-   * NestJS returns HTTP 200 for all chat responses — the frontend reads
-   * the `type` field to determine what happened.
+   * Open a raw SSE stream to the AI service for a user message.
+   * NestJS pipes the stream straight through to the client — no parsing,
+   * no transformation. The frontend handles all SSE frame types directly.
    */
-  chat(payload: ChatRequestDto): Promise<ChatResponseDto>;
+  chatStream(payload: ChatRequestDto): Promise<Readable>;
 
   /**
    * Forward a user feedback signal to the AI service.
