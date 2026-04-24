@@ -8,11 +8,19 @@ type AssistantBubbleType = 'clarification' | 'assistant';
 
 interface AssistantBubbleProps {
   message: string;
+  timestamp: number;
   type?: AssistantBubbleType;
   onDismiss?: () => void;
 }
 
-export function AssistantBubble({ message, type = 'assistant', onDismiss }: AssistantBubbleProps) {
+function formatTime(ts: number): string {
+  return new Date(ts).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export function AssistantBubble({ message, timestamp, type = 'assistant', onDismiss }: AssistantBubbleProps) {
   const [visible, setVisible] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -34,10 +42,10 @@ export function AssistantBubble({ message, type = 'assistant', onDismiss }: Assi
 
   return (
     <div
-      className="group flex gap-2 transition-opacity duration-200"
+      className="group flex flex-col items-start gap-1 transition-opacity duration-200"
       style={{ opacity: visible ? 1 : 0 }}
     >
-      <div className={`max-w-[80%] rounded-2xl rounded-bl-sm ${bgColor} px-4 py-3 flex-1`}>
+      <div className={`max-w-[80%] rounded-2xl rounded-bl-sm ${bgColor} px-4 py-3`}>
         <div className={`text-sm ${textColor} leading-relaxed`}>
           <ReactMarkdown
             components={{
@@ -58,18 +66,22 @@ export function AssistantBubble({ message, type = 'assistant', onDismiss }: Assi
           </ReactMarkdown>
         </div>
       </div>
-      <div className="flex flex-col gap-1 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={copy}
-          className="text-muted-foreground hover:text-foreground transition-colors"
+          className="hover:text-foreground transition-colors"
           aria-label="Copy"
         >
           {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
         </button>
+        <time className="text-[11px] tabular-nums" dateTime={new Date(timestamp).toISOString()}>
+          {formatTime(timestamp)}
+        </time>
         {onDismiss && (
           <button
             onClick={onDismiss}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="hover:text-foreground transition-colors"
+            aria-label="Dismiss"
           >
             <X className="h-3.5 w-3.5" />
           </button>

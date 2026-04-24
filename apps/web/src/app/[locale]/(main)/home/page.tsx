@@ -86,18 +86,23 @@ function extractIntro(message: string): string {
   return intro.join('\n').trim();
 }
 
+function timestampFromId(id: string): number {
+  const parsed = Number.parseInt(id.split('-')[1] ?? '', 10);
+  return Number.isFinite(parsed) ? parsed : Date.now();
+}
+
 function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
   if (entry.role === 'user') {
-    return <UserBubble content={entry.content} />;
+    return <UserBubble content={entry.content} timestamp={timestampFromId(entry.id)} />;
   }
   if (entry.type === 'clarification' || entry.type === 'assistant') {
-    return <AssistantBubble message={entry.message} type={entry.type} />;
+    return <AssistantBubble message={entry.message} type={entry.type} timestamp={timestampFromId(entry.id)} />;
   }
   if (entry.type === 'consult') {
     const intro = extractIntro(entry.message);
     return (
       <div className="flex flex-col gap-4">
-        {intro && <AssistantBubble message={intro} type="assistant" />}
+        {intro && <AssistantBubble message={intro} type="assistant" timestamp={timestampFromId(entry.id)} />}
         <ConsultResult result={entry.data} />
       </div>
     );
@@ -113,7 +118,7 @@ function ThreadEntryView({ entry }: { entry: ThreadEntry }) {
     const intro = extractIntro(entry.message);
     return (
       <div className="flex flex-col gap-3">
-        {intro && <AssistantBubble message={intro} type="assistant" />}
+        {intro && <AssistantBubble message={intro} type="assistant" timestamp={timestampFromId(entry.id)} />}
         <RecallResultBubble message={entry.message} data={entry.data} />
       </div>
     );
