@@ -15,3 +15,11 @@ export function setTasteProfileConfirmed(): void {
     // localStorage unavailable — no-op
   }
 }
+
+export function clearTasteProfileConfirmed(): void {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    // localStorage unavailable — no-op
+  }
+}

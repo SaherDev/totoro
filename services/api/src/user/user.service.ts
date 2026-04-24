@@ -6,13 +6,17 @@ import {
 } from '../ai-service/ai-service-client.interface';
 
 @Injectable()
-export class UserContextService {
+export class UserService {
   constructor(
     @Inject(AI_SERVICE_CLIENT) private readonly aiClient: IAiServiceClient
   ) {}
 
-  async get(user: AuthUser): Promise<UserContextResponse> {
+  async getContext(user: AuthUser): Promise<UserContextResponse> {
     const aiContext = await this.aiClient.getUserContext(user.id);
     return { ...aiContext, plan: user.plan ?? null };
+  }
+
+  async deleteData(userId: string): Promise<void> {
+    await this.aiClient.deleteUserData(userId);
   }
 }

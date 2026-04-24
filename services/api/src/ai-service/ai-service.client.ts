@@ -76,4 +76,13 @@ export class AiServiceClient implements IAiServiceClient {
     );
     return response.data;
   }
+
+  async deleteUserData(userId: string): Promise<void> {
+    await firstValueFrom(
+      this.httpService.delete<void>(
+        `${this.baseUrl}/v1/user/${encodeURIComponent(userId)}/data`,
+        { timeout: AI_SERVICE_TIMEOUT_MS }
+      )
+    );
+  }
 }

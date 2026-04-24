@@ -19,7 +19,7 @@ import { DatabaseModule } from '../database/database.module';
 import { ChatModule } from '../chat/chat.module';
 import { RateLimitModule } from '../rate-limit/rate-limit.module';
 import { SignalModule } from '../signal/signal.module';
-import { UserContextModule } from '../user-context/user-context.module';
+import { UserModule } from '../user/user.module';
 
 function loadAppYaml(): Record<string, unknown> {
   const candidates = [
@@ -61,7 +61,7 @@ function loadAppYaml(): Record<string, unknown> {
     ChatModule,
     RateLimitModule,
     SignalModule,
-    UserContextModule,
+    UserModule,
   ],
   controllers: [AppController, ClerkWebhookController],
   providers: [AppService, AiEnabledGuard],

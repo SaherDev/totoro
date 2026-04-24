@@ -108,6 +108,9 @@
     "designSystem": "Design System",
     "settings": "Settings",
     "giveFeedback": "Give feedback",
+    "clearData": "Clear data",
+    "clearDataConfirm": "This permanently deletes your saved places, taste profile, and chat history. This can't be undone.",
+    "clearDataError": "Couldn't clear your data. Please try again.",
     "logOut": "Log out",
     "privacy": "Privacy",
     "terms": "Terms"

@@ -48,6 +48,19 @@ export class FetchClient implements HttpClient {
     })
   }
 
+  async delete(path: string): Promise<void> {
+    const res = await this.fetch(path, { method: 'DELETE' })
+    if (!res.ok) {
+      let body: Record<string, unknown> | undefined
+      try {
+        body = await res.json()
+      } catch {
+        // non-JSON error body — leave body undefined
+      }
+      throw new HttpError(res.status, res.statusText, body)
+    }
+  }
+
   private attachLocation(body: unknown): Record<string, unknown> {
     const base =
       body && typeof body === 'object' && !Array.isArray(body)

@@ -7,11 +7,12 @@ import { useRouter } from 'next/navigation';
 import { useUser, useClerk } from '@clerk/nextjs';
 import { useLocale } from 'next-intl';
 import { cn } from '@totoro/ui';
-import { clearPersistedThread } from '@/store/home-store';
+import { clearPersistedThread, useHomeStore } from '@/store/home-store';
 import {
   Settings,
   MessageSquare,
   LogOut,
+  Trash2,
 } from 'lucide-react';
 import { TotoroAvatar } from './TotoroAvatar';
 import { UserCard } from './user-card';
@@ -23,7 +24,9 @@ export function ProfileMenu() {
   const { user } = useUser();
   const { signOut } = useClerk();
   const locale = useLocale();
+  const clearAllUserData = useHomeStore((s) => s.clearAllUserData);
   const [open, setOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,6 +52,20 @@ export function ProfileMenu() {
   const handleLogout = async () => {
     clearPersistedThread();
     await signOut({ redirectUrl: `/${locale}/login` });
+  };
+
+  const handleClearData = async () => {
+    if (clearing) return;
+    if (!window.confirm(t('clearDataConfirm'))) return;
+    setClearing(true);
+    try {
+      await clearAllUserData();
+      setOpen(false);
+    } catch {
+      window.alert(t('clearDataError'));
+    } finally {
+      setClearing(false);
+    }
   };
 
   const displayName = user?.firstName || user?.username || 'User';
@@ -112,8 +129,16 @@ export function ProfileMenu() {
 
             <div className="h-px bg-border" />
 
-            {/* Logout */}
+            {/* Logout & destructive actions */}
             <div className="py-2 px-2">
+              <button
+                onClick={handleClearData}
+                disabled={clearing}
+                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-foreground font-body text-sm hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Trash2 className="w-4 h-4 text-muted-foreground" />
+                <span className="flex-1 text-start">{t('clearData')}</span>
+              </button>
               <button
                 onClick={() => {
                   handleLogout();

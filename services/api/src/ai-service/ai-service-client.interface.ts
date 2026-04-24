@@ -37,6 +37,13 @@ export interface IAiServiceClient {
    * userId is forwarded as the `?user_id=…` query parameter per the FastAPI contract.
    */
   getUserContext(userId: string): Promise<AiUserContext>;
+
+  /**
+   * Delete all AI-owned data for the user (places, embeddings, taste_model,
+   * recommendations, user_memories, interaction_log). The user account itself
+   * and product-owned data stay intact.
+   */
+  deleteUserData(userId: string): Promise<void>;
 }
 
 /**
