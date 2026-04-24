@@ -1,9 +1,9 @@
 import { Readable } from 'stream';
 import {
+  AiUserContext,
   ChatRequestDto,
   SignalRequestWithUser,
   SignalResponse,
-  UserContextResponse,
 } from '@totoro/shared';
 
 /**
@@ -36,7 +36,7 @@ export interface IAiServiceClient {
    * Fetch the user's taste-context summary from the AI service.
    * userId is forwarded as the `?user_id=…` query parameter per the FastAPI contract.
    */
-  getUserContext(userId: string): Promise<UserContextResponse>;
+  getUserContext(userId: string): Promise<AiUserContext>;
 }
 
 /**

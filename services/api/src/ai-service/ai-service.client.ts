@@ -4,10 +4,10 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { Readable } from 'stream';
 import {
+  AiUserContext,
   ChatRequestDto,
   SignalRequestWithUser,
   SignalResponse,
-  UserContextResponse,
 } from '@totoro/shared';
 import { IAiServiceClient } from './ai-service-client.interface';
 
@@ -67,9 +67,9 @@ export class AiServiceClient implements IAiServiceClient {
     return response.data;
   }
 
-  async getUserContext(userId: string): Promise<UserContextResponse> {
+  async getUserContext(userId: string): Promise<AiUserContext> {
     const response = await firstValueFrom(
-      this.httpService.get<UserContextResponse>(
+      this.httpService.get<AiUserContext>(
         `${this.baseUrl}/v1/user/context`,
         { params: { user_id: userId }, timeout: AI_SERVICE_TIMEOUT_MS }
       )

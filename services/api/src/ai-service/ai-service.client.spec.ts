@@ -7,7 +7,7 @@ import {
   ChatRequestDto,
   SignalRequestWithUser,
   SignalResponse,
-  UserContextResponse,
+  AiUserContext,
 } from '@totoro/shared';
 import { AiServiceClient } from './ai-service.client';
 
@@ -138,7 +138,7 @@ describe('AiServiceClient', () => {
 
   describe('getUserContext()', () => {
     it('forwards to GET /v1/user/context with user_id as a query param', async () => {
-      const body: UserContextResponse = {
+      const body: AiUserContext = {
         saved_places_count: 3,
         signal_tier: 'active',
         chips: [
@@ -152,7 +152,7 @@ describe('AiServiceClient', () => {
           },
         ],
       };
-      const response = { data: body } as AxiosResponse<UserContextResponse>;
+      const response = { data: body } as AxiosResponse<AiUserContext>;
       httpService.get.mockReturnValueOnce(of(response));
 
       const result = await client.getUserContext('user_abc');
@@ -165,12 +165,12 @@ describe('AiServiceClient', () => {
     });
 
     it('passes through a cold-start response unchanged', async () => {
-      const body: UserContextResponse = {
+      const body: AiUserContext = {
         saved_places_count: 0,
         signal_tier: 'cold',
         chips: [],
       };
-      const response = { data: body } as AxiosResponse<UserContextResponse>;
+      const response = { data: body } as AxiosResponse<AiUserContext>;
       httpService.get.mockReturnValueOnce(of(response));
 
       const result = await client.getUserContext('user_new');

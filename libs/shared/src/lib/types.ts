@@ -252,8 +252,12 @@ export interface SignalResponse {
 // User context
 export type SignalTier = "cold" | "warming" | "chip_selection" | "active";
 
-export interface UserContextResponse {
+export interface AiUserContext {
   saved_places_count: number;
   signal_tier: SignalTier;
   chips: ChipItem[];
+}
+
+export interface UserContextResponse extends AiUserContext {
+  plan: PlanTier | null;
 }

@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import type { SignalResponse } from '@totoro/shared';
+import type { AuthUser, SignalResponse } from '@totoro/shared';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { RequiresAi } from '../common/decorators/requires-ai.decorator';
 import { SignalRequestDto } from './dto/signal-request.dto';
@@ -13,9 +13,9 @@ export class SignalController {
   @HttpCode(HttpStatus.ACCEPTED)
   @RequiresAi()
   async submit(
-    @CurrentUser() userId: string,
+    @CurrentUser() user: AuthUser,
     @Body() dto: SignalRequestDto
   ): Promise<SignalResponse> {
-    return this.signalService.submit(userId, dto);
+    return this.signalService.submit(user.id, dto);
   }
 }
