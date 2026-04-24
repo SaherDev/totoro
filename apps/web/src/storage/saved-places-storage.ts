@@ -46,3 +46,12 @@ export function appendSavedPlace(place: SavedPlaceStub): void {
     // localStorage unavailable — no-op
   }
 }
+
+export function clearSavedPlaces(): void {
+  try {
+    localStorage.removeItem(COUNT_KEY);
+    localStorage.removeItem(PLACES_KEY);
+  } catch {
+    // localStorage unavailable — no-op
+  }
+}

@@ -29,6 +29,7 @@ describe('AiServiceClient', () => {
     httpService = {
       post: jest.fn(),
       get: jest.fn(),
+      delete: jest.fn(),
     } as unknown as jest.Mocked<HttpService>;
 
     client = new AiServiceClient(configService, httpService);
@@ -176,6 +177,44 @@ describe('AiServiceClient', () => {
       const result = await client.getUserContext('user_new');
 
       expect(result).toEqual(body);
+    });
+  });
+
+  describe('deleteUserData()', () => {
+    it('forwards to DELETE /v1/user/{user_id}/data with the user_id as a path param', async () => {
+      const response = { data: undefined } as AxiosResponse<void>;
+      (httpService.delete as jest.Mock).mockReturnValueOnce(of(response));
+
+      await client.deleteUserData('user_abc');
+
+      expect(httpService.delete).toHaveBeenCalledWith(
+        'http://localhost:8000/v1/user/user_abc/data',
+        { timeout: 30000 }
+      );
+    });
+
+    it('URL-encodes user ids containing reserved characters', async () => {
+      const response = { data: undefined } as AxiosResponse<void>;
+      (httpService.delete as jest.Mock).mockReturnValueOnce(of(response));
+
+      await client.deleteUserData('user/abc?x');
+
+      expect(httpService.delete).toHaveBeenCalledWith(
+        'http://localhost:8000/v1/user/user%2Fabc%3Fx/data',
+        { timeout: 30000 }
+      );
+    });
+
+    it('propagates upstream errors raw', async () => {
+      const upstream = Object.assign(new Error('upstream 500'), {
+        isAxiosError: true,
+        response: { status: 500 },
+      });
+      (httpService.delete as jest.Mock).mockImplementationOnce(() => {
+        throw upstream;
+      });
+
+      await expect(client.deleteUserData('user_abc')).rejects.toBe(upstream);
     });
   });
 });

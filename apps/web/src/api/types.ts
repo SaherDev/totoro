@@ -10,4 +10,5 @@ export interface HttpClient {
   get<T>(path: string): Promise<T>
   post<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T>
   postStream(path: string, body: unknown): Promise<Response>
+  delete(path: string): Promise<void>
 }

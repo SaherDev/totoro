@@ -2,8 +2,9 @@ import { Capacitor } from "@capacitor/core";
 import { FetchClient } from "../api/transports/fetch.transport";
 import type { UserContextResponse } from "@totoro/shared";
 
-export interface UserContextClient {
+export interface UserClient {
   getUserContext(): Promise<UserContextResponse>;
+  deleteUserData(): Promise<void>;
 }
 
 const FIXTURE_RESPONSE: UserContextResponse = {
@@ -13,9 +14,7 @@ const FIXTURE_RESPONSE: UserContextResponse = {
   plan: null,
 };
 
-function makeRealUserContextClient(
-  getToken: () => Promise<string>,
-): UserContextClient {
+function makeRealUserClient(getToken: () => Promise<string>): UserClient {
   const apiBase = Capacitor.isNativePlatform()
     ? (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/api\/v1\/?$/, "")
     : "";
@@ -23,14 +22,18 @@ function makeRealUserContextClient(
 
   return {
     getUserContext: () => http.get<UserContextResponse>(`/api/v1/user/context`),
+    deleteUserData: () => http.delete(`/api/v1/user/data`),
   };
 }
 
-export function getUserContextClient(
-  getToken: () => Promise<string>,
-): UserContextClient {
+export function getUserClient(getToken: () => Promise<string>): UserClient {
   if (process.env.NEXT_PUBLIC_CHAT_FIXTURES === "true") {
-    return { getUserContext: async () => FIXTURE_RESPONSE };
+    return {
+      getUserContext: async () => FIXTURE_RESPONSE,
+      deleteUserData: async () => {
+        /* fixture no-op */
+      },
+    };
   }
-  return makeRealUserContextClient(getToken);
+  return makeRealUserClient(getToken);
 }

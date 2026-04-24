@@ -14,11 +14,13 @@ import type {
 import type { FlowId, HomePhase } from "../flows/flow-definition";
 import {
   appendSavedPlace,
+  clearSavedPlaces,
   getSavedPlaceCount,
   incrementSavedPlaceCount,
 } from "../storage/saved-places-storage";
 import { createJSONStorage, persist } from "zustand/middleware";
 import {
+  clearTasteProfileConfirmed,
   getTasteProfileConfirmed,
   setTasteProfileConfirmed,
 } from "../storage/taste-profile-storage";
@@ -27,7 +29,7 @@ import { FLOW_BY_CLIENT_INTENT } from "../flows/registry";
 import { classifyIntent } from "../lib/classify-intent";
 import { create } from "zustand";
 import { getSignalClient } from "../lib/signal-client";
-import { getUserContextClient } from "../lib/user-context-client";
+import { getUserClient } from "../lib/user-client";
 import { useChatStreamStore } from "./chat-stream.store";
 
 // ── Thread entry types ─────────────────────────────────────────────────────────
@@ -154,6 +156,7 @@ interface HomeState {
   ) => void;
   clearStream: () => void;
   clearThread: () => void;
+  clearAllUserData: () => Promise<void>;
   confirmTasteProfile: () => void;
   reset: () => void;
 
@@ -286,7 +289,7 @@ export const useHomeStore = create<HomeState>()(
         const isFirstLoad = savedPlacesCountFromContext === null;
         if (isFirstLoad) set({ contextLoading: true });
         try {
-          const client = getUserContextClient(getToken ?? (async () => ""));
+          const client = getUserClient(getToken ?? (async () => ""));
           const ctx = await client.getUserContext();
           const signalTier = ctx.signal_tier;
           const hasPendingChips = ctx.chips.some(c => c.status === "pending");
@@ -314,8 +317,7 @@ export const useHomeStore = create<HomeState>()(
 
       // ── submit ─────────────────────────────────────────────────────────────────
       submit: (message, opts) => {
-        const { thread, signalTier, savedPlaceCount, tasteProfileConfirmed } =
-          get();
+        const { thread } = get();
 
         get().dismissAssistantReply();
         get().abortController?.abort();
@@ -323,32 +325,6 @@ export const useHomeStore = create<HomeState>()(
 
         const intent: ClientIntent =
           opts?.forceIntent ?? classifyIntent(message);
-
-        // Tier guard — block non-save intents when onboarding isn't complete.
-        // chip_selection + tasteProfileConfirmed means the user already decided locally — let them through.
-        const onboardingIncomplete =
-          signalTier === "cold" ||
-          (signalTier === "chip_selection" && !tasteProfileConfirmed);
-        if (onboardingIncomplete && intent !== "save") {
-          const restingPhase = pickRestingPhase(
-            savedPlaceCount,
-            tasteProfileConfirmed,
-            signalTier,
-          );
-          const entry: ThreadEntry = {
-            id: nextId(),
-            role: "assistant",
-            type: "clarification",
-            message:
-              "Let's finish setup first before we explore recommendations.",
-          };
-          set({
-            thread: [...get().thread, entry],
-            phase: restingPhase,
-            activeFlowId: null,
-          });
-          return;
-        }
 
         const preFlow = FLOW_BY_CLIENT_INTENT[intent];
         const initialFlowId: FlowId = preFlow?.id ?? "consult";
@@ -569,6 +545,44 @@ export const useHomeStore = create<HomeState>()(
           abortController: null,
           clarificationMessage: null,
         });
+      },
+
+      // ── clearAllUserData ───────────────────────────────────────────────────────
+      // Wipes every server-side trace (AI-owned tables via DELETE /user/data)
+      // and every client-side trace (persisted thread, saved places, taste
+      // profile confirmation, chat stream buffer). Throws if the API call fails
+      // so the caller can surface an error — local state is not touched until
+      // the server confirms deletion.
+      clearAllUserData: async () => {
+        const { getToken } = get();
+        const client = getUserClient(getToken ?? (async () => ""));
+        await client.deleteUserData();
+
+        get().abortController?.abort();
+        useChatStreamStore.getState().reset();
+        clearPersistedThread();
+        clearSavedPlaces();
+        clearTasteProfileConfirmed();
+
+        set({
+          thread: [],
+          streamingMessage: null,
+          phase: "idle",
+          activeFlowId: null,
+          query: null,
+          result: null,
+          reasoningSteps: [],
+          error: null,
+          abortController: null,
+          clarificationMessage: null,
+          savedPlaceCount: 0,
+          tasteProfileConfirmed: false,
+          signalTier: null,
+          chips: [],
+          savedPlacesCountFromContext: null,
+        });
+
+        void get().loadUserContext();
       },
 
       // ── clearThread ────────────────────────────────────────────────────────────
