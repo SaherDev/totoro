@@ -521,6 +521,38 @@ Note: `selection_round` is always a string in `chip_selection` tier — the serv
 
 ---
 
+## DELETE /v1/user/{user_id}/data
+
+Deletes all AI-owned data for the user. The Clerk identity and product-owned tables (`users`, `user_settings`) are preserved — this is a "forget what you know about me" operation, not an account deletion.
+
+**Request:** No body. `user_id` is a path parameter.
+
+**Response (204):** Empty body.
+
+**Tables wiped (all owned by totoro-ai):**
+
+- `places` (rows where `user_id = :user_id`)
+- `embeddings` (rows belonging to the deleted places)
+- `taste_model` (row where `user_id = :user_id`)
+- `recommendations` (rows where `user_id = :user_id`)
+- `user_memories` (rows where `user_id = :user_id`)
+- `interaction_log` (rows where `user_id = :user_id`)
+
+**HTTP Status Codes:**
+
+| Code  | When                                                          |
+| ----- | ------------------------------------------------------------- |
+| `204` | Deletion completed (including the no-data-to-wipe case)       |
+| `500` | Unhandled internal error                                      |
+
+**Notes:**
+
+- Idempotent — calling this for a user with no data still returns `204`.
+- No Redis cleanup required: the LLM cache is keyed by prompt hash, and session/agent state is short-TTL.
+- Invoked only by the product repo (`DELETE /api/v1/user/data` in NestJS forwards here after Clerk auth). The frontend never calls totoro-ai directly.
+
+---
+
 ## POST /v1/signal
 
 Behavioral signal endpoint (ADR-060, ADR-061). Replaces `POST /v1/feedback`. Discriminated union on `signal_type`.
@@ -639,6 +671,7 @@ Always HTTP 200 — DB outages surface via `db: "disconnected"`, not a non-2xx s
 | POST /v1/chat/stream            | SSE streaming chat                      | Same as POST /v1/chat                                                                                                                                           | reasoning_step frames, message frame, done frame (tool_calls_used)          |
 | GET /v1/extraction/{request_id} | Poll background extraction status       | request_id (path param)                                                                                                                                         | ExtractPlaceResponse (200) or 404                                           |
 | GET /v1/user/context            | User taste context for product UI       | user_id (query param)                                                                                                                                           | saved_places_count, signal_tier, chips (each with status + selection_round) |
+| DELETE /v1/user/{user_id}/data  | Wipe all AI-owned data for the user     | user_id (path param)                                                                                                                                            | — (204 No Content)                                                          |
 | POST /v1/signal                 | Recommendation feedback OR chip_confirm | Discriminated on `signal_type` — recommendation variant (recommendation_id + place_id) OR chip_confirm variant (metadata.chips[] with per-chip selection_round) | status (202)                                                                |
 | GET /v1/health                  | Service health check                    | —                                                                                                                                                               | status, db connectivity                                                     |
 
