@@ -66,7 +66,7 @@ export function AssistantBubble({ message, timestamp, type = 'assistant', onDism
           </ReactMarkdown>
         </div>
       </div>
-      <div className="flex items-center gap-3 ps-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-2 ps-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={copy}
           className="hover:text-foreground transition-colors"
