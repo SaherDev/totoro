@@ -12,8 +12,6 @@ import { HomeIdle } from '@/components/home/HomeIdle';
 import { TasteProfileCelebration } from '@/components/home/TasteProfileCelebration';
 import { ChipSelectionBoard } from '@/components/home/ChipSelectionBoard';
 import { SavedProgressNudge } from '@/components/home/SavedProgressNudge';
-import { ColdStartZero } from '@/flows/cold-start-zero/ColdStartZero';
-import { ColdStartOneFour } from '@/flows/cold-start-1-4/ColdStartOneFour';
 import { UserBubble } from '@/components/home/UserBubble';
 import { AssistantBubble } from '@/components/home/AssistantBubble';
 import { RecallResultBubble } from '@/components/home/RecallResultBubble';
@@ -205,25 +203,17 @@ export default function HomePage() {
 
             {/* Empty state — only when no thread and no active flow */}
             {store.phase !== 'chip-selection' && !hasThread && !store.activeFlowId && (() => {
-              switch (store.phase) {
-                case 'idle':
-                  return (
-                    <HomeIdle
-                      onSuggestionClick={store.submit}
-                      firstName={user?.firstName}
-                      savedCount={store.savedPlacesCountFromContext ?? store.savedPlaceCount}
-                      chips={store.chips.length > 0 ? store.chips : undefined}
-                    />
-                  );
-                case 'taste-profile':
-                  return <TasteProfileCelebration chips={TASTE_CHIP_BANK} onStartExploring={store.confirmTasteProfile} />;
-                case 'cold-0':
-                  return <ColdStartZero onSuggestionClick={store.submit} />;
-                case 'cold-1-4':
-                  return <ColdStartOneFour store={store} />;
-                default:
-                  return null;
+              if (store.phase === 'taste-profile') {
+                return <TasteProfileCelebration chips={TASTE_CHIP_BANK} onStartExploring={store.confirmTasteProfile} />;
               }
+              return (
+                <HomeIdle
+                  onSuggestionClick={store.submit}
+                  firstName={user?.firstName}
+                  savedCount={store.savedPlacesCountFromContext ?? store.savedPlaceCount}
+                  chips={store.chips.length > 0 ? store.chips : undefined}
+                />
+              );
             })()}
 
             {/* Thread */}
