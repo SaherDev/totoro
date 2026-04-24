@@ -54,13 +54,17 @@ export function HomeIdle({ onSuggestionClick, firstName, savedCount, chips }: Ho
         <Illustration id="idle-welcoming" />
       </div>
 
-      {/* Top confirmed chips — display only */}
+      {/* Top non-rejected chips — display only; pending rendered outlined */}
       {visibleChips.length > 0 && (
         <div className="flex flex-wrap justify-center gap-1.5">
           {visibleChips.map((chip) => (
             <span
               key={chip.label}
-              className="rounded-full bg-foreground px-3 py-1 text-xs font-medium text-background"
+              className={
+                chip.status === 'confirmed'
+                  ? 'rounded-full bg-foreground px-3 py-1 text-xs font-medium text-background'
+                  : 'rounded-full border border-border bg-transparent px-3 py-1 text-xs font-medium text-muted-foreground'
+              }
             >
               {chip.label}
             </span>
