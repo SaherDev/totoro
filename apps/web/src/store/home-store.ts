@@ -79,6 +79,7 @@ export type ThreadEntry =
       role: "assistant";
       type: "error";
       category: "offline" | "timeout" | "generic" | "server" | "rate_limit";
+      message?: string;
       rateLimitInfo?: RateLimitInfo;
       flowId?: FlowId;
     };
@@ -432,6 +433,7 @@ export const useHomeStore = create<HomeState>()(
             role: "assistant",
             type: "error",
             category: "server",
+            message: errorEvent.data.detail,
           });
         } else if (isHttpError) {
           if (isRateLimit) {
@@ -453,6 +455,7 @@ export const useHomeStore = create<HomeState>()(
               role: "assistant",
               type: "error",
               category: "server",
+              message: streamError,
             });
           }
         } else {

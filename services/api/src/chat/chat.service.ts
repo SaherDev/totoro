@@ -58,13 +58,12 @@ export class ChatService {
         return;
       }
       this.logger.error('AI service stream error', err);
+      const detail = err instanceof Error && err.message ? err.message : 'AI service error';
       if (!res.headersSent) {
         res.status(503).end();
       } else {
-        // Write a structured SSE error frame so the client can parse the failure
-        // rather than seeing a raw socket ECONNRESET.
         res.write(
-          `event: error\ndata: ${JSON.stringify({ detail: 'AI service error' })}\n\n`,
+          `event: error\ndata: ${JSON.stringify({ detail })}\n\n`,
         );
         res.end();
       }

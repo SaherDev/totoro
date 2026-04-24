@@ -11,6 +11,7 @@ interface SaveErrorProps {
 
 export function SaveError({ error, onTryAgain }: SaveErrorProps) {
   const category: ErrorCategory = error?.category ?? 'generic';
+  const detail = error?.message && error.message !== category ? error.message : null;
 
   return (
     <div className="flex flex-col items-center gap-6 py-8">
@@ -25,6 +26,11 @@ export function SaveError({ error, onTryAgain }: SaveErrorProps) {
         <p className="text-sm text-muted-foreground">
           {category === 'offline' ? 'Check your connection and try again.' : 'Something went wrong. Try again.'}
         </p>
+        {detail && (
+          <p className="text-xs text-muted-foreground/70 font-mono mt-1 break-all">
+            {detail}
+          </p>
+        )}
       </div>
 
       <button
