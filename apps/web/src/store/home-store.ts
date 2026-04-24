@@ -292,16 +292,11 @@ export const useHomeStore = create<HomeState>()(
           const client = getUserClient(getToken ?? (async () => ""));
           const ctx = await client.getUserContext();
           const signalTier = ctx.signal_tier;
-          const hasPendingChips = ctx.chips.some(c => c.status === "pending");
-          // Force chip-selection when server sends new pending chips, even if user confirmed a previous round
-          const phase =
-            signalTier === "chip_selection" && hasPendingChips
-              ? "chip-selection"
-              : pickRestingPhase(
-                  savedPlaceCount,
-                  tasteProfileConfirmed,
-                  signalTier,
-                );
+          const phase = pickRestingPhase(
+            savedPlaceCount,
+            tasteProfileConfirmed,
+            signalTier,
+          );
           set({
             signalTier,
             chips: ctx.chips,
@@ -901,6 +896,17 @@ export const useHomeStore = create<HomeState>()(
         }));
         setTasteProfileConfirmed();
         set({ tasteProfileConfirmed: true });
+
+        // Fire chip_confirm signal — local state already updated, so a failed
+        // network call doesn't block the user from moving on.
+        const { getToken } = get();
+        const client = getSignalClient(getToken ?? (async () => ""));
+        try {
+          await client.confirmChips(decidedChips);
+        } catch (err) {
+          console.warn("[home-store] chip_confirm signal failed", err);
+        }
+
         await get().loadUserContext();
       },
     }),
