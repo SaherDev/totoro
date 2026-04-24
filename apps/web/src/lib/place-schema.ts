@@ -48,7 +48,7 @@ export const PlaceObjectSchema: z.ZodType<PlaceObject> = z.object({
   attributes: PlaceAttributesSchema,
   source_url: z.string().nullable(),
   source: z
-    .enum(['tiktok', 'instagram', 'youtube', 'manual', 'link', 'consult'])
+    .enum(['tiktok', 'instagram', 'youtube', 'google_maps', 'manual'])
     .nullable(),
   provider_id: z.string().nullable(),
   created_at: z.string().nullable(),
