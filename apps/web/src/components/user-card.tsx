@@ -1,12 +1,19 @@
 'use client';
 
 import { useUser } from '@clerk/nextjs';
+import type { PlanTier } from '@totoro/shared';
 import { TotoroAvatar } from './TotoroAvatar';
 import { Button } from '@totoro/ui';
 
 interface UserCardProps {
   onSetupProfile?: () => void;
 }
+
+const PLAN_LABELS: Record<PlanTier, string> = {
+  homebody: 'Homebody',
+  explorer: 'Explorer',
+  local_legend: 'Local Legend',
+};
 
 export function UserCard({ onSetupProfile }: UserCardProps) {
   const { user, isLoaded } = useUser();
@@ -33,6 +40,8 @@ export function UserCard({ onSetupProfile }: UserCardProps) {
   const displayName = user.firstName || user.username || 'User';
   const email = user.primaryEmailAddress?.emailAddress || 'user@example.com';
   const avatarInitial = displayName.charAt(0).toUpperCase();
+  const plan = user.publicMetadata?.plan as PlanTier | undefined;
+  const planLabel = plan ? PLAN_LABELS[plan] : null;
 
   return (
     <div className="px-5 pt-5 pb-4">
@@ -43,7 +52,14 @@ export function UserCard({ onSetupProfile }: UserCardProps) {
           size="lg"
         />
         <div className="flex-1 min-w-0">
-          <p className="font-display text-base text-foreground truncate">{displayName}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-display text-base text-foreground truncate">{displayName}</p>
+            {planLabel && (
+              <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent-foreground">
+                {planLabel}
+              </span>
+            )}
+          </div>
           <p className="font-body text-xs text-muted-foreground truncate">{email}</p>
         </div>
       </div>
