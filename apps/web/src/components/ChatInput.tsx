@@ -70,7 +70,7 @@ function ChatInput({ onSubmit, onStop, isStreaming, disabled, placeholder, class
           disabled={disabled}
           rows={1}
           suppressHydrationWarning
-          className="w-full resize-none bg-transparent px-3 py-2.5 font-body text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none disabled:opacity-50"
+          className="w-full resize-none bg-transparent px-3 py-2.5 font-body text-base text-foreground placeholder:text-muted-foreground/50 focus:outline-none disabled:opacity-50"
         />
 
         <div className="flex items-center gap-2">
