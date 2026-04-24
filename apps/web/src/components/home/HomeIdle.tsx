@@ -29,9 +29,9 @@ export function HomeIdle({ onSuggestionClick, firstName, savedCount, chips }: Ho
   const t = useTranslations('home.idle');
 
   const visibleChips = (chips ?? [])
-    .filter((c) => c.status === 'confirmed')
+    .filter((c) => c.status !== 'rejected')
     .sort((a, b) => b.signal_count - a.signal_count)
-    .slice(0, 6);
+    .slice(0, 8);
   const suggestions = getSuggestions(chips);
 
   return (
