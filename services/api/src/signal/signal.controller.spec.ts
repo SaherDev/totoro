@@ -1,4 +1,4 @@
-import type { SignalResponse } from '@totoro/shared';
+import type { AuthUser, SignalResponse } from '@totoro/shared';
 import { SignalController } from './signal.controller';
 import { SignalRequestDto } from './dto/signal-request.dto';
 import { SignalService } from './signal.service';
@@ -21,8 +21,9 @@ describe('SignalController', () => {
       recommendation_id: 'rec_1',
       place_id: 'google:abc',
     };
+    const user: AuthUser = { id: 'user_clerk_123', ai_enabled: true };
 
-    const result = await controller.submit('user_clerk_123', dto);
+    const result = await controller.submit(user, dto);
 
     expect(service.submit).toHaveBeenCalledTimes(1);
     expect(service.submit).toHaveBeenCalledWith('user_clerk_123', dto);

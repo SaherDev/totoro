@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import type { UserContextResponse } from '@totoro/shared';
+import type { AuthUser, UserContextResponse } from '@totoro/shared';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { RequiresAi } from '../common/decorators/requires-ai.decorator';
 import { UserContextService } from './user-context.service';
@@ -10,7 +10,7 @@ export class UserContextController {
 
   @Get()
   @RequiresAi()
-  async get(@CurrentUser() userId: string): Promise<UserContextResponse> {
-    return this.userContextService.get(userId);
+  async get(@CurrentUser() user: AuthUser): Promise<UserContextResponse> {
+    return this.userContextService.get(user);
   }
 }

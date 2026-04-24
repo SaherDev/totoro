@@ -4,7 +4,7 @@
 
 ## Project Context
 
-Totoro is an AI-native place decision engine. The AI IS the product — NestJS is supporting infrastructure. Users share places over time (free-text, URLs, descriptions), the system builds a taste model, and returns one confident recommendation from natural language intent. This is the **product repo**: an Nx monorepo with a Next.js frontend (`apps/web`), NestJS backend (`services/api`), and shared TypeScript types (`libs/shared`). NestJS is a **thin gateway** — it authenticates, forwards AI requests, stores recommendation history, and serves user CRUD. All AI logic lives in a separate Python repo (`totoro-ai`, FastAPI) that acts as the **autonomous AI brain**. See @docs/architecture.md for the full design and @docs/api-contract.md for the HTTP contract.
+Totoro is an AI-native place decision engine. The AI IS the product — NestJS is supporting infrastructure. Users share places over time (free-text, URLs, descriptions), the system builds a taste model, and returns one confident recommendation from natural language intent. This is the **product repo**: an Nx monorepo with a Next.js frontend (`apps/web`), NestJS backend (`services/api`), and shared TypeScript types (`libs/shared`). NestJS is a **thin gateway** — it authenticates, forwards AI requests, stores recommendation history, and serves user CRUD. All AI logic lives in a separate Python repo (`totoro-ai`, FastAPI) that acts as the **autonomous AI brain**. See @docs/architecture.md for the full design and `docs/api-contract.md` for the HTTP contract.
 
 ## Key Directories
 

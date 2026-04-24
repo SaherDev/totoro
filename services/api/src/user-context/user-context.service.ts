@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { UserContextResponse } from '@totoro/shared';
+import type { AuthUser, UserContextResponse } from '@totoro/shared';
 import {
   AI_SERVICE_CLIENT,
   IAiServiceClient,
@@ -11,7 +11,8 @@ export class UserContextService {
     @Inject(AI_SERVICE_CLIENT) private readonly aiClient: IAiServiceClient
   ) {}
 
-  async get(userId: string): Promise<UserContextResponse> {
-    return this.aiClient.getUserContext(userId);
+  async get(user: AuthUser): Promise<UserContextResponse> {
+    const aiContext = await this.aiClient.getUserContext(user.id);
+    return { ...aiContext, plan: user.plan ?? null };
   }
 }

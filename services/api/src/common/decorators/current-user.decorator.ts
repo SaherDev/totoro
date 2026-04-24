@@ -1,18 +1,17 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import type { AuthUser } from '@totoro/shared';
 
 /**
- * Decorator to inject the current authenticated user's ID
- * Extracts req.user.id from the Clerk auth middleware
+ * Decorator to inject the current authenticated user
+ * Extracts req.user (populated by ClerkMiddleware) — id, ai_enabled, plan.
  *
  * Usage:
  * @Post()
- * async create(@CurrentUser() userId: string, @Body() dto: CreateDto) {
- *   // userId is the authenticated user's ID from Clerk
- * }
+ * async create(@CurrentUser() { id }: AuthUser, @Body() dto: CreateDto) {}
  */
 export const CurrentUser = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext) => {
+  (_data: unknown, ctx: ExecutionContext): AuthUser | undefined => {
     const request = ctx.switchToHttp().getRequest();
-    return request.user?.id;
+    return request.user as AuthUser | undefined;
   }
 );

@@ -220,11 +220,12 @@ export default function HomePage() {
             {store.thread.map((entry) => {
               if (entry.role === 'assistant' && entry.type === 'error') {
                 const retry = () => store.submit(store.query ?? '', { isRetry: true });
+                const message = 'message' in entry && entry.message ? entry.message : entry.category;
                 if (entry.flowId === 'save') {
                   return (
                     <SaveError
                       key={entry.id}
-                      error={{ message: entry.category, category: entry.category as 'offline' | 'timeout' | 'server' | 'generic' }}
+                      error={{ message, category: entry.category as 'offline' | 'timeout' | 'server' | 'generic' }}
                       onTryAgain={retry}
                     />
                   );
@@ -232,7 +233,7 @@ export default function HomePage() {
                 return (
                   <ConsultError
                     key={entry.id}
-                    error={{ message: entry.category, category: entry.category, ...('rateLimitInfo' in entry && entry.rateLimitInfo ? { rateLimitInfo: entry.rateLimitInfo } : {}) }}
+                    error={{ message, category: entry.category, ...('rateLimitInfo' in entry && entry.rateLimitInfo ? { rateLimitInfo: entry.rateLimitInfo } : {}) }}
                     onTryAgain={retry}
                   />
                 );

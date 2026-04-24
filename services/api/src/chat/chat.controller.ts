@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Res, Req, UseGuards } from '@nestjs/common';
 import { IncomingMessage } from 'http';
 import type { Response } from 'express';
+import type { AuthUser } from '@totoro/shared';
 import { ChatService } from './chat.service';
 import { ChatRequestBodyDto } from './dto/chat-request.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -24,11 +25,11 @@ export class ChatController {
   @RequiresAi()
   @UseGuards(RateLimitGuard)
   async chat(
-    @CurrentUser() userId: string,
+    @CurrentUser() user: AuthUser,
     @Body() dto: ChatRequestBodyDto,
     @Req() req: IncomingMessage,
     @Res() res: Response,
   ): Promise<void> {
-    await this.chatService.pipeStream(userId, dto, req, res);
+    await this.chatService.pipeStream(user.id, dto, req, res);
   }
 }

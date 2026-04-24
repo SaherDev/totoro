@@ -19,6 +19,8 @@ export function ConsultError({ error, onTryAgain }: ConsultErrorProps) {
     ? t(`rate_limit.${error.rateLimitInfo.limit}` as Parameters<typeof t>[0], { limit_value: error.rateLimitInfo.limit_value })
     : t(`${category}.body` as Parameters<typeof t>[0]);
 
+  const detail = error?.message && error.message !== category ? error.message : null;
+
   return (
     <div className="flex flex-col items-center gap-6 py-8">
       <div className="h-32 w-32">
@@ -32,6 +34,11 @@ export function ConsultError({ error, onTryAgain }: ConsultErrorProps) {
         <p className="text-sm text-muted-foreground">
           {body}
         </p>
+        {detail && (
+          <p className="text-xs text-muted-foreground/70 font-mono mt-1 break-all">
+            {detail}
+          </p>
+        )}
       </div>
 
       <button

@@ -1,4 +1,4 @@
-import type { UserContextResponse } from '@totoro/shared';
+import type { AuthUser, UserContextResponse } from '@totoro/shared';
 import { UserContextController } from './user-context.controller';
 import { UserContextService } from './user-context.service';
 
@@ -11,18 +11,20 @@ describe('UserContextController', () => {
     controller = new UserContextController(service);
   });
 
-  it('is a facade — one service call with the authed userId, return value forwarded', async () => {
+  it('is a facade — one service call with the authed user, return value forwarded', async () => {
     const body: UserContextResponse = {
       saved_places_count: 0,
       signal_tier: 'cold',
       chips: [],
+      plan: 'homebody',
     };
     service.get.mockResolvedValueOnce(body);
+    const user: AuthUser = { id: 'user_clerk_123', ai_enabled: true, plan: 'homebody' };
 
-    const result = await controller.get('user_clerk_123');
+    const result = await controller.get(user);
 
     expect(service.get).toHaveBeenCalledTimes(1);
-    expect(service.get).toHaveBeenCalledWith('user_clerk_123');
+    expect(service.get).toHaveBeenCalledWith(user);
     expect(result).toEqual(body);
   });
 });
