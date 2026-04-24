@@ -872,7 +872,6 @@ export const useHomeStore = create<HomeState>()(
 
       // ── confirmChips ──────────────────────────────────────────────────────────
       confirmChips: async decidedChips => {
-        const { getToken } = get();
         // Optimistic update
         set(s => ({
           chips: s.chips.map(c => {
@@ -883,11 +882,8 @@ export const useHomeStore = create<HomeState>()(
             return decided ?? c;
           }),
         }));
-        // Persist locally so chip-selection is never shown again after submission
         setTasteProfileConfirmed();
         set({ tasteProfileConfirmed: true });
-        const client = getSignalClient(getToken ?? (async () => ""));
-        await client.confirmChips(decidedChips);
         await get().loadUserContext();
       },
     }),
