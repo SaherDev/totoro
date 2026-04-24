@@ -48,8 +48,7 @@ export type PlaceSource =
   | "instagram"
   | "youtube"
   | "manual"
-  | "link"
-  | "consult";
+  | "link";
 
 export interface PlaceLocationContext {
   neighborhood: string | null;
