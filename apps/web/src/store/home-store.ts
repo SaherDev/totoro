@@ -187,20 +187,12 @@ function pickRestingPhase(
   tasteProfileConfirmed: boolean,
   signalTier: SignalTier | null,
 ): HomePhase {
-  if (signalTier === "cold") return "cold-0";
-  // Skip chip-selection if user already confirmed chips locally — server may lag
+  // Chip-selection is the only gated phase — skip if already confirmed locally
   if (signalTier === "chip_selection" && !tasteProfileConfirmed)
     return "chip-selection";
-  if (
-    signalTier === "warming" ||
-    signalTier === "active" ||
-    (signalTier === "chip_selection" && tasteProfileConfirmed)
-  )
-    return "idle";
-  // null fallback — count-based
-  if (savedPlaceCount === 0) return "cold-0";
-  if (savedPlaceCount < 5) return "cold-1-4";
-  if (!tasteProfileConfirmed) return "taste-profile";
+  // Taste-profile celebration shown once after reaching threshold (count-based fallback only)
+  if (signalTier === null && savedPlaceCount >= 5 && !tasteProfileConfirmed)
+    return "taste-profile";
   return "idle";
 }
 
@@ -880,7 +872,6 @@ export const useHomeStore = create<HomeState>()(
 
       // ── confirmChips ──────────────────────────────────────────────────────────
       confirmChips: async decidedChips => {
-        const { getToken } = get();
         // Optimistic update
         set(s => ({
           chips: s.chips.map(c => {
@@ -891,11 +882,8 @@ export const useHomeStore = create<HomeState>()(
             return decided ?? c;
           }),
         }));
-        // Persist locally so chip-selection is never shown again after submission
         setTasteProfileConfirmed();
         set({ tasteProfileConfirmed: true });
-        const client = getSignalClient(getToken ?? (async () => ""));
-        await client.confirmChips(decidedChips);
         await get().loadUserContext();
       },
     }),

@@ -25,6 +25,8 @@ export const metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  // Resize layout viewport when virtual keyboard opens so content isn't hidden
+  interactiveWidget: 'resizes-content',
 };
 
 export default function RootLayout({
