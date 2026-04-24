@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { Check, X } from 'lucide-react';
 import type { ChipItem, ChipStatus } from '@totoro/shared';
 import { Illustration } from '@/components/illustrations/Illustration';
@@ -57,6 +58,7 @@ function Chip({ chip, status, onConfirm, onReject }: {
 }
 
 export function ChipSelectionBoard({ chips, onConfirm, onSkip }: ChipSelectionBoardProps) {
+  const t = useTranslations('chipSelection');
   const currentRound = useMemo(
     () => chips.find((c) => c.status === 'pending')?.selection_round ?? null,
     [chips],
@@ -106,7 +108,7 @@ export function ChipSelectionBoard({ chips, onConfirm, onSkip }: ChipSelectionBo
         onClick={handleConfirm}
         className="w-full max-w-xs rounded-full bg-primary py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
       >
-        Start exploring
+        {t('done')}
       </button>
     </div>
   );
