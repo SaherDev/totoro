@@ -14,14 +14,13 @@ interface HomeIdleProps {
 
 function getSuggestions(chips: ChipItem[] | undefined): string[] {
   const chipSuggestions = (chips ?? [])
-    .filter((c) => c.status === 'confirmed' && c.query && c.query.trim().length > 0)
+    .filter((c) => c.query && c.query.trim().length > 0)
     .sort((a, b) => b.signal_count - a.signal_count)
     .slice(0, 3)
     .map((c) => c.query as string);
 
   if (chipSuggestions.length === 0) return CONSULT_SUGGESTIONS;
 
-  // Pad with hardcoded if fewer than 2 chip suggestions
   const fallback = CONSULT_SUGGESTIONS.filter((s) => !chipSuggestions.includes(s));
   return [...chipSuggestions, ...fallback].slice(0, 2);
 }
@@ -59,13 +58,13 @@ export function HomeIdle({ onSuggestionClick, firstName, savedCount, chips }: Ho
       {visibleChips.length > 0 && (
         <div className="flex flex-wrap justify-center gap-1.5">
           {visibleChips.map((chip) => (
-              <span
-                key={chip.label}
-                className="rounded-full bg-foreground px-3 py-1 text-xs font-medium text-background"
-              >
-                {chip.label}
-              </span>
-            ))}
+            <span
+              key={chip.label}
+              className="rounded-full bg-foreground px-3 py-1 text-xs font-medium text-background"
+            >
+              {chip.label}
+            </span>
+          ))}
         </div>
       )}
 

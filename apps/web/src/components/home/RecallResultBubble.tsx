@@ -26,7 +26,8 @@ export function RecallResultBubble({ message, data }: RecallResultBubbleProps) {
     return () => clearTimeout(timer);
   }, []);
 
-  const hasMore = data.total_count > data.results.length;
+  const results = data.results ?? [];
+  const hasMore = data.total_count > results.length;
 
   return (
     <div
@@ -34,7 +35,7 @@ export function RecallResultBubble({ message, data }: RecallResultBubbleProps) {
       style={{ opacity: visible ? 1 : 0 }}
     >
       <div className="flex flex-col gap-3">
-        {data.results.map((item, i) => (
+        {results.map((item, i) => (
           <motion.div
             key={item.place.place_id}
             initial={{ opacity: 0, y: 10 }}
@@ -51,7 +52,7 @@ export function RecallResultBubble({ message, data }: RecallResultBubbleProps) {
 
       {hasMore && (
         <p className="text-center text-xs text-muted-foreground/60">
-          Showing {data.results.length} of {data.total_count} saved places
+          Showing {results.length} of {data.total_count} saved places
         </p>
       )}
     </div>
