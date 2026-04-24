@@ -21,9 +21,9 @@ function getSuggestions(chips: ChipItem[] | undefined): string[] {
 
   if (chipSuggestions.length === 0) return CONSULT_SUGGESTIONS;
 
-  // Pad with hardcoded if fewer than 3 chip suggestions
+  // Pad with hardcoded if fewer than 2 chip suggestions
   const fallback = CONSULT_SUGGESTIONS.filter((s) => !chipSuggestions.includes(s));
-  return [...chipSuggestions, ...fallback].slice(0, 3);
+  return [...chipSuggestions, ...fallback].slice(0, 2);
 }
 
 export function HomeIdle({ onSuggestionClick, firstName, savedCount, chips }: HomeIdleProps) {
