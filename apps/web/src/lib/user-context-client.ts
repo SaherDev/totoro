@@ -10,6 +10,7 @@ const FIXTURE_RESPONSE: UserContextResponse = {
   saved_places_count: 0,
   signal_tier: "active",
   chips: [],
+  plan: null,
 };
 
 function makeRealUserContextClient(
