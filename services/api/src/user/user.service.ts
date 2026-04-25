@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { AuthUser, UserContextResponse } from '@totoro/shared';
+import type { AuthUser, DataScope, UserContextResponse } from '@totoro/shared';
 import {
   AI_SERVICE_CLIENT,
   IAiServiceClient,
@@ -16,7 +16,7 @@ export class UserService {
     return { ...aiContext, plan: user.plan ?? null };
   }
 
-  async deleteData(userId: string): Promise<void> {
-    await this.aiClient.deleteUserData(userId);
+  async deleteData(userId: string, scopes?: DataScope[]): Promise<void> {
+    await this.aiClient.deleteUserData(userId, scopes);
   }
 }

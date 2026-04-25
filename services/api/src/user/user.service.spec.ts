@@ -57,13 +57,21 @@ describe('UserService', () => {
   });
 
   describe('deleteData', () => {
-    it('forwards the user id to the AI client', async () => {
+    it('forwards the user id to the AI client with no scopes by default', async () => {
       aiClient.deleteUserData.mockResolvedValueOnce(undefined);
 
       await service.deleteData('user_clerk_123');
 
       expect(aiClient.deleteUserData).toHaveBeenCalledTimes(1);
-      expect(aiClient.deleteUserData).toHaveBeenCalledWith('user_clerk_123');
+      expect(aiClient.deleteUserData).toHaveBeenCalledWith('user_clerk_123', undefined);
+    });
+
+    it('forwards scopes when provided', async () => {
+      aiClient.deleteUserData.mockResolvedValueOnce(undefined);
+
+      await service.deleteData('user_clerk_123', ['chat_history']);
+
+      expect(aiClient.deleteUserData).toHaveBeenCalledWith('user_clerk_123', ['chat_history']);
     });
 
     it('propagates upstream errors to the caller', async () => {
