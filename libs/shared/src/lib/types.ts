@@ -260,3 +260,8 @@ export interface AiUserContext {
 export interface UserContextResponse extends AiUserContext {
   plan: PlanTier | null;
 }
+
+// User data deletion scope (DELETE /v1/user/{user_id}/data?scope=...)
+export type DataScope = "all" | "chat_history";
+
+export const DATA_SCOPES: readonly DataScope[] = ["all", "chat_history"] as const;

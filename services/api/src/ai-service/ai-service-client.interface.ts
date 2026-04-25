@@ -2,6 +2,7 @@ import { Readable } from 'stream';
 import {
   AiUserContext,
   ChatRequestDto,
+  DataScope,
   SignalRequestWithUser,
   SignalResponse,
 } from '@totoro/shared';
@@ -39,11 +40,14 @@ export interface IAiServiceClient {
   getUserContext(userId: string): Promise<AiUserContext>;
 
   /**
-   * Delete all AI-owned data for the user (places, embeddings, taste_model,
-   * recommendations, user_memories, interaction_log). The user account itself
-   * and product-owned data stay intact.
+   * Delete AI-owned data for the user. With no `scopes` (or `["all"]`), wipes
+   * places, embeddings, taste_model, recommendations, user_memories,
+   * interactions, the LangGraph chat thread, and any pending taste-regen task.
+   * `scopes=["chat_history"]` clears only the LangGraph thread and the
+   * pending taste-regen task; SQL data is preserved. Scopes are forwarded as
+   * repeated `?scope=` query params per the AI contract.
    */
-  deleteUserData(userId: string): Promise<void>;
+  deleteUserData(userId: string, scopes?: DataScope[]): Promise<void>;
 }
 
 /**

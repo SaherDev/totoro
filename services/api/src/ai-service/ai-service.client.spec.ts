@@ -205,6 +205,49 @@ describe('AiServiceClient', () => {
       );
     });
 
+    it('omits the query string when scopes is undefined or empty', async () => {
+      const response = { data: undefined } as AxiosResponse<void>;
+      (httpService.delete as jest.Mock).mockReturnValue(of(response));
+
+      await client.deleteUserData('user_abc', undefined);
+      await client.deleteUserData('user_abc', []);
+
+      expect(httpService.delete).toHaveBeenNthCalledWith(
+        1,
+        'http://localhost:8000/v1/user/user_abc/data',
+        { timeout: 30000 }
+      );
+      expect(httpService.delete).toHaveBeenNthCalledWith(
+        2,
+        'http://localhost:8000/v1/user/user_abc/data',
+        { timeout: 30000 }
+      );
+    });
+
+    it('serializes a single scope as ?scope=value', async () => {
+      const response = { data: undefined } as AxiosResponse<void>;
+      (httpService.delete as jest.Mock).mockReturnValueOnce(of(response));
+
+      await client.deleteUserData('user_abc', ['chat_history']);
+
+      expect(httpService.delete).toHaveBeenCalledWith(
+        'http://localhost:8000/v1/user/user_abc/data?scope=chat_history',
+        { timeout: 30000 }
+      );
+    });
+
+    it('serializes multiple scopes as repeated ?scope= params', async () => {
+      const response = { data: undefined } as AxiosResponse<void>;
+      (httpService.delete as jest.Mock).mockReturnValueOnce(of(response));
+
+      await client.deleteUserData('user_abc', ['chat_history', 'all']);
+
+      expect(httpService.delete).toHaveBeenCalledWith(
+        'http://localhost:8000/v1/user/user_abc/data?scope=chat_history&scope=all',
+        { timeout: 30000 }
+      );
+    });
+
     it('propagates upstream errors raw', async () => {
       const upstream = Object.assign(new Error('upstream 500'), {
         isAxiosError: true,

@@ -6,6 +6,7 @@ import { Readable } from 'stream';
 import {
   AiUserContext,
   ChatRequestDto,
+  DataScope,
   SignalRequestWithUser,
   SignalResponse,
 } from '@totoro/shared';
@@ -77,12 +78,15 @@ export class AiServiceClient implements IAiServiceClient {
     return response.data;
   }
 
-  async deleteUserData(userId: string): Promise<void> {
+  async deleteUserData(userId: string, scopes?: DataScope[]): Promise<void> {
+    let url = `${this.baseUrl}/v1/user/${encodeURIComponent(userId)}/data`;
+    if (scopes && scopes.length > 0) {
+      const qs = new URLSearchParams();
+      for (const scope of scopes) qs.append('scope', scope);
+      url += `?${qs.toString()}`;
+    }
     await firstValueFrom(
-      this.httpService.delete<void>(
-        `${this.baseUrl}/v1/user/${encodeURIComponent(userId)}/data`,
-        { timeout: AI_SERVICE_TIMEOUT_MS }
-      )
+      this.httpService.delete<void>(url, { timeout: AI_SERVICE_TIMEOUT_MS })
     );
   }
 }
