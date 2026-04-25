@@ -523,33 +523,33 @@ Note: `selection_round` is always a string in `chip_selection` tier — the serv
 
 ## DELETE /v1/user/{user_id}/data
 
-Deletes all AI-owned data for the user. The Clerk identity and product-owned tables (`users`, `user_settings`) are preserved — this is a "forget what you know about me" operation, not an account deletion.
+Hard-deletes every trace of a user's **AI-owned data**. Does NOT delete the user account — that lives in NestJS/Clerk. Called by the product repo as part of its account-deletion flow: NestJS deletes its own `users` / `user_settings` rows and calls this endpoint to wipe the AI side.
 
-**Request:** No body. `user_id` is a path parameter.
+**Request:**
+
+```
+DELETE /v1/user/user_abc/data
+```
 
 **Response (204):** Empty body.
 
-**Tables wiped (all owned by totoro-ai):**
+**What gets deleted (in one DB transaction, then the checkpointer, then the in-memory debouncer):**
 
-- `places` (rows where `user_id = :user_id`)
-- `embeddings` (rows belonging to the deleted places)
-- `taste_model` (row where `user_id = :user_id`)
-- `recommendations` (rows where `user_id = :user_id`)
-- `user_memories` (rows where `user_id = :user_id`)
-- `interaction_log` (rows where `user_id = :user_id`)
-
-**HTTP Status Codes:**
-
-| Code  | When                                                          |
-| ----- | ------------------------------------------------------------- |
-| `204` | Deletion completed (including the no-data-to-wipe case)       |
-| `500` | Unhandled internal error                                      |
+1. `interactions` rows where `user_id = ?`
+2. `recommendations` rows where `user_id = ?`
+3. `user_memories` rows where `user_id = ?`
+4. `taste_model` row for `user_id = ?` (one per user)
+5. `places` rows where `user_id = ?` — `embeddings` cascade automatically via FK `ON DELETE CASCADE`
+6. LangGraph checkpoint thread for `thread_id = user_id` (= the agent conversation history across all turns)
+7. Any pending taste-regen task for the user in the in-memory debouncer
 
 **Notes:**
 
-- Idempotent — calling this for a user with no data still returns `204`.
-- No Redis cleanup required: the LLM cache is keyed by prompt hash, and session/agent state is short-TTL.
-- Invoked only by the product repo (`DELETE /api/v1/user/data` in NestJS forwards here after Clerk auth). The frontend never calls totoro-ai directly.
+- **Idempotent.** Calling on an absent user is still 204. The SQL deletes return 0 rows; `adelete_thread` is a no-op when the thread isn't there.
+- **Synchronous.** The endpoint blocks until the sweep completes. At portfolio volume the sweep is well under 1s. If a single user ever accumulates thousands of places this can move to a background task with a 202 response — see plan.
+- **Hard-delete only.** No soft-delete column, no grace window, no purge cron. This is a deliberate v1 simplification — soft-delete on `places` can be added later if a real GDPR / "oops recovery" requirement appears.
+- **No Redis cleanup.** All Redis keys in this repo are `place_id` or `request_id` scoped (see ADR-054); none are per-user.
+- **Caller trust.** No new auth — this matches every other route's "NestJS verified upstream" model.
 
 ---
 
@@ -671,8 +671,8 @@ Always HTTP 200 — DB outages surface via `db: "disconnected"`, not a non-2xx s
 | POST /v1/chat/stream            | SSE streaming chat                      | Same as POST /v1/chat                                                                                                                                           | reasoning_step frames, message frame, done frame (tool_calls_used)          |
 | GET /v1/extraction/{request_id} | Poll background extraction status       | request_id (path param)                                                                                                                                         | ExtractPlaceResponse (200) or 404                                           |
 | GET /v1/user/context            | User taste context for product UI       | user_id (query param)                                                                                                                                           | saved_places_count, signal_tier, chips (each with status + selection_round) |
-| DELETE /v1/user/{user_id}/data  | Wipe all AI-owned data for the user     | user_id (path param)                                                                                                                                            | — (204 No Content)                                                          |
 | POST /v1/signal                 | Recommendation feedback OR chip_confirm | Discriminated on `signal_type` — recommendation variant (recommendation_id + place_id) OR chip_confirm variant (metadata.chips[] with per-chip selection_round) | status (202)                                                                |
+| DELETE /v1/user/{user_id}/data  | Erase user's AI-owned data on account delete | user_id (path param)                                                                                                                                       | 204 No Content (idempotent — absent user is still 204) |
 | GET /v1/health                  | Service health check                    | —                                                                                                                                                               | status, db connectivity                                                     |
 
 ---
@@ -689,7 +689,7 @@ The AI service returns standard HTTP status codes:
 | 500     | AI service internal error                                  | Log error, return 503 to frontend with retry suggestion |
 | Timeout | Service unreachable                                        | Return 503 with "service temporarily unavailable"       |
 
-**Timeout policy:** Set HTTP client timeout to 30 seconds for all AI service calls. /v1/chat responses targeting consult intent may take up to 20s for complex queries.
+**Timeout policy:** Set HTTP client timeout to **75 seconds** for `/v1/chat` and `/v1/chat/stream`. The save tool's per-tool budget is 60s on the AI side (accommodates Apify-backed Google Maps shared-list imports — single Apify call alone is ~14s + NER + Google validation), so the product-side timeout must comfortably exceed it. 30s is sufficient for all other endpoints (`/v1/recall`, `/v1/consult`, `/v1/signal`, `/v1/user/...`, health). /v1/chat responses targeting consult intent may take up to 20s for complex queries.
 
 ---
 
