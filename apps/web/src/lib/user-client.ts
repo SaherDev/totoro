@@ -1,10 +1,15 @@
 import { Capacitor } from "@capacitor/core";
 import { FetchClient } from "../api/transports/fetch.transport";
-import type { UserContextResponse } from "@totoro/shared";
+import type { DataScope, UserContextResponse } from "@totoro/shared";
 
 export interface UserClient {
   getUserContext(): Promise<UserContextResponse>;
-  deleteUserData(): Promise<void>;
+  /**
+   * Delete AI-owned user data. Pass `scope="chat_history"` to clear only
+   * the LangGraph chat thread + pending taste-regen task (saves remain).
+   * Omit to wipe everything (used by full account-delete).
+   */
+  deleteUserData(scope?: DataScope): Promise<void>;
 }
 
 const FIXTURE_RESPONSE: UserContextResponse = {
@@ -22,7 +27,12 @@ function makeRealUserClient(getToken: () => Promise<string>): UserClient {
 
   return {
     getUserContext: () => http.get<UserContextResponse>(`/api/v1/user/context`),
-    deleteUserData: () => http.delete(`/api/v1/user/data`),
+    deleteUserData: (scope) => {
+      const path = scope
+        ? `/api/v1/user/data?scope=${encodeURIComponent(scope)}`
+        : `/api/v1/user/data`;
+      return http.delete(path);
+    },
   };
 }
 

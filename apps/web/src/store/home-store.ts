@@ -581,10 +581,14 @@ export const useHomeStore = create<HomeState>()(
       },
 
       // ── clearThread ────────────────────────────────────────────────────────────
+      // Triggered by the X button. Clears local thread state immediately, then
+      // wipes the server-side LangGraph checkpoint + pending taste-regen via
+      // DELETE /api/v1/user/data?scope=chat_history. Fire-and-forget on the
+      // server call so the UI is responsive — saves are unaffected by this scope.
       clearThread: () => {
         get().abortController?.abort();
         useChatStreamStore.getState().reset();
-        const { savedPlaceCount, tasteProfileConfirmed, signalTier } = get();
+        const { savedPlaceCount, tasteProfileConfirmed, signalTier, getToken } = get();
         const phase = pickRestingPhase(
           savedPlaceCount,
           tasteProfileConfirmed,
@@ -601,6 +605,10 @@ export const useHomeStore = create<HomeState>()(
           error: null,
           abortController: null,
           clarificationMessage: null,
+        });
+        const client = getUserClient(getToken ?? (async () => ""));
+        void client.deleteUserData("chat_history").catch((err) => {
+          console.warn("Failed to clear server chat history", err);
         });
         void get().loadUserContext();
       },
