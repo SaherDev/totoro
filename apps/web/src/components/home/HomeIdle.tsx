@@ -14,15 +14,14 @@ interface HomeIdleProps {
 
 function getSuggestions(chips: ChipItem[] | undefined): string[] {
   const chipSuggestions = (chips ?? [])
-    .filter((c) => c.query && c.query.trim().length > 0)
+    .filter((c) => c.status !== 'rejected' && c.query && c.query.trim().length > 0)
     .sort((a, b) => b.signal_count - a.signal_count)
-    .slice(0, 3)
     .map((c) => c.query as string);
 
   if (chipSuggestions.length === 0) return CONSULT_SUGGESTIONS;
 
   const fallback = CONSULT_SUGGESTIONS.filter((s) => !chipSuggestions.includes(s));
-  return [...chipSuggestions, ...fallback].slice(0, 2);
+  return [...chipSuggestions, ...fallback].slice(0, 4);
 }
 
 export function HomeIdle({ onSuggestionClick, firstName, savedCount, chips }: HomeIdleProps) {
